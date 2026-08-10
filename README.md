@@ -29,8 +29,7 @@ La justificación y definición del aspecto seleccionado se encuentra en `docs/a
 
 ```text
 docs/
-├── ficha_problem
-a.md
+├── ficha_problema.md
 ├── aspectos.md
 └── ia.md
 ```
