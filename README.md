@@ -6,7 +6,7 @@ Proyecto del curso **Arquitectura de Software** (AS_202620) — Universidad Tecn
 
 **DRIFT** es una plataforma web orientada a jugadores que buscan tomar mejores decisiones al comprar videojuegos. El sistema reúne información de diferentes plataformas digitales para comparar precios, descuentos e historial de ofertas, teniendo en cuenta además las plataformas disponibles para cada usuario y el rendimiento esperado de sus dispositivos.
 
-Ver el planteamiento completo del problema en [`docs/ficha_problema.md`](docs/ficha_problema.md).
+La definición detallada de la problemática se encuentra en [`docs/ficha_problema.md`](docs/ficha_problema.md).
 
 ## Aspecto de calidad declarado
 
