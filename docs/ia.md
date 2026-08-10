@@ -15,6 +15,14 @@ ChatGPT fue utilizado principalmente para:
 
 Las propuestas generadas fueron revisadas por el equipo y utilizadas únicamente como apoyo para tomar las decisiones del proyecto.
 
+
 ## Estado
 
 Por el momento, Se ha utilizado ChatGPT como apoyo para la generación de ideas y definición inicial del proyecto..
+
+
+## Herramientas de IA que se implementarán
+
+* Claude (Anthropic)
+* ChatGPT (OpenIA)
+* Gemini (Google)
