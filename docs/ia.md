@@ -32,6 +32,12 @@ Se estudiará la incorporación de inteligencia artificial o modelos de recomend
 
 A partir de estos datos, DRIFT buscará recomendar la alternativa que presente una mejor relación entre **precio, compatibilidad y rendimiento**.
 
+## Herramientas de IA que se implementarán 
+* Claude (Anthropic)
+* ChatGPT (OpenIA)
+* Gemini (Google) 
+
+
 ## Consideraciones
 
 Las recomendaciones generadas por el sistema serán orientativas y dependerán de la calidad y disponibilidad de los datos obtenidos de las diferentes plataformas.
