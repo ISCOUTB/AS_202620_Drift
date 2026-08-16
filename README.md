@@ -32,7 +32,6 @@ docs/
 ├── ficha_problema.md  
 ├── ia.md  
 ├── interesados.md  
-└── README.md
 ```
 
 ### Documentación
