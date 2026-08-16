@@ -45,6 +45,18 @@ docs/
 | `Escenarios.md`     | Escenarios de calidad medibles de DRIFT                 |
 | `ia.md`             | Registro y criterios de uso de herramientas de IA       |
 
+---
+
+### Documentación de arquitectura — arc42
+
+La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **arc42**. En ella se describen el propósito del sistema, sus objetivos de calidad, las restricciones arquitectónicas y el contexto y alcance del sistema.
+
+| Sección | Contenido | Documento |
+|---|---|---|
+| **1. Introducción y objetivos** | Propósito, alcance, objetivos de calidad e interesados. | [`arc42_1_introduccion_objetivos.md`](docs/arc42_1_introduccion_objetivos.md) |
+| **2. Restricciones** | Restricciones que condicionan la arquitectura y su justificación. | [`arc42_2_restricciones.md`](docs/arc42_2_restricciones.md) |
+| **3. Contexto y alcance** | Contexto del sistema, actores, sistemas externos, límites e interfaces. | [`arc42_3_contexto_alcance.md`](docs/arc42_3_contexto_alcance.md) |
+
 
 ---
 
