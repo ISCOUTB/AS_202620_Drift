@@ -12,7 +12,7 @@ La definición detallada de la problemática se encuentra en [`docs/ficha_proble
 
 Para DRIFT se prioriza la **mantenibilidad**, buscando que el sistema pueda incorporar nuevas plataformas, fuentes de información y funcionalidades sin generar cambios importantes en los demás componentes.
 
-La justificación y definición del aspecto seleccionado se encuentra en [`docs/aspectos.md`](docs/aspectos.mmd).
+La justificación y definición del aspecto seleccionado se encuentra en [`docs/aspectos.md`](docs/aspectos.md).
 
 ---
 
