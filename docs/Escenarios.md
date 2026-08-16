@@ -26,7 +26,7 @@
 - **Artefacto:** Módulo de información y detalle del videojuego.
 - **Entorno:** Sistema funcionando normalmente con hasta 50 usuarios concurrentes.
 - **Respuesta:** DRIFT muestra información del videojuego, incluyendo precios, descuentos, plataformas disponibles e historial de precios.
-- **Medida verificable:** La información deberá estar disponible en **≤ 2 segundos en el p95** después de seleccionar el videojuego.
+- **Medida verificable:** La información deberá estar disponible en **≤ 3 segundos en el p95** después de seleccionar el videojuego.
 
 **Escenario completo:**
 
