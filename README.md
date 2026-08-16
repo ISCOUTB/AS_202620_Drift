@@ -12,7 +12,7 @@ La definición detallada de la problemática se encuentra en [`docs/ficha_proble
 
 Para DRIFT se prioriza la **mantenibilidad**, buscando que el sistema pueda incorporar nuevas plataformas, fuentes de información y funcionalidades sin generar cambios importantes en los demás componentes.
 
-La justificación y definición del aspecto seleccionado se encuentra en [`docs/aspectos.md`](doc/aspectos.mmd).
+La justificación y definición del aspecto seleccionado se encuentra en [`docs/aspectos.md`](docs/aspectos.mmd).
 
 ---
 
@@ -73,6 +73,6 @@ Los escenarios actuales contemplan principalmente:
 
 ## Inteligencia Artificial
 
-La IA forma parte de la propuesta de DRIFT como apoyo para la generación de recomendaciones personalizadas y el análisis de información relacionada con precios, plataformas y rendimiento.El uso de estas herramientas será registrado y justificado durante el desarrollo en [`docs/ia.md`](doc/ia.md).
+La IA forma parte de la propuesta de DRIFT como apoyo para la generación de recomendaciones personalizadas y el análisis de información relacionada con precios, plataformas y rendimiento.El uso de estas herramientas será registrado y justificado durante el desarrollo en [`docs/ia.md`](docs/ia.md).
 
  
