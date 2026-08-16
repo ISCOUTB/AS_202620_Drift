@@ -1,98 +1,72 @@
 # 2. Restricciones
 
-Las restricciones de DRIFT corresponden a condiciones que deben ser consideradas al momento de definir la arquitectura del sistema. Estas condiciones provienen principalmente del problema planteado, de las características de las fuentes externas de información y de los objetivos de calidad definidos para el proyecto.
+Las restricciones de DRIFT corresponden a condiciones externas o de contexto que limitan las decisiones que pueden tomarse durante el diseño y desarrollo de la arquitectura del sistema.
 
-## 2.1 Dependencia de fuentes externas de información
+Estas restricciones provienen principalmente del contexto académico del proyecto, de las características del equipo de desarrollo, del uso de fuentes externas de información y de las condiciones establecidas para el desarrollo del proyecto.
 
-DRIFT depende de información proveniente de diferentes tiendas digitales y proveedores de información de videojuegos.
+## 2.1 Restricciones organizacionales
 
-Las fuentes externas pueden manejar diferentes catálogos, formatos de información, precios, descuentos y condiciones de disponibilidad. Por esta razón, la arquitectura debe considerar la integración con múltiples fuentes y evitar que las diferencias entre ellas afecten significativamente al resto del sistema.
+### Equipo de desarrollo
+
+DRIFT es desarrollado por un equipo de **4 integrantes** dentro del curso de Arquitectura de Software.
 
 **Justificación:**  
-El problema identificado establece que la información de precios, descuentos y disponibilidad se encuentra distribuida entre diferentes plataformas.
+La cantidad de integrantes condiciona la capacidad disponible para desarrollar, probar, documentar y mantener el sistema durante el proyecto.
 
 ---
 
-## 2.2 Incorporación de múltiples plataformas digitales
+## 2.2 Restricciones académicas y de plazo
 
-El sistema debe permitir trabajar con información proveniente de diferentes plataformas digitales, como tiendas de videojuegos para PC y consolas.
+### Entregas del curso
 
-La arquitectura no debe estar diseñada de manera que una única plataforma sea indispensable para el funcionamiento general del sistema.
+El desarrollo de DRIFT está condicionado por las entregas y fechas establecidas para el curso **AS_202620 – Arquitectura de Software**.
 
 **Justificación:**  
-El objetivo principal de DRIFT es centralizar información que actualmente se encuentra distribuida entre diferentes tiendas. La solución debe poder trabajar con varias fuentes para realizar comparaciones entre las opciones disponibles.
+El proyecto debe cumplir con los entregables y tiempos definidos por el curso, lo que limita el tiempo disponible para diseñar, implementar y validar la arquitectura.
 
 ---
 
-## 2.3 Capacidad de incorporar nuevas fuentes
+## 2.3 Restricciones tecnológicas
 
-La arquitectura debe permitir agregar nuevas tiendas o fuentes de información sin requerir modificaciones importantes en las demás partes del sistema.
+El proyecto deberá considerar las tecnologías que hayan sido establecidas como obligatorias por el curso o por los lineamientos del proyecto.
 
-Los cambios relacionados con una fuente específica deben mantenerse lo más aislados posible del resto de funcionalidades.
+En caso de que no exista un stack tecnológico obligatorio, las tecnologías utilizadas podrán seleccionarse de acuerdo con las necesidades del sistema y las capacidades del equipo de desarrollo.
 
 **Justificación:**  
-La mantenibilidad es el principal atributo de calidad declarado para DRIFT. El proyecto establece como necesidad la incorporación de nuevas plataformas y fuentes de información, así como la posibilidad de modificar componentes sin afectar significativamente otras funcionalidades.
+Las tecnologías impuestas externamente limitan las alternativas disponibles para implementar la solución. Si no existen tecnologías obligatorias, esta restricción no limita directamente las decisiones arquitectónicas.
 
 ---
 
-## 2.4 Manejo de fallos de fuentes externas
+## 2.4 Restricciones relacionadas con fuentes externas
 
-El fallo o indisponibilidad temporal de una fuente externa no debe provocar la interrupción completa de la consulta de precios.
+El acceso a información de precios, descuentos, disponibilidad y demás datos de videojuegos estará condicionado por las interfaces, APIs, mecanismos de acceso y condiciones de uso que proporcionen las fuentes externas seleccionadas.
 
-Cuando una fuente no pueda proporcionar información, DRIFT debe poder continuar mostrando la información disponible de las demás fuentes e informar que la fuente afectada no está disponible.
+DRIFT deberá considerar las características y limitaciones particulares de cada fuente al momento de integrar su información.
 
 **Justificación:**  
-Este comportamiento está definido explícitamente en los escenarios de calidad de DRIFT. El sistema debe mantener la consulta operativa incluso cuando una fuente externa de precios deje de responder.
+DRIFT depende de información proporcionada por terceros. Las condiciones técnicas y de uso de cada fuente pueden limitar la forma en que el sistema puede obtener, consultar y actualizar dicha información.
 
 ---
 
-## 2.5 Centralización de información para la comparación
+## 2.5 Restricción de proceso: uso de inteligencia artificial
 
-DRIFT debe integrar información relacionada con precios, descuentos, historial de precios y disponibilidad de plataformas, junto con información necesaria para estimar la compatibilidad y el rendimiento en PC.
-
-La arquitectura debe permitir relacionar esta información para que pueda ser utilizada en la comparación y recomendación de opciones.
+El uso de herramientas de inteligencia artificial durante el desarrollo del proyecto debe registrarse y documentarse en `docs/ia.md`.
 
 **Justificación:**  
-El problema identificado surge precisamente de que esta información se encuentra distribuida entre diferentes plataformas y fuentes. La propuesta de DRIFT busca centralizarla para reducir el tiempo de búsqueda y facilitar decisiones de compra informadas.
+El proyecto contempla el registro del uso de herramientas de inteligencia artificial, por lo que el proceso de desarrollo debe incluir la documentación correspondiente.
 
 ---
 
-## 2.6 Consideración de las características del dispositivo del usuario
+## 2.6 Restricciones de rendimiento
 
-Para las funcionalidades relacionadas con PC, el sistema debe considerar las especificaciones del dispositivo registrado por el usuario y compararlas con los requisitos del videojuego.
-
-**Justificación:**  
-DRIFT plantea estimar el rendimiento y la compatibilidad de un videojuego en PC a partir de las especificaciones del dispositivo y de los requisitos del videojuego.
-
----
-
-## 2.7 Restricciones de rendimiento
-
-Las operaciones principales del sistema deben cumplir con los tiempos de respuesta establecidos en los escenarios de calidad.
+Las operaciones principales del sistema deben considerar los tiempos de respuesta establecidos en los escenarios de calidad del proyecto.
 
 Actualmente se establecen las siguientes medidas:
 
 - Búsqueda y comparación de precios: **≤ 3 segundos en p95**.
-- Consulta de información de un videojuego: **≤ 2 segundos en p95**.
+- Consulta de información de un videojuego: **≤ 3 segundos en p95**.
 - Estimación de compatibilidad y rendimiento en PC: **≤ 5 segundos en p95**.
 - Consulta ante el fallo de una fuente externa: **≤ 5 segundos**.
 
 **Justificación:**  
-Estos tiempos se encuentran definidos como medidas verificables en los escenarios de calidad del proyecto y representan condiciones que la arquitectura deberá considerar.
-
----
-
-## 2.8 Restricción de mantenibilidad
-
-La arquitectura debe priorizar la mantenibilidad del sistema, procurando que los cambios, ampliaciones y modificaciones puedan realizarse con un impacto reducido sobre las funcionalidades existentes.
-
-Esto incluye principalmente:
-
-- Incorporar nuevas plataformas digitales.
-- Agregar nuevas fuentes de información.
-- Modificar la lógica de comparación.
-- Modificar la lógica de recomendación.
-- Añadir nuevos filtros o características.
-
-**Justificación:**  
-La mantenibilidad es el aspecto de calidad prioritario declarado para DRIFT debido a que el sistema depende de múltiples fuentes externas y está planteado para crecer e incorporar nuevas funcionalidades.
+Estos tiempos representan condiciones medibles establecidas para el sistema y deben ser considerados durante las decisiones de diseño y arquitectura.
