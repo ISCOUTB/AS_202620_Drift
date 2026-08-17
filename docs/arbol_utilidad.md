@@ -3,7 +3,7 @@
 El árbol de utilidad de DRIFT permite organizar y visualizar los aspectos de calidad que consideramos más importantes para el funcionamiento del sistema. A partir de la utilidad general de la plataforma, se desglosan características como el rendimiento, la mantenibilidad, la disponibilidad, la usabilidad y la compatibilidad. Esto nos ayuda a relacionar cada aspecto con objetivos más concretos y a tener una visión clara de qué debe cumplir DRIFT para ofrecer una buena experiencia a los usuarios.
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["Utilidad de DRIFT"] --> B["Mantenibilidad"]
     A --> C["Rendimiento"]
     A --> D["Disponibilidad"]
