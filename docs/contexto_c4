@@ -23,4 +23,3 @@ flowchart LR
 
     D -->|"Solicita información"| P
     P -->|"Entrega datos"| D
-```
