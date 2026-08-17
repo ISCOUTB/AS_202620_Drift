@@ -1,6 +1,8 @@
 # C4 — Diagrama de Contexto de DRIFT
 
-El diagrama de contexto muestra a DRIFT como el sistema principal y permite identificar los usuarios y sistemas externos que interactúan con él. También permite delimitar qué hace parte de DRIFT y qué elementos se encuentran fuera del sistema.
+El diagrama de contexto representa a DRIFT como el sistema principal y muestra
+los usuarios y sistemas externos que interactúan con él, permitiendo
+identificar de forma clara los límites del sistema y sus relaciones externas.
 
 ```mermaid
 flowchart LR
