@@ -9,9 +9,9 @@ Comparar los estilos de arquitectura en capas, arquitectura hexagonal y monolito
 | Mantenibilidad | Media | **Alta** | Media-Alta |
 | Incorporar nuevas plataformas | Media | **Alta** | Media-Alta |
 | Cambiar una API externa | Media | **Alta** | Media |
-| Aislamiento de cambios | Medio | **Alto** | Medio-Alto |
-| Bajo acoplamiento | Medio | **Alto** | Medio-Alto |
-| Facilidad de pruebas | Media | **Alta** | Media-Alta |
+| Aislamiento de cambios | Media | **Alto** | Media-Alta |
+| Bajo acoplamiento | Media | **Alto** | Media-Alta |
+| Facilidad de pruebas | Media | **Alta** | Alta |
 | Complejidad inicial | **Baja** | Media-Alta | Media |
 | Adecuación a DRIFT | Media | **Alta** | Media-Alta |
 
