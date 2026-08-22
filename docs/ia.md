@@ -40,9 +40,8 @@ Se utilizó ChatGPT para **aclarar conceptos relacionados con estilos arquitect�
 
 Esto permitió reforzar los conocimientos del equipo y apoyar la documentación de las decisiones tomadas durante esta etapa.
 
-## 5. Herramienta utilizada
+## Herramientas de IA que se implementarán
 
-*Herramienta:* ChatGPT
-*Uso:* apoyo para análisis, revisión, estructuración y documentación del proyecto.
-
-Las decisiones finales, contenidos y cambios realizados en el repositorio fueron revisados y definidos por el equipo.
+* Claude (Anthropic)
+* ChatGPT (OpenIA)
+* Gemini (Google)
