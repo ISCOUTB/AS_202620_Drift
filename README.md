@@ -56,7 +56,7 @@ La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **a
 | **1. Introducción y objetivos** | Propósito, alcance, objetivos de calidad e interesados. | [`arc42_1_introduccion_objetivos.md`](docs/arc42_1_introduccion_objetivos.md) |
 | **2. Restricciones** | Restricciones que condicionan la arquitectura y su justificación. | [`arc42_2_restricciones.md`](docs/arc42_2_restricciones.md) |
 | **3. Contexto y alcance** | Contexto del sistema, actores, sistemas externos, límites e interfaces. | [`arc42_3_contexto_alcance.md`](docs/arc42_3_contexto_alcance.md) |
-| **4. Solucion Arquitectonica** | Principales decisiones arquitectónicas de DRIFT. | [`arc42_4_solucion_arquitectonica.md`](docs/arc42_4_solucion_arquitectonica.md) |
+| **4. Soluciones Arquitectonica** | Principales decisiones arquitectónicas de DRIFT. | [`arc42_4_soluciones_arquitectonica.md`](docs/arc42_4_soluciones_arquitectonica.md) |
 
 
 ---
