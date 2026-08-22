@@ -63,6 +63,7 @@ La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **a
 ## Contexto y análisis arquitectónico
 
 El proyecto incluye diferentes artefactos que permiten representar y analizar la arquitectura de DRIFT. 
+
 -[`docs/c4_contexto.md`](docs/c4_contexto.md)
 
 El **árbol de utilidad** organiza los atributos de calidad y los escenarios priorizados del sistema.  
