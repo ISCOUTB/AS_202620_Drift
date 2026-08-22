@@ -62,9 +62,11 @@ La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **a
 
 ## Contexto y análisis arquitectónico
 
-El proyecto incluye diferentes artefactos que permiten representar y analizar la arquitectura de DRIFT. | [`docs/c4_contexto.md`](docs/c4_contexto.md)
+El proyecto incluye diferentes artefactos que permiten representar y analizar la arquitectura de DRIFT. 
+-[`docs/c4_contexto.md`](docs/c4_contexto.md)
 
-El **árbol de utilidad** organiza los atributos de calidad y los escenarios priorizados del sistema. | [`docs/arbol_utilidad.md`](docs/arbol_utilidad.md)
+El **árbol de utilidad** organiza los atributos de calidad y los escenarios priorizados del sistema.  
+-[`docs/arbol_utilidad.md`](docs/arbol_utilidad.md)
 
 El **diagrama C4 de contexto** representa a DRIFT, sus principales actores y los sistemas externos con los que interactúa.
 
@@ -97,7 +99,8 @@ Los escenarios actuales contemplan principalmente:
 
 Para definir la estrategia arquitectónica de DRIFT se realizó una comparación entre diferentes estilos arquitectónicos, considerando los escenarios de calidad y las necesidades del sistema. 
 
-La **matriz comparativa** evalúa la arquitectura en capas, la arquitectura hexagonal y el monolito modular. A partir de esta comparación se selecciona la **arquitectura hexagonal** como la alternativa más adecuada para DRIFT. | [`docs/matriz.md`](docs/matriz.md)
+La **matriz comparativa** evalúa la arquitectura en capas, la arquitectura hexagonal y el monolito modular. A partir de esta comparación se selecciona la **arquitectura hexagonal** como la alternativa más adecuada para DRIFT.  
+-[`docs/matriz.md`](docs/matriz.md)
 
 ## Inteligencia Artificial
 
