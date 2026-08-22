@@ -29,6 +29,7 @@ En el proceso de revisión se crearon y organizaron los siguientes elementos:
   - **Sección 1:** Introducción y objetivos.
   - **Sección 2:** Restricciones.
   - **Sección 3:** Contexto y alcance.
+  - **Sección 4:** Solucion Arquitectonica.
 - Escenarios de calidad medibles.
 - Revisión conceptual de las restricciones arquitectónicas.
 - Organización de los documentos de arquitectura mediante enlaces desde el `README.md`.
