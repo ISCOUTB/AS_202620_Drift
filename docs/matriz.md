@@ -4,16 +4,16 @@
 
 Comparar los estilos de arquitectura en capas, arquitectura hexagonal y monolito modular frente a los escenarios de calidad definidos para DRIFT, con especial énfasis en la mantenibilidad, atributo de calidad priorizado por el equipo.
 
-| Criterio | Capas | Hexagonal | Monolito modular |
+| Criterio | Arquitectura en capas | Arquitectura hexagonal | Monolito modular |
 |---|---|---|---|
-| Mantenibilidad | Media-Alta | Alta | Alta |
-| Incorporar nuevas plataformas | Media | Alta | Alta |
-| Cambiar una API externa | Media | Alta | Alta |
-| Aislamiento de cambios | Medio | Alto | Alto |
-| Facilidad de pruebas | Media-Alta | Alta | Alta |
-| Bajo acoplamiento | Medio | Alto | Alto |
-| Complejidad inicial | Baja | Alta | Media |
-| Adecuación a DRIFT | Media | Alta | Alta |
+| Mantenibilidad | Media | **Alta** | Media-Alta |
+| Incorporar nuevas plataformas | Media | **Alta** | Media-Alta |
+| Cambiar una API externa | Media | **Alta** | Media |
+| Aislamiento de cambios | Medio | **Alto** | Medio-Alto |
+| Bajo acoplamiento | Medio | **Alto** | Medio-Alto |
+| Facilidad de pruebas | Media | **Alta** | Media-Alta |
+| Complejidad inicial | **Baja** | Media-Alta | Media |
+| Adecuación a DRIFT | Media | **Alta** | Media-Alta |
 
 ## Análisis
 
