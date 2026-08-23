@@ -1,8 +1,7 @@
 # Árbol de Utilidad — DRIFT
 
-El árbol de utilidad de DRIFT permite organizar y visualizar los aspectos de calidad que consideramos más importantes para el funcionamiento del sistema. A partir de la utilidad general de la plataforma, se desglosan características como el rendimiento, la mantenibilidad, la disponibilidad, la usabilidad y la compatibilidad. Esto nos ayuda a relacionar cada aspecto con objetivos más concretos y a tener una visión clara de qué debe cumplir DRIFT para ofrecer una buena experiencia a los usuarios.
+El árbol de utilidad organiza los atributos de calidad de DRIFT según su prioridad y relaciona cada uno con escenarios evaluados mediante **impacto** y **riesgo**. 
 
-El árbol de utilidad organiza los atributos de calidad de DRIFT según su prioridad y relaciona cada uno con escenarios evaluados mediante **impacto** y **riesgo**.
 La prioridad se establece de acuerdo con los objetivos de calidad definidos en la sección 1 de arc42.
 
 ```mermaid
