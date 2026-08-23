@@ -2,33 +2,26 @@
 
 El árbol de utilidad de DRIFT permite organizar y visualizar los aspectos de calidad que consideramos más importantes para el funcionamiento del sistema. A partir de la utilidad general de la plataforma, se desglosan características como el rendimiento, la mantenibilidad, la disponibilidad, la usabilidad y la compatibilidad. Esto nos ayuda a relacionar cada aspecto con objetivos más concretos y a tener una visión clara de qué debe cumplir DRIFT para ofrecer una buena experiencia a los usuarios.
 
+El árbol de utilidad organiza los atributos de calidad de DRIFT según su prioridad y relaciona cada uno con escenarios evaluados mediante **impacto** y **riesgo**.
+La prioridad se establece de acuerdo con los objetivos de calidad definidos en la sección 1 de arc42.
+
 ```mermaid
-flowchart LR
-    A["Utilidad de DRIFT"] --> B["Mantenibilidad"]
-    A --> C["Rendimiento"]
-    A --> D["Disponibilidad"]
-    A --> E["Usabilidad"]
-    A --> F["Compatibilidad"]
+flowchart TD
+    A["Utilidad de DRIFT"]
 
-    B --> B1["Extensibilidad"]
-    B --> B2["Modificabilidad"]
-    B1 --> B11["Agregar nuevas tiendas sin afectar funcionalidades existentes"]
-    B2 --> B21["Realizar cambios minimizando el impacto en el sistema"]
+    A --> B["1. Mantenibilidad"]
+    A --> C["2. Rendimiento"]
+    A --> D["3. Disponibilidad"]
+    A --> E["4. Usabilidad"]
+    A --> F["5. Compatibilidad"]
 
-    C --> C1["Tiempo de búsqueda"]
-    C --> C2["Tiempo de consulta"]
-    C1 --> C11["Objetivo: ≤ 3 s en p95"]
-    C2 --> C21["Objetivo: ≤ 3 s en p95"]
+    B --> B1["[Impacto: Alto | Riesgo: Alto]<br/>Agregar una nueva plataforma sin modificar el núcleo"]
+    B --> B2["[Impacto: Alto | Riesgo: Medio]<br/>Modificar una fuente externa sin afectar el sistema"]
 
-    D --> D1["Disponibilidad de fuentes externas"]
-    D --> D2["Recuperación ante fallos"]
-    D1 --> D11["Mantener el servicio ante fallos temporales"]
-    D2 --> D21["Proporcionar una respuesta controlada ante fallos"]
+    C --> C1["[Impacto: Alto | Riesgo: Medio]<br/>Consulta de precios dentro del tiempo establecido"]
 
-    E --> E1["Facilidad de uso"]
-    E --> E2["Claridad de información"]
-    E1 --> E11["Permitir comparar precios sin conocimientos técnicos"]
-    E2 --> E21["Presentar precios y plataformas de forma comprensible"]
+    D --> D1["[Impacto: Alto | Riesgo: Alto]<br/>Mantener el servicio ante fallos de fuentes externas"]
 
-    F --> F1["Compatibilidad con dispositivos"]
-    F1 --> F11["Funcionamiento adecuado en los dispositivos contemplados"]
+    E --> E1["[Impacto: Medio | Riesgo: Bajo]<br/>Permitir comparar precios de forma sencilla"]
+
+    F --> F1["[Impacto: Medio | Riesgo: Medio]<br/>Estimar el rendimiento del videojuego en PC"]
