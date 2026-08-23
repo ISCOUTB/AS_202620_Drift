@@ -107,4 +107,36 @@ La **matriz comparativa** evalúa la arquitectura en capas, la arquitectura hexa
 
 La IA forma parte de la propuesta de DRIFT como apoyo para la generación de recomendaciones personalizadas y el análisis de información relacionada con precios, plataformas y rendimiento.El uso de estas herramientas será registrado y justificado durante el desarrollo en [`docs/ia.md`](docs/ia.md).
 
- 
+
+# DRIFT
+
+## Arquitectura
+
+El proyecto adopta una Arquitectura Hexagonal (Ports and Adapters).
+
+Ver ADR:
+
+- docs/adr/0001-arquitectura-base.md
+
+## Ejecutar proyecto
+
+```bash
+mvn spring-boot:run
+```
+
+## Ejecutar pruebas
+
+```bash
+mvn test
+```
+
+## Estructura inicial
+
+```text
+src/main/java/com/drift
+
+├── domain
+├── application
+├── infrastructure
+└── config
+```
