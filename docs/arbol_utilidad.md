@@ -5,7 +5,7 @@ El árbol de utilidad organiza los atributos de calidad de DRIFT según su prior
 La prioridad se establece de acuerdo con los objetivos de calidad definidos en la sección 1 de arc42.
 
 ```mermaid
-flowchart RL
+flowchart LR
     A["Utilidad de DRIFT"]
 
     A --> B["1. Mantenibilidad"]
