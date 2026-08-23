@@ -5,7 +5,7 @@
 
 ## Contexto
 
-DRIFT es una plataforma orientada a la comparación y recomendación de videojuegos, integrando información proveniente de múltiples fuentes externas. El sistema deberá evolucionar para incorporar nuevas plataformas, servicios de análisis, motores de recomendación y posibles fuentes de datos adicionales.
+DRIFT es una plataforma orientada a la comparación de precios de videojuegos, integrando información proveniente de múltiples fuentes externas. El sistema deberá evolucionar para incorporar nuevas plataformas, servicios de análisis, motores de recomendación y posibles fuentes de datos adicionales.
 
 Dado que la **mantenibilidad** ha sido identificada como el principal atributo de calidad, se requiere una arquitectura que facilite la incorporación de nuevas funcionalidades e integraciones sin afectar significativamente el núcleo de la aplicación.
 
