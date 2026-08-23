@@ -26,12 +26,24 @@ La justificación y definición del aspecto seleccionado se encuentra en [`docs/
 ## Organización del proyecto
 
 ```text
-docs/  
-├── Escenarios.md  
-├── aspectos.md  
-├── ficha_problema.md  
-├── ia.md  
-├── interesados.md  
+docs/
+├── adr/
+│   └── 0001-arquitectura-base.md
+├── arc42/
+│   ├── arc42
+│   ├── arc42_1_introduccion_objetivos.md
+│   ├── arc42_2_restricciones.md
+│   ├── arc42_3_contexto_alcance.md
+│   └── arc42_4_soluciones_arquitectonica.md
+├── c4/
+│   └── contexto.md
+├── arbol_utilidad.md
+├── aspectos.md
+├── escenarios.md
+├── ficha_problema.md
+├── ia.md
+├── interesados.md
+└── matriz.md
 ```
 
 ### Documentación
