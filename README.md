@@ -116,7 +116,7 @@ El proyecto adopta una Arquitectura Hexagonal (Ports and Adapters).
 
 Ver ADR:
 
-- docs/adr/0001-arquitectura-base.md
+- [`docs/adr/0001-arquitectura-base.md`](docs/adr/0001-arquitectura-base.md)
 
 ## Ejecutar proyecto
 
