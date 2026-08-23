@@ -40,3 +40,15 @@ Desarrollar **DRIFT**, una plataforma web que permita:
 ## Beneficio esperado
 
 DRIFT busca **reducir el tiempo de búsqueda y facilitar decisiones de compra más informadas**, permitiendo encontrar la opción que ofrezca la mejor relación entre **precio y experiencia de juego**.
+
+## Tensiones de calidad
+
+DRIFT presenta las siguientes tensiones de calidad que deben ser consideradas en las decisiones arquitectónicas:
+
+### Mantenibilidad vs. Rendimiento
+
+DRIFT debe contar con una arquitectura modular y desacoplada que facilite agregar nuevas plataformas de videojuegos, modificar componentes y mantener el sistema a medida que evoluciona. Sin embargo, un mayor desacoplamiento mediante capas, interfaces y adaptadores puede introducir procesamiento adicional y afectar los tiempos de respuesta. Por lo tanto, se debe buscar un equilibrio entre la facilidad de mantenimiento y el rendimiento del sistema.
+
+### Disponibilidad vs. Actualización de precios
+
+DRIFT depende de información proveniente de diferentes plataformas y fuentes externas. Utilizar mecanismos como almacenamiento temporal o caché puede permitir que el sistema continúe disponible cuando una fuente externa presente fallos, pero puede ocasionar que algunos precios no estén completamente actualizados. Por lo tanto, se debe buscar un equilibrio entre mantener la disponibilidad del sistema y ofrecer información actualizada.
