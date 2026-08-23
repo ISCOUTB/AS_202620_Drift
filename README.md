@@ -51,11 +51,20 @@ docs/
 
 | Archivo             | Contenido                                               |
 |---------------------|---------------------------------------------------------|
-| `ficha_problema.md` | Definición y análisis de la problemática             |
-| `aspectos.md`       | Aspecto de calidad seleccionado para la arquitectura    |
-| `interesados.md`    | Identificación y análisis de los interesados de DRIFT |
-| `Escenarios.md`     | Escenarios de calidad medibles de DRIFT                 |
-| `ia.md`             | Registro y criterios de uso de herramientas de IA       |
+| `adr/0001-arquitectura-base.md` | Decisión arquitectónica base de DRIFT            |
+| `arc42/arc42_1_introduccion_objetivos.md` | Introducción, objetivos e interesados de DRIFT |
+| `arc42/arc42_2_restricciones.md`  | Restricciones del proyecto DRIFT |
+| `arc42/arc42_3_contexto_alcance.md` | Contexto y alcance del sistema |
+| `arc42/arc42_4_soluciones_arquitectonica.md` | Estrategia de solución arquitectónica |
+| `c4/contexto.md`       | Diagrama de contexto C4 de DRIFT  |
+| `ficha_problema.md`    | Definición y análisis de la problemática |
+| `aspectos.md`     | Aspecto de calidad seleccionado para la arquitectura|
+| `ia.md`             | Registro y criterios de uso de herramientas de IA |
+| `arbol_utilidad.md`       | Árbol de utilidad de atributos de calidad |
+| `interesados.md`    |Identificación y análisis de los interesados de DRIFT|
+| `escenarios.md`     | Escenarios de calidad medibles de DRIFT|
+| `ia.md`             | Registro y criterios de uso de herramientas de IA |
+| `matriz.md`             | Matriz comparativa de estilos arquitectónicos (capas, hexagonal, monolito modular) frente a los escenarios de calidad de DRIFT |
 
 ---
 
