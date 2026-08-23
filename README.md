@@ -161,3 +161,25 @@ src/main/java/com/drift
 ├── infrastructure
 └── config
 ```
+
+# Ejecución
+
+## Backend
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+## Pruebas
+
+```bash
+cd backend
+pytest
+```
+
+## Arquitectura
+
+El proyecto utiliza Arquitectura Hexagonal (Ports and Adapters), documentada en:
+
+- docs/adr/0001-arquitectura-base.md
