@@ -1,4 +1,4 @@
-# ADR-0001: Selección de Arquitectura Base
+# ADR-0002: Selección de Arquitectura Base
 
 ## Contexto
 
