@@ -30,7 +30,6 @@ docs/
 ├── adr/
 │   └── 0001-arquitectura-base.md
 ├── arc42/
-│   ├── arc42
 │   ├── arc42_1_introduccion_objetivos.md
 │   ├── arc42_2_restricciones.md
 │   ├── arc42_3_contexto_alcance.md
