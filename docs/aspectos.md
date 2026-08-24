@@ -27,6 +27,12 @@ La mantenibilidad se evaluará mediante la capacidad de incorporar una nueva pla
 * Implementado
 * Pruebas de mantenibilidad realizadas
 
+### Decisión arquitectónica relacionada
+
+La mantenibilidad es el principal atributo de calidad considerado en la selección de la arquitectura de DRIFT. El ADR-0002 establece la **Arquitectura Hexagonal (Ports and Adapters)** como arquitectura base, debido a su bajo acoplamiento, facilidad para incorporar nuevas integraciones y capacidad para facilitar la evolución del sistema.
+
+* [`ADR-0002: Selección de Arquitectura Base`](adr/0002-arquitectura-base.md)
+
 ## Escenarios de calidad
 
 | ID | Aspecto de calidad | Escenario | Medida verificable | Enlace |
