@@ -138,28 +138,9 @@ Ver ADR:
 
 - [`docs/adr/0001-arquitectura-base.md`](docs/adr/0001-arquitectura-base.md)
 
-## Ejecutar proyecto
 
-```bash
-mvn spring-boot:run
-```
 
-## Ejecutar pruebas
 
-```bash
-mvn test
-```
-
-## Estructura inicial
-
-```text
-src/main/java/com/drift
-
-├── domain
-├── application
-├── infrastructure
-└── config
-```
 
 # Ejecución
 
