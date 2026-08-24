@@ -88,4 +88,9 @@
 > Cuando una fuente externa de precios no responda durante una consulta, DRIFT deberá continuar mostrando la información disponible de las demás tiendas e informar al usuario de la fuente no disponible, manteniendo la consulta operativa en un tiempo **≤ 5 segundos**.
 >
 
- 
+---
+
+
+**Los escenarios de calidad se consideran como parte de la evaluación de la arquitectura seleccionada para DRIFT. La decisión arquitectónica base se encuentra documentada en:**
+
+- **[`ADR-0002: Selección de Arquitectura Base`](adr/0002-arquitectura-base.md)**
