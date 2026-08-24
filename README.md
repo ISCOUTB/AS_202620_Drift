@@ -136,12 +136,9 @@ El proyecto adopta una Arquitectura Hexagonal (Ports and Adapters).
 
 Ver ADR:
 
-- [`docs/adr/0001-arquitectura-base.md`](docs/adr/0001-arquitectura-base.md)
+- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
 
-
-
-
-
+---
 # Ejecución
 
 ## Backend
@@ -149,6 +146,7 @@ Ver ADR:
 ```bash
 cd backend
 uvicorn app.main:app --reload
+(El backend estará disponible en http://localhost:8000)
 ```
 
 ## Pruebas
@@ -158,8 +156,10 @@ cd backend
 pytest
 ```
 
-## Arquitectura
-
-El proyecto utiliza Arquitectura Hexagonal (Ports and Adapters), documentada en:
-
-- docs/adr/0001-arquitectura-base.md
+## Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+(El frontend estará disponible en http://localhost:3000)
+```
