@@ -19,20 +19,20 @@
 ---
 
 ## Escenario 2
-**Atributo:** Eficiencia de desempeño
 
-- **Fuente:** Usuario de DRIFT.
-- **Estímulo:** El usuario selecciona un videojuego de los resultados de búsqueda.
-- **Artefacto:** Módulo de información y detalle del videojuego.
-- **Entorno:** Sistema funcionando normalmente con hasta 50 usuarios concurrentes.
-- **Respuesta:** DRIFT muestra información del videojuego, incluyendo precios, descuentos, plataformas disponibles e historial de precios.
-- **Medida verificable:** La información deberá estar disponible en **≤ 3 segundos en el p95** después de seleccionar el videojuego.
+**Atributo:** Mantenibilidad
+
+* **Fuente:** Equipo de desarrollo de DRIFT.
+* **Estímulo:** Se requiere modificar o reemplazar la integración con una fuente externa de precios debido a un cambio en su API.
+* **Artefacto:** Adaptador de integración de la fuente externa de precios.
+* **Entorno:** Sistema funcionando normalmente y utilizando la fuente externa modificada.
+* **Respuesta:** DRIFT deberá permitir modificar el adaptador correspondiente sin realizar cambios significativos en el núcleo de la aplicación ni en las integraciones con las demás fuentes.
+* **Medida verificable:** El cambio deberá limitarse al adaptador de la fuente afectada, sin modificar el dominio ni los adaptadores de las demás fuentes.
 
 **Escenario completo:**
 
->
-> Cuando un usuario seleccione un videojuego en DRIFT, bajo una carga de hasta 50 usuarios concurrentes, el sistema deberá mostrar su información de precios, descuentos, plataformas disponibles e historial de precios en un tiempo **≤ 3 segundos en el p95**.
->
+> Cuando una fuente externa de precios modifique su API, el equipo de desarrollo deberá poder adaptar la integración correspondiente sin realizar cambios en el núcleo de la aplicación ni en los adaptadores de las demás fuentes.
+
 
 ---
 
