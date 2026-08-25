@@ -25,24 +25,65 @@ La justificación y definición del aspecto seleccionado se encuentra en [`docs/
 
 ## Organización del proyecto
 
+La estructura actual de DRIFT separa el frontend, el backend y la documentación arquitectónica. El backend sigue los principios de la Arquitectura Hexagonal (Ports and Adapters), mientras que el frontend utiliza Next.js.
+
 ```text
-docs/
-├── adr/
-│   └── 0001-arquitectura-base.md
-├── arc42/
-│   ├── arc42_1_introduccion_objetivos.md
-│   ├── arc42_2_restricciones.md
-│   ├── arc42_3_contexto_alcance.md
-│   └── arc42_4_soluciones_arquitectonica.md
-├── c4/
-│   └── contexto.md
-├── arbol_utilidad.md
-├── aspectos.md
-├── escenarios.md
-├── ficha_problema.md
-├── ia.md
-├── interesados.md
-└── matriz.md
+DRIFT/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+├── backend/
+│   ├── app/
+│   │   ├── domain/
+│   │   │   ├── model/
+│   │   │   └── ports/
+│   │   │
+│   │   ├── application/
+│   │   │   └── usecases/
+│   │   │
+│   │   ├── infrastructure/
+│   │   │   ├── api/
+│   │   │   ├── playstation/
+│   │   │   ├── steam/
+│   │   │   ├── xbox/
+│   │   │   └── persistence/
+│   │   │
+│   │   └── main.py
+│   │
+│   └── tests/
+│       └── test_health.py
+│
+├── frontend/
+│   ├── app/
+│   │   ├── layout.js
+│   │   └── page.js
+│   ├── public/
+│   ├── next.config.js
+│   ├── package.json
+│   └── package-lock.json
+│
+├── docs/
+│   ├── adr/
+│   │   └── 0001-arquitectura-base.md
+|   |   └── 0002-arquitectura-base.md
+│   ├── arc42/
+│   │   ├── arc42_1_introduccion_objetivos.md
+│   │   ├── arc42_2_restricciones.md
+│   │   ├── arc42_3_contexto_alcance.md
+│   │   └── arc42_4_soluciones_arquitectonica.md
+│   ├── c4/
+│   │   └── contexto.md
+│   ├── arbol_utilidad.md
+│   ├── aspectos.md
+│   ├── escenarios.md
+│   ├── ficha_problema.md
+│   ├── ia.md
+│   ├── interesados.md
+│   └── matriz.md
+│
+├── .gitignore
+└── README.md
 ```
 
 ### Documentación
