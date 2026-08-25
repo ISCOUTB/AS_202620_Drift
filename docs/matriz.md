@@ -15,6 +15,18 @@ Comparar los estilos de arquitectura en capas, arquitectura hexagonal y monolito
 | Complejidad inicial | **Baja** | Media-Alta | Media |
 | Adecuación a DRIFT | Media | **Alta** | Media-Alta |
 
+## Relación con los escenarios de calidad
+
+La evaluación de los estilos arquitectónicos se relaciona con los escenarios E1-E5 definidos en el árbol de utilidad y detallados en [`docs/escenarios.md`](docs/escenarios.md). Estos escenarios permiten evaluar cómo cada alternativa responde a las necesidades de calidad de DRIFT.
+
+| Escenario | Atributo de calidad | Arquitectura en capas | Arquitectura hexagonal | Monolito modular |
+|---|---|---|---|---|
+| [E1](escenarios.md#escenario-1) - Búsqueda y comparación de precios | Rendimiento | Media | **Alta** | Media-Alta |
+| [E2](escenarios.md#escenario-2) - Modificar una fuente externa sin afectar el sistema | Mantenibilidad | Media | **Muy Alta** | Media-Alta |
+| [E3](escenarios.md#escenario-3) - Identificación de la opción recomendada | Usabilidad | Media | **Alta** | Alta |
+| [E4](escenarios.md#escenario-4) - Compatibilidad del dispositivo | Compatibilidad | Media | **Alta** | Alta |
+| [E5](escenarios.md#escenario-5) - Fallo de una fuente externa de precios | Disponibilidad | Media | **Muy Alta** | Media |
+
 ## Análisis
 
 ### Arquitectura en capas
