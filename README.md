@@ -143,7 +143,7 @@ Los **escenarios medibles** traducen estas preocupaciones en situaciones verific
 La documentación correspondiente se encuentra en:
 
 - [`docs/interesados.md`](docs/interesados.md)
-- [`docs/Escenarios.md`](docs/Escenarios.md)
+- [`docs/escenarios.md`](docs/escenarios.md)
 
 Los escenarios actuales contemplan principalmente:
 
