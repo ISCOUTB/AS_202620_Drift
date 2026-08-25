@@ -2,7 +2,7 @@
 
 ## Criterios de evaluación
 
-Comparar los estilos de arquitectura en capas, arquitectura hexagonal y monolito modular frente a los escenarios de calidad definidos para DRIFT, con especial énfasis en la mantenibilidad, atributo de calidad priorizado por el equipo.
+Se comparan la arquitectura en capas, la arquitectura hexagonal y el monolito modular frente a los escenarios de calidad E1-E5 definidos en el árbol de utilidad. La evaluación considera además criterios arquitectónicos relacionados con la mantenibilidad, atributo de calidad priorizado por el equipo.
 
 | Criterio | Arquitectura en capas | Arquitectura hexagonal | Monolito modular |
 |---|---|---|---|
