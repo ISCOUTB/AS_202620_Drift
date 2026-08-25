@@ -35,10 +35,12 @@ La mantenibilidad es el principal atributo de calidad considerado en la selecci�
 
 ## Escenarios de calidad
 
-| ID | Aspecto de calidad | Escenario | Medida verificable | Enlace |
-|---|---|---|---|---|
-| E1 | Eficiencia de desempeño | Búsqueda y comparación de precios | ≤ 3 segundos en p95 con hasta 50 usuarios concurrentes | [Escenario 1](escenarios.md#escenario-1) |
-| E2 | Eficiencia de desempeño | Consulta de información del videojuego | ≤ 3 segundos en p95 con hasta 50 usuarios concurrentes | [Escenario 2](escenarios.md#escenario-2) |
-| E3 | Usabilidad / eficiencia | Identificación de la opción recomendada | Máximo 3 interacciones | [Escenario 3](escenarios.md#escenario-3) |
-| E4 | Rendimiento / compatibilidad | Consulta de compatibilidad del dispositivo | ≤ 5 segundos en p95 | [Escenario 4](escenarios.md#escenario-4) |
-| E5 | Disponibilidad | Fallo de una fuente externa de precios | Mantener la consulta operativa y mostrar las demás fuentes en ≤ 5 segundos | [Escenario 5](escenarios.md#escenario-5) |
+Los escenarios de calidad de DRIFT se documentan mediante los elementos de fuente, estímulo, artefacto, entorno, respuesta y medida verificable. La siguiente tabla consolida estos elementos junto con el atributo de calidad y el identificador de cada escenario.
+
+| ID | Aspecto de calidad | Fuente | Estímulo | Artefacto | Entorno | Respuesta | Medida verificable |
+|---|---|---|---|---|---|---|---|
+| [E1](escenarios.md#escenario-1) | Eficiencia de desempeño | Usuario de DRIFT. | El usuario realiza una búsqueda de un videojuego para comparar su precio. | Módulo de búsqueda y comparación de precios de DRIFT. | Sistema funcionando normalmente con hasta 50 usuarios concurrentes. | DRIFT consulta y muestra los precios disponibles del videojuego en las diferentes tiendas digitales. | ≤ 3 segundos en el p95. |
+| [E2](escenarios.md#escenario-2) | Eficiencia de desempeño | Usuario de DRIFT. | El usuario selecciona un videojuego de los resultados de búsqueda. | Módulo de información y detalle del videojuego. | Sistema funcionando normalmente con hasta 50 usuarios concurrentes. | DRIFT muestra información del videojuego, incluyendo precios, descuentos, plataformas disponibles e historial de precios. | ≤ 3 segundos en el p95. |
+| [E3](escenarios.md#escenario-3) | Usabilidad / eficiencia | Usuario de DRIFT. | El usuario busca un videojuego y desea determinar cuál de las opciones disponibles es más conveniente. | Módulo de comparación y recomendación de DRIFT. | Usuario con acceso a los resultados de las diferentes tiendas digitales. | DRIFT presenta las opciones ordenadas o diferenciadas según precio, disponibilidad de plataforma y demás criterios considerados por el sistema. | Máximo 3 interacciones. |
+| [E4](escenarios.md#escenario-4) | Rendimiento / compatibilidad | Usuario con un dispositivo PC registrado en DRIFT. | El usuario consulta un videojuego para conocer si su equipo puede ejecutarlo. | Módulo de compatibilidad y estimación de rendimiento. | El usuario tiene previamente registrado su dispositivo y sus especificaciones. | DRIFT compara las especificaciones del dispositivo con los requisitos del videojuego e informa el nivel de compatibilidad o rendimiento estimado. | ≤ 5 segundos en el p95. |
+| [E5](escenarios.md#escenario-5) | Disponibilidad | Servicio externo de una tienda digital. | Una de las fuentes externas de precios deja de responder durante una consulta. | Módulo de consulta e integración de fuentes de precios de DRIFT. | DRIFT se encuentra funcionando normalmente y el usuario está realizando una comparación de precios. | DRIFT continúa mostrando la información obtenida de las demás fuentes disponibles e indica que una fuente no pudo ser consultada. | Consulta operativa y demás fuentes disponibles en ≤ 5 segundos. |
