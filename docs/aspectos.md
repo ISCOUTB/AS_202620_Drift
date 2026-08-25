@@ -23,7 +23,7 @@ La mantenibilidad se evaluará mediante la capacidad de incorporar una nueva pla
 ### Estado
 
 * Aspecto identificado y declarado
-* Arquitectura y mecanismos para garantizarlo definidos
+* Arquitectura y mecanismos para favorecerlo definidos
 * Implementado
 * Pruebas de mantenibilidad realizadas
 
