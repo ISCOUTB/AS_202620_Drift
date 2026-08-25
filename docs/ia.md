@@ -43,5 +43,54 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 ## Herramientas de IA que se implementarán
 
 * Claude (Anthropic)
-* ChatGPT (OpenIA)
+* ChatGPT (OpenAI)
 * Gemini (Google)
+
+---
+# Log
+
+### Registro 1 — Selección de tecnología para el frontend
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Qué sería mejor para el frontend de DRIFT, Next.js o React con Vite? Explícame cuál conviene más para nuestro proyecto y por qué."
+
+**Uso:** Se utilizó ChatGPT para comparar alternativas tecnológicas para el frontend de DRIFT y apoyar la selección de Next.js como framework para la interfaz web.
+
+---
+
+### Registro 2 — Actualización del README
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Mira, el README está así. Tenemos que actualizarlo porque ahora el proyecto tiene frontend y backend, pero quiero mantener más o menos la estructura que ya tiene. ¿Qué deberíamos cambiar?"
+
+**Uso:** Se utilizó ChatGPT para revisar el README, identificar información desactualizada y actualizar las instrucciones de ejecución y la estructura del proyecto de acuerdo con los cambios realizados.
+
+---
+
+### Registro 3 — Relación entre escenarios, árbol de utilidad y matriz
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Te paso el contenido de la matriz y del árbol de utilidad para resolver la observación 4. ¿Cómo podemos hacer que los escenarios E1-E5 queden relacionados correctamente?"
+
+**Uso:** Se utilizó ChatGPT para analizar la relación entre el árbol de utilidad, los escenarios de calidad y la matriz comparativa. Como resultado, se modificó el escenario E2 para representar una situación de mantenibilidad y se actualizaron las referencias E1-E5 en los documentos relacionados.
+
+---
+
+### Registro 4 — Configuración del pipeline de pruebas
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "La observación dice que no tenemos pipeline y que la prueba existe pero no está evidenciado el verde. ¿Cómo podemos solucionarlo en GitHub?"
+
+**Uso:** Se utilizó ChatGPT para identificar una solución mediante GitHub Actions y configurar un workflow que ejecuta automáticamente las pruebas del backend utilizando `pytest`. La ejecución del pipeline finalizó correctamente y fue evidenciada mediante el resultado verde de GitHub Actions.
