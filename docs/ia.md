@@ -24,6 +24,10 @@ Se trabajó en:
 * *Sección 2:* Restricciones.
 * *Sección 3:* Contexto y alcance.
 * *Sección 4:* Estrategia de solución.
+* *Sección 5:* Vista de Bloques.
+* *Sección 6:* Vista de Tiempos de Ejecucion.
+* *Sección 9:* Decisiones Arquitectonicas.
+* *Sección 10:* Requisitos de Calidad.
 * Escenarios de calidad medibles.
 * Revisión conceptual de las restricciones arquitectónicas.
 * Organización de los documentos mediante enlaces desde el `README.md`.
