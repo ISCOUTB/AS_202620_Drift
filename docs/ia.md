@@ -28,6 +28,7 @@ Se trabajó en:
 * *Sección 6:* Vista de Tiempos de Ejecucion.
 * *Sección 9:* Decisiones Arquitectonicas.
 * *Sección 10:* Requisitos de Calidad.
+* *Sección 12:* Glosario.
 * Escenarios de calidad medibles.
 * Revisión conceptual de las restricciones arquitectónicas.
 * Organización de los documentos mediante enlaces desde el `README.md`.
