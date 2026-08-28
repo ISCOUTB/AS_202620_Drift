@@ -11,7 +11,7 @@ flowchart LR
     A["Administrador<br/><br/>[Persona]<br/>Gestiona información y configuración"]
 
     %% Sistema DRIFT
-    subgraph DRIFT["DRIFT — Sistema de comparación de videojuegos"]
+    subgraph DRIFT["DRIFT"]
 
         WEB["Web / API<br/><br/>[Contenedor]<br/>Expone la interfaz HTTP y recibe<br/>las solicitudes de los usuarios"]
 
@@ -59,3 +59,10 @@ flowchart LR
     end
 ```
 
+Coherencia con la arquitectura
+
+La descomposición corresponde a la Arquitectura Hexagonal seleccionada en el ADR-0001. El dominio se mantiene aislado de los detalles de infraestructura y las integraciones externas se realizan mediante adaptadores.
+
+Esta separación permite incorporar nuevas fuentes externas sin modificar directamente las reglas de negocio, contribuyendo al atributo de calidad prioritario de mantenibilidad.
+
+El nivel 2 no descompone todavía los servicios internos de búsqueda, recomendación y compatibilidad. Estos corresponden a una vista de mayor detalle que puede documentarse posteriormente como nivel 3.
