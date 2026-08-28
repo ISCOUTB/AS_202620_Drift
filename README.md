@@ -106,14 +106,19 @@ DRIFT/
 
 ### Documentación de arquitectura — arc42
 
-La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **arc42**. En ella se describen el propósito del sistema, sus objetivos de calidad, las restricciones arquitectónicas y el contexto y alcance del sistema.
+La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **arc42**. En ella se describen el propósito del sistema, sus objetivos de calidad, las restricciones arquitectónicas, el contexto y alcance, la estrategia de solución, la estructura interna, el comportamiento en tiempo de ejecución, las decisiones arquitectónicas y los requisitos de calidad detallados.
 
 | Sección | Contenido | Documento |
 |---|---|---|
 | **1. Introducción y objetivos** | Propósito, alcance, objetivos de calidad e interesados. | [`arc42_1_introduccion_objetivos.md`](docs/arc42/arc42_1_introduccion_objetivos.md) |
 | **2. Restricciones** | Restricciones que condicionan la arquitectura y su justificación. | [`arc42_2_restricciones.md`](docs/arc42/arc42_2_restricciones.md) |
 | **3. Contexto y alcance** | Contexto del sistema, actores, sistemas externos, límites e interfaces. | [`arc42_3_contexto_alcance.md`](docs/arc42/arc42_3_contexto_alcance.md) |
-| **4. Soluciones Arquitectonica** | Principales decisiones arquitectónicas de DRIFT. | [`arc42_4_soluciones_arquitectonica.md`](docs/arc42/arc42_4_soluciones_arquitectonica.md) |
+| **4. Estrategia de solución** | Principales decisiones y estrategias arquitectónicas de DRIFT. | [`arc42_4_soluciones_arquitectonica.md`](docs/arc42/arc42_4_soluciones_arquitectonica.md) |
+| **5. Vista de bloques de construcción** | Descomposición estática del sistema (niveles 1 y 2), puertos y adaptadores. | [`arc42_5_bloques_construccion.md`](docs/arc42/arc42_5_bloques_construccion.md) |
+| **6. Vista de tiempo de ejecución** | Escenarios de interacción entre bloques de construcción en runtime. | [`arc42_6_vista_runtime.md`](docs/arc42/arc42_6_vista_runtime.md) |
+| **9. Decisiones de arquitectura** | Índice de ADR y resumen de las decisiones más importantes. | [`arc42_9_decisiones_arquitectura.md`](docs/arc42/arc42_9_decisiones_arquitectura.md) |
+| **10. Requisitos de calidad** | Árbol/tabla de calidad y escenarios de calidad detallados y medibles. | [`arc42_10_requisitos_calidad.md`](docs/arc42/arc42_10_requisitos_calidad.md) |
+| **12. Glosario** | Términos técnicos y de dominio usados en la documentación (versión inicial). | [`arc42_12_glosario.md`](docs/arc42/arc42_12_glosario.md) |
 
 ---
 
