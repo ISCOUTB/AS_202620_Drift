@@ -94,3 +94,14 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 > "La observación dice que no tenemos pipeline y que la prueba existe pero no está evidenciado el verde. ¿Cómo podemos solucionarlo en GitHub?"
 
 **Uso:** Se utilizó ChatGPT para identificar una solución mediante GitHub Actions y configurar un workflow que ejecuta automáticamente las pruebas del backend utilizando `pytest`. La ejecución del pipeline finalizó correctamente y fue evidenciada mediante el resultado verde de GitHub Actions.
+
+---
+
+### Registro 5 — C4 de contenedores
+**Fecha:** 27/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Ayúdame a entender cómo hacer el C4 de contenedores de nuestro repositorio DRIFT. Ya tenemos el C4 de contexto, ¿cómo se relaciona con el nivel 2 y qué debería tener en cuenta para hacerlo correctamente?"
+
+**Uso:** Se utilizó para aclarar dudas sobre el C4 de contenedores y su relación con el C4 de contexto.
