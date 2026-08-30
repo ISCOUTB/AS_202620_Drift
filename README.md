@@ -196,10 +196,14 @@ uvicorn app.main:app --reload
 
 ## Pruebas
 
+Las pruebas actuales corresponden al backend desarrollado con FastAPI.
+
+Para el frontend, la validación actual se realiza mediante ejecución local:
+
 ```bash
-cd backend
-pytest
-```
+cd frontend
+npm install
+npm run dev
 
 ## Frontend
 ```bash
@@ -208,3 +212,40 @@ npm install
 npm run dev
 (El frontend estará disponible en http://localhost:3000)
 ```
+
+---
+
+# Corte vertical implementado
+
+## Búsqueda y comparación de precios de videojuegos
+
+DRIFT cuenta actualmente con un corte vertical funcional que permite realizar la búsqueda de videojuegos desde la interfaz web y consultar los precios disponibles por plataforma.
+
+El flujo implementado conecta frontend, backend y dominio mediante la Arquitectura Hexagonal (Ports and Adapters).
+
+## Flujo de ejecución
+
+```text
+Usuario
+   |
+   v
+Frontend Next.js
+   |
+   | GET /games/search?q=<videojuego>
+   v
+Backend FastAPI
+   |
+   v
+Caso de uso SearchGames
+   |
+   v
+Puerto GameRepository
+   |
+   v
+InMemoryGameRepository
+   |
+   v
+Modelo Game
+   |
+   v
+Respuesta al frontend
