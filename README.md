@@ -97,7 +97,7 @@ DRIFT/
 │
 ├── .gitignore
 └── README.md
-
+```
 ### Documentación
 
 | Archivo | Contenido |
