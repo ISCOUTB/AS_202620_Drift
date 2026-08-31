@@ -25,7 +25,11 @@ La justificación y definición del aspecto seleccionado se encuentra en [`docs/
 
 ## Organización del proyecto
 
-La estructura actual de DRIFT separa el frontend, el backend y la documentación arquitectónica. El backend sigue los principios de la Arquitectura Hexagonal (Ports and Adapters), mientras que el frontend utiliza Next.js.
+La estructura actual de DRIFT separa el frontend, el backend y la documentación arquitectónica.
+
+El backend sigue los principios de la **Arquitectura Hexagonal (Ports and Adapters)**, separando el dominio, los casos de uso y la infraestructura. Actualmente cuenta con un repositorio en memoria como fuente inicial de datos, permitiendo validar el flujo completo del sistema antes de integrar fuentes externas reales.
+
+El frontend está desarrollado utilizando **Next.js** y consume los servicios expuestos por el backend mediante una API REST desarrollada con **FastAPI**.
 
 ```text
 DRIFT/
@@ -37,17 +41,17 @@ DRIFT/
 │   ├── app/
 │   │   ├── domain/
 │   │   │   ├── model/
+│   │   │   │   └── game.py
 │   │   │   └── ports/
+│   │   │       └── game_repository.py
 │   │   │
 │   │   ├── application/
 │   │   │   └── usecases/
+│   │   │       └── search_games.py
 │   │   │
 │   │   ├── infrastructure/
-│   │   │   ├── api/
-│   │   │   ├── playstation/
-│   │   │   ├── steam/
-│   │   │   ├── xbox/
 │   │   │   └── persistence/
+│   │   │       └── in_memory_game_repository.py
 │   │   │
 │   │   └── main.py
 │   │
@@ -65,16 +69,24 @@ DRIFT/
 │
 ├── docs/
 │   ├── adr/
-│   │   └── 0001-arquitectura-base.md
-|   |   └── 0002-arquitectura-base.md
+│   │   ├── 0001-arquitectura-base.md
+│   │   └── 0002-arquitectura-base.md
+│   │
 │   ├── arc42/
 │   │   ├── arc42_1_introduccion_objetivos.md
 │   │   ├── arc42_2_restricciones.md
 │   │   ├── arc42_3_contexto_alcance.md
-│   │   └── arc42_4_soluciones_arquitectonica.md
+│   │   ├── arc42_4_soluciones_arquitectonica.md
+│   │   ├── arc42_5_bloques_construccion.md
+│   │   ├── arc42_6_vista_runtime.md
+│   │   ├── arc42_9_decisiones_arquitectura.md
+│   │   ├── arc42_10_requisitos_calidad.md
+│   │   └── arc42_12_glosario.md
+│   │
 │   ├── c4/
-│   │   └── contexto.md
+│   │   ├── contexto.md
 │   │   └── contenedores.md
+│   │
 │   ├── arbol_utilidad.md
 │   ├── aspectos.md
 │   ├── escenarios.md
@@ -85,7 +97,6 @@ DRIFT/
 │
 ├── .gitignore
 └── README.md
-```
 
 ### Documentación
 
