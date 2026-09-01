@@ -28,4 +28,5 @@ jobs:
 
       - name: Ejecutar pruebas
         run: |
-          pytest backend/tests
+          cd backend
+          python -m pytest tests
