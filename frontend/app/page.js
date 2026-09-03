@@ -42,12 +42,16 @@ export default function Home() {
   };
 
   const getBestPrice = (prices) => {
-    const entries = Object.entries(prices);
+  const entries = Object.entries(prices);
 
-    return entries.reduce((best, current) => {
-      return current[1] < best[1] ? current : best;
-    });
-  };
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return entries.reduce((best, current) => {
+    return current[1] < best[1] ? current : best;
+  });
+};
 
   return (
     <main
@@ -123,9 +127,9 @@ export default function Home() {
 
       <section>
         {games.map((game) => {
-          const [bestPlatform, bestPrice] = getBestPrice(game.prices);
+  const bestPrice = getBestPrice(game.prices);
 
-          return (
+  return (
             <article
               key={game.id}
               style={{
@@ -138,9 +142,11 @@ export default function Home() {
               <h2 style={{ marginTop: 0 }}>{game.name}</h2>
 
               <p>
-                <strong>Mejor precio:</strong>{" "}
-                {bestPlatform} — ${bestPrice.toFixed(2)}
-              </p>
+  <strong>Mejor precio:</strong>{" "}
+  {bestPrice
+    ? `${bestPrice[0]} — $${bestPrice[1].toFixed(2)}`
+    : "Precio no disponible"}
+</p>
 
               <hr />
 

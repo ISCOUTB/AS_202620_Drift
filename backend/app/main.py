@@ -2,8 +2,8 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.application.usecases.search_games import SearchGames
-from app.infrastructure.persistence.in_memory_game_repository import (
-    InMemoryGameRepository
+from app.infrastructure.external.steam.steam_game_repository import (
+    SteamGameRepository
 )
 
 app = FastAPI(title="DRIFT API")
@@ -16,7 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-repository = InMemoryGameRepository()
+repository = SteamGameRepository()
 search_games = SearchGames(repository)
 
 
