@@ -113,12 +113,48 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 
 ---
 
-### Registro 6 — Renovación del frontend e integración continua
+### Registro 6 — Renovación visual de la portada
 
 **Fecha:** 03/09/2026  
 **Herramienta:** ChatGPT  
 **Prompt utilizado:**
 
-> "Ayúdame a renovar la portada de DRIFT, conectar la búsqueda del frontend con la API y verificar esa integración en el pipeline de GitHub Actions."
+> "Ayúdame a renovar la portada de DRIFT para que tenga una interfaz más atractiva para explorar videojuegos, con buscador, categorías, sugerencias y tarjetas de juegos."
 
-**Uso:** Se utilizó ChatGPT para reorganizar el frontend en capas de dominio, aplicación, infraestructura e interfaz; renovar la portada de DRIFT y conectar la búsqueda de videojuegos con la API de FastAPI mediante un repositorio HTTP configurable. También se actualizó el pipeline de GitHub Actions para ejecutar las pruebas del backend, iniciar la API local, compilar el frontend y comprobar que la portada se sirva correctamente.
+**Uso:** Se utilizó ChatGPT como apoyo para estructurar la nueva portada de DRIFT en un componente de interfaz, incluyendo el buscador, filtros por categoría, sugerencias y tarjetas para mostrar videojuegos.
+
+---
+
+### Registro 7 — Separación del frontend por capas
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Cómo podemos separar la lógica del frontend de DRIFT en capas de dominio, aplicación, infraestructura e interfaz para que la página no dependa directamente de HTTP?"
+
+**Uso:** Se utilizó ChatGPT para organizar el frontend con un modelo de juego en el dominio, un caso de uso para la búsqueda, un puerto de salida y un adaptador HTTP. Esta estructura permitió mantener la interfaz separada de la comunicación con la API.
+
+---
+
+### Registro 8 — Conexión del buscador con FastAPI
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Cómo conectamos el buscador de videojuegos del frontend con el endpoint de FastAPI y configuramos la URL de la API para distintos entornos?"
+
+**Uso:** Se utilizó ChatGPT para implementar un repositorio HTTP que consulta el endpoint de búsqueda de videojuegos y obtiene su URL desde la variable de entorno `NEXT_PUBLIC_DRIFT_API_URL`, con una dirección local como valor predeterminado.
+
+---
+
+### Registro 9 — Verificación de integración en GitHub Actions
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Cómo actualizamos el pipeline de GitHub Actions para probar el backend, iniciar la API local, compilar el frontend y comprobar que la portada responda correctamente?"
+
+**Uso:** Se utilizó ChatGPT para ampliar el workflow de integración continua: ejecuta las pruebas del backend, comprueba la disponibilidad de FastAPI, compila el frontend con la URL de la API local y verifica que la portada se sirva correctamente.
