@@ -84,13 +84,6 @@ npm ci
 npm run dev
 ```
 
-- Frontend: http://localhost:3000
-- API: http://localhost:8000
-- Salud de API: http://localhost:8000/
-- Búsqueda: http://localhost:8000/games/search?q=hades
-
-Por defecto el frontend usa `http://localhost:8000`. Para apuntar a otra API,
-define `NEXT_PUBLIC_DRIFT_API_URL` antes de ejecutar Next.js.
 
 ## Pruebas automatizadas
 
