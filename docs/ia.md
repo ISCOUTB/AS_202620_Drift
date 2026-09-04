@@ -110,3 +110,15 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 > "Ayúdame a entender cómo hacer el C4 de contenedores de nuestro repositorio DRIFT. Ya tenemos el C4 de contexto, ¿cómo se relaciona con el nivel 2 y qué debería tener en cuenta para hacerlo correctamente?"
 
 **Uso:** Se utilizó para aclarar dudas sobre el C4 de contenedores y su relación con el C4 de contexto.
+
+---
+
+### Registro 6 — Renovación del frontend e integración continua
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Ayúdame a renovar la portada de DRIFT, conectar la búsqueda del frontend con la API y verificar esa integración en el pipeline de GitHub Actions."
+
+**Uso:** Se utilizó ChatGPT para reorganizar el frontend en capas de dominio, aplicación, infraestructura e interfaz; renovar la portada de DRIFT y conectar la búsqueda de videojuegos con la API de FastAPI mediante un repositorio HTTP configurable. También se actualizó el pipeline de GitHub Actions para ejecutar las pruebas del backend, iniciar la API local, compilar el frontend y comprobar que la portada se sirva correctamente.
