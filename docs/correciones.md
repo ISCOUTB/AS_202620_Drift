@@ -323,19 +323,27 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 ---
 
-## 16. Evidenciar run de CI en verde
+### 16. Evidenciar run de CI en verde
 
-**Observación recibida:** Evidenciar run de CI en verde.
+**Observación recibida:**
 
-**Estado:** Pendiente de evidencia final.
+> Evidenciar run de CI en verde.
 
-**Verificación:**El repositorio contiene el workflow de integración continua y las pruebas automatizadas necesarias para su ejecución. Sin embargo, la existencia del workflow no constituye por sí misma evidencia de una ejecución exitosa.
+**Estado:** Corregido.
+
+**Verificación:**
+
+Se ejecutó el workflow de integración continua en GitHub Actions sobre el commit `d0db91e45d2ca17bac6e360aacd97d012ee02354`.
+
+La ejecución finalizó exitosamente. Las pruebas automatizadas del backend reportaron `2 passed`, el smoke test del frontend conectado a la API finalizó correctamente y el análisis de SonarCloud obtuvo `Quality Gate passed`.
 
 **Evidencia disponible:**
 
 - [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 - [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+- [Ejecución exitosa del backend en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561346006)
+- [Ejecución exitosa del frontend conectado a la API en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561376057)
 
-**Pendiente:**
+**Resultado:**
 
-- Registrar una ejecución exitosa del workflow de GitHub Actions y conservar su evidencia asociada al commit correspondiente al corte.
+La ejecución de CI quedó en verde, proporcionando evidencia verificable de la ejecución exitosa del pipeline.
