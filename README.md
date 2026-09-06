@@ -189,7 +189,7 @@ La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **a
 | **6. Vista de tiempo de ejecución**     | Escenarios de interacción entre bloques de construcción en runtime.    | [`arc42_6_vista_runtime.md`](docs/arc42/arc42_6_Vista_Ejecucion.md)                         |
 | **9. Decisiones de arquitectura**        | Índice de ADR y resumen de las decisiones más importantes.             | [`arc42_9_decisiones_arquitectura.md`](docs/arc42/arc42_9_Decisiones_Arquitectonicas.md)     |
 | **10. Requisitos de calidad**            | Árbol/tabla de calidad y escenarios de calidad detallados y medibles.   | [`arc42_10_requisitos_calidad.md`](docs/arc42/arc42_10_Requisitos_Calidad.md)             |
-| **12. Glosario**                         | Términos técnicos y de dominio usados en la documentación.            | [`arc42_12_glosario.md`](docs/arc42/arc42_12_glosario.md)                                 |
+| **12. Glosario**                         | Términos técnicos y de dominio usados en la documentación.            | [`arc42_12_glosario.md`](docs/arc42/arc42_12_Glosario.md)                                 |
 
 
 ---
