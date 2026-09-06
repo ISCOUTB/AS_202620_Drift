@@ -31,9 +31,9 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
-- [`docs/escenarios.md`](docs/escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/escenarios.md`](escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
 
 ---
 
@@ -49,10 +49,11 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 Se revisó la ficha del problema y se incorporaron las tensiones entre los objetivos de calidad relevantes para DRIFT, especialmente mantenibilidad, rendimiento, disponibilidad, usabilidad y compatibilidad.
 
+
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
-- [`docs/arc42/arc42_1_introduccion_objetivos.md`](docs/arc42/arc42_1_introduccion_objetivos.md)
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/arc42/arc42_1_introduccion_objetivos.md`](arc42/arc42_1_introduccion_objetivos.md)
 
 ---
 
@@ -66,7 +67,7 @@ Se revisó la ficha del problema y se incorporaron las tensiones entre los objet
 
 **Verificación:**
 
-El repositorio efectivamente presenta una distribución desigual de commits entre los integrantes durante el periodo indicado. Este hallazgo no corresponde a una ausencia documental o técnica que pueda considerarse corregida mediante un cambio en la arquitectura.
+El repositorio efectivamente presentaba una distribución desigual de commits entre los integrantes durante el periodo indicado. Este hallazgo no corresponde a una ausencia documental o técnica que pueda considerarse corregida mediante un cambio en la arquitectura.
 
 **Evidencia:**
 
@@ -75,7 +76,7 @@ El repositorio efectivamente presenta una distribución desigual de commits entr
 
 **Acción:**
 
-El equipo debe continuar equilibrando la participación y mantener evidencia de las contribuciones de todos los integrantes durante los siguientes periodos.
+El equipo equilibró la participación y mantener evidencia de las contribuciones de todos los integrantes durante los siguientes periodos.
 
 ---
 
@@ -97,3 +98,258 @@ El README fue actualizado para reflejar el stack tecnológico real del proyecto.
 cd backend
 python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
+```
+
+### 5. Sin pipeline / evidencia de CI en verde
+
+**Observación recibida:**
+
+> Sin pipeline: prueba existe sin evidencia de verde.
+
+**Estado:** Parcialmente corregido / pendiente de verificación final.
+
+**Verificación:**
+
+El repositorio contiene un workflow de CI en:
+
+```text
+.github/workflows/ci.yml
+```
+Además, existen pruebas automatizadas en `backend/tests/test_health.py`
+La prueba del recorrido vertical fue implementada utilizando un mock de la API de Steam para evitar depender de una conexión externa durante la ejecución de las pruebas.
+
+## 5. Sin pipeline / evidencia de CI en verde
+
+**Observación recibida:** Sin pipeline: prueba existe sin evidencia de verde.
+
+**Estado:** Parcialmente corregido / pendiente de verificación final.
+
+**Verificación:**El repositorio contiene un workflow de integración continua en `.github/workflows/ci.yml`.
+
+Además, existen pruebas automatizadas en `backend/tests/test_health.py`. La prueba del recorrido vertical utiliza un mock de la API de Steam para evitar depender de una conexión externa durante la ejecución.
+
+La existencia del workflow y de las pruebas demuestra que el proyecto cuenta con infraestructura para ejecutar verificaciones automatizadas, pero todavía es necesario conservar evidencia de una ejecución exitosa del workflow en GitHub Actions.
+
+**Evidencia:**
+
+- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+- [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+
+**Pendiente:**
+
+- Ejecutar/verificar el workflow en GitHub Actions y conservar evidencia de una ejecución exitosa asociada al commit correspondiente.
+
+---
+
+## 6. Matriz de estilos sin referencia a E1–E5
+
+**Observación recibida:** Matriz de estilos sin referencia a los escenarios E1–E5.
+
+**Estado:** Corregido.
+
+**Verificación:**Se actualizó la documentación arquitectónica para mantener trazabilidad entre los atributos y objetivos de calidad y los escenarios E1–E5 definidos para DRIFT.
+
+**Evidencia:**
+
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/escenarios.md`](escenarios.md)
+- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](arc42/arc42_10_requisitos_de_calidad.md)
+
+---
+
+## 7. Prueba automatizada del recorrido completo
+
+**Observación recibida:** Prueba automatizada del recorrido completo.
+
+**Estado:** Corregido.
+
+**Verificación:**Se implementó una prueba automatizada del recorrido vertical de búsqueda de videojuegos.
+
+El recorrido verificado es:
+
+```
+GET /games/search  
+        ↓  
+FastAPI  
+        ↓  
+SearchGames  
+        ↓  
+GameRepository  
+        ↓  
+SteamGameRepository  
+        ↓  
+Game  
+        ↓  
+Respuesta HTTP
+```
+
+La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y verificar el resultado sin depender de la disponibilidad de la API externa.
+
+**Evidencia:**
+
+- [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+- [`backend/app/main.py`](../backend/app/main.py)
+- [`backend/app/application/usecases/search_games.py`](../backend/app/application/usecases/search_games.py)
+- [`backend/app/infrastructure/external/steam/steam_game_repository.py`](../backend/app/infrastructure/external/steam/steam_game_repository.py)
+---
+
+## 8. Tabla de trazabilidad en docs/aspectos.md
+
+**Observación recibida:** Tabla de trazabilidad en `docs/aspectos.md`.
+
+**Estado:** Corregido.
+
+**Verificación:**La documentación fue actualizada para relacionar los atributos de calidad con los escenarios E1–E5 y la decisión arquitectónica correspondiente.
+
+**Evidencia:**
+
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/escenarios.md`](escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
+
+---
+
+## 9. ADR con trazabilidad y marcado de reemplazo
+
+**Observación recibida:** ADR con trazabilidad y marcado de reemplazo.
+
+**Estado:** Corregido.
+
+**Verificación:**Los ADR fueron actualizados para indicar su estado y la relación entre las decisiones arquitectónicas.
+
+- ADR-0001 conserva la decisión inicial de Arquitectura Hexagonal y registra que el stack tecnológico fue posteriormente actualizado.
+- ADR-0002 registra la actualización del stack a Next.js + FastAPI y mantiene la Arquitectura Hexagonal como decisión arquitectónica.
+- Ambos ADR incluyen una sección de trazabilidad.
+
+**Evidencia:**
+
+- [`docs/adr/0001-arquitectura-base.md`](adr/0001-arquitectura-base.md)
+- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
+
+---
+
+## 10. README con requisitos previos y comando de arranque
+
+**Observación recibida:** README con requisitos previos y comando de arranque.
+
+**Estado:** Corregido.
+
+**Verificación:**El README documenta los requisitos y comandos necesarios para instalar las dependencias y ejecutar el backend y frontend del proyecto.
+
+**Evidencia:**
+
+- [`README.md`](../README.md)
+- [`backend/requirements.txt`](../backend/requirements.txt)
+- [`frontend/package.json`](../frontend/package.json)
+
+---
+
+## 11. Verificar/crear etiqueta corte-1
+
+**Observación recibida:** Verificar/crear etiqueta `corte-1`.
+
+**Estado:** Pendiente.
+
+**Verificación:**La etiqueta `corte-1` debe apuntar al commit exacto que será presentado como entrega del primer corte.
+
+No se debe crear la etiqueta hasta finalizar las correcciones y verificaciones correspondientes al corte.
+
+**Acción pendiente:**
+
+Una vez finalizados los cambios:
+
+```bash
+git add .  
+git commit -m "Preparación entrega corte 1"  
+git tag corte-1  
+git push origin master  
+git push origin corte-1
+```
+
+La rama utilizada deberá corresponder a la rama principal actual del repositorio.
+
+**Evidencia pendiente:**
+
+- Hash del commit correspondiente al corte.
+- Etiqueta `corte-1` visible en GitHub.
+
+---
+
+## 12. Registrar ADR del reto con alternativas y decisión
+
+**Observación recibida:** Registrar ADR del reto con alternativas y decisión.
+
+**Estado:** Pendiente.
+
+**Verificación:**Esta observación corresponde al reto arquitectónico que será asignado para la evaluación.
+
+El ADR correspondiente deberá registrar el problema planteado por el reto, las alternativas consideradas, los criterios de decisión, la alternativa seleccionada, sus consecuencias y la trazabilidad correspondiente.
+
+**Acción pendiente:**Una vez definido el reto arquitectónico, crear el ADR correspondiente y asociarlo al commit donde se registre la decisión.
+
+---
+
+## 13. Medir línea base con procedimiento
+
+**Observación recibida:** Medir línea base con procedimiento.
+
+**Estado:** Parcialmente corregido.
+
+**Verificación:**Los escenarios de calidad ya contienen medidas verificables y se incorporó un método de verificación para cada escenario.
+
+Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para la búsqueda con hasta 50 usuarios concurrentes y define un procedimiento para realizar la prueba de carga y calcular el percentil 95.
+
+**Evidencia:**
+
+- [`docs/escenarios.md`](escenarios.md)
+
+**Pendiente:**
+
+- Ejecutar las mediciones reales y conservar evidencia de los resultados obtenidos, incluyendo el procedimiento utilizado y los valores registrados.
+
+---
+
+## 14. Completar aspectos.md con 8 columnas
+
+**Observación recibida:** Completar `aspectos.md` con 8 columnas.
+
+**Estado:** Corregido.
+
+**Verificación:**La estructura de `docs/aspectos.md` fue actualizada para incorporar la información requerida para los atributos de calidad y su trazabilidad con los escenarios correspondientes.
+
+**Evidencia:**
+
+- [`docs/aspectos.md`](aspectos.md)
+
+---
+
+## 15. Añadir rechazos con motivo en ia.md
+
+**Observación recibida:** Añadir rechazos con motivo en `ia.md`.
+
+**Estado:** Corregido.
+
+**Verificación:**La documentación de uso de IA registra los rechazos realizados por el equipo y el motivo correspondiente.
+
+**Evidencia:**
+
+- [`docs/ia.md`](ia.md)
+
+---
+
+## 16. Evidenciar run de CI en verde
+
+**Observación recibida:** Evidenciar run de CI en verde.
+
+**Estado:** Pendiente de evidencia final.
+
+**Verificación:**El repositorio contiene el workflow de integración continua y las pruebas automatizadas necesarias para su ejecución. Sin embargo, la existencia del workflow no constituye por sí misma evidencia de una ejecución exitosa.
+
+**Evidencia disponible:**
+
+- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+- [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+
+**Pendiente:**
+
+- Registrar una ejecución exitosa del workflow de GitHub Actions y conservar su evidencia asociada al commit correspondiente al corte.
