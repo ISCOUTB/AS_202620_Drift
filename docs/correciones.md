@@ -100,46 +100,32 @@ python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### 5. Sin pipeline / evidencia de CI en verde
+#### 5. Sin pipeline / evidencia de CI en verde
 
 **Observación recibida:**
 
 > Sin pipeline: prueba existe sin evidencia de verde.
 
-**Estado:** Parcialmente corregido / pendiente de verificación final.
+**Estado:** Corregido.
 
 **Verificación:**
 
-El repositorio contiene un workflow de CI en:
+El repositorio cuenta con un workflow de integración continua en `.github/workflows/ci.yml`.
 
-```text
-.github/workflows/ci.yml
-```
-Además, existen pruebas automatizadas en `backend/tests/test_health.py`
-La prueba del recorrido vertical fue implementada utilizando un mock de la API de Steam para evitar depender de una conexión externa durante la ejecución de las pruebas.
+El pipeline ejecuta las pruebas automatizadas del backend y, posteriormente, realiza un smoke test de integración entre el backend y el frontend. Durante la ejecución se inicia la API FastAPI, se verifica su disponibilidad, se instalan las dependencias del frontend, se compila la aplicación Next.js y se comprueba que la portada responda correctamente.
 
-## 5. Sin pipeline / evidencia de CI en verde
-
-**Observación recibida:** Sin pipeline: prueba existe sin evidencia de verde.
-
-**Estado:** Parcialmente corregido / pendiente de verificación final.
-
-**Verificación:**El repositorio contiene un workflow de integración continua en `.github/workflows/ci.yml`.
-
-Además, existen pruebas automatizadas en `backend/tests/test_health.py`. La prueba del recorrido vertical utiliza un mock de la API de Steam para evitar depender de una conexión externa durante la ejecución.
-
-La existencia del workflow y de las pruebas demuestra que el proyecto cuenta con infraestructura para ejecutar verificaciones automatizadas, pero todavía es necesario conservar evidencia de una ejecución exitosa del workflow en GitHub Actions.
+La ejecución analizada finalizó exitosamente. Las pruebas del backend reportaron `2 passed` y el job de frontend conectado a la API también finalizó correctamente.
 
 **Evidencia:**
 
 - [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 - [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+- [Ejecución exitosa del backend en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561346006)
+- [Ejecución exitosa del frontend conectado a la API en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561376057)
 
-**Pendiente:**
+**Resultado:**
 
-- Ejecutar/verificar el workflow en GitHub Actions y conservar evidencia de una ejecución exitosa asociada al commit correspondiente.
-
----
+El pipeline se ejecutó correctamente y los jobs definidos finalizaron en verde.
 
 ## 6. Matriz de estilos sin referencia a E1–E5
 
