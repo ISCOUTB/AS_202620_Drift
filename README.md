@@ -210,7 +210,7 @@ cd backend
 Instalar las dependencias necesarias:
 
 ```bash
-python -m pip install fastapi uvicorn httpx pytest
+python -m pip install -r requirements.txt
 ```
 
 Iniciar el servidor:
