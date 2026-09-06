@@ -148,3 +148,51 @@ DRIFT
 ```
 
 Esta estructura representa únicamente el esqueleto inicial del proyecto y no contiene lógica de negocio implementada.
+## Trazabilidad de la decisión
+
+La decisión de utilizar Arquitectura Hexagonal se relaciona directamente con los escenarios de calidad definidos para DRIFT y con la estructura implementada actualmente.
+
+| Elemento                | Relación con la decisión                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **E1 — Rendimiento**    | La separación entre caso de uso y adaptadores permite optimizar las integraciones externas sin modificar el dominio.                    |
+| **E2 — Mantenibilidad** | Es el escenario directamente relacionado con la decisión. Los adaptadores aíslan las fuentes externas del núcleo de la aplicación.      |
+| **E3 — Usabilidad**     | El frontend se mantiene separado del núcleo del backend, permitiendo evolucionar la interfaz sin modificar la lógica de dominio.        |
+| **E4 — Compatibilidad** | La lógica de compatibilidad puede implementarse como un caso de uso independiente utilizando los puertos definidos por la arquitectura. |
+| **E5 — Disponibilidad** | La separación mediante adaptadores permite manejar independientemente los errores de las fuentes externas.                              |
+
+### Relación con C4
+
+La decisión se representa en el C4 de contenedores mediante la separación entre:
+
+* Frontend Next.js.
+* API/backend FastAPI.
+* Casos de uso.
+* Dominio.
+* Adaptadores de fuentes externas.
+
+[C4 de contexto](../c4/contexto.md)
+
+[C4 de contenedores](../c4/contenedores.md)
+
+### Relación con el código
+
+La implementación actual refleja la decisión mediante:
+
+* `backend/app/domain/model/game.py`
+* `backend/app/domain/ports/game_repository.py`
+* `backend/app/application/usecases/search_games.py`
+* `backend/app/infrastructure/external/steam/steam_game_repository.py`
+* `backend/app/infrastructure/persistence/in_memory_game_repository.py`
+
+El puerto `GameRepository` define el contrato que utilizan las fuentes de datos, mientras que `SearchGames` depende de dicho contrato y no de una implementación concreta.
+
+### Relación con pruebas
+
+La decisión se valida parcialmente mediante la prueba `test_search_games_vertical_slice`, que comprueba el flujo desde el endpoint hasta el adaptador de Steam utilizando una respuesta externa simulada.
+
+La prueba específica de sustitución de un adaptador externo queda como trabajo pendiente para validar completamente el escenario E2.
+
+### Relación con CI
+
+El workflow `.github/workflows/ci.yml` ejecuta las pruebas del backend y realiza una comprobación de integración entre el backend y el frontend.
+
