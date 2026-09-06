@@ -8,8 +8,8 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 
 | ID | Decisión | Estado | Impacto principal |
 |---|---|---|---|
-| [ADR-0001](adr/0001-arquitectura-base.md) | Selección de Arquitectura Hexagonal (Ports and Adapters) como arquitectura base, sobre stack Java | Superada parcialmente por ADR-0002 (stack tecnológico) | Estructura completa del sistema (Sección 5); soporta mantenibilidad y testabilidad (Sección 1.2) |
-| [ADR-0002](adr/0002-arquitectura-base.md) | Cambio de stack tecnológico: Next.js (frontend) + FastAPI (backend), manteniendo Arquitectura Hexagonal | Aceptada | Reemplaza la tecnología concreta de implementación definida en ADR-0001, sin cambiar la decisión arquitectónica de fondo |
+| [ADR-0001](../adr/0001-arquitectura-base.md) | Selección de Arquitectura Hexagonal (Ports and Adapters) como arquitectura base, sobre stack Java | Superada por ADR-0002 en cuanto al stack; se mantiene la decisión de Arquitectura Hexagonal | Estructura completa del sistema (Sección 5); soporta principalmente la mantenibilidad |
+| [ADR-0002](../adr/0002-arquitectura-base.md) | Cambio de stack tecnológico: Next.js (frontend) + FastAPI (backend), manteniendo Arquitectura Hexagonal | Aceptada | Reemplaza la tecnología concreta de implementación definida en ADR-0001, sin cambiar la decisión arquitectónica de fondo |
 
 ## 9.2 Resumen
 
