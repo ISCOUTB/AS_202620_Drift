@@ -65,6 +65,7 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 **Uso:** Se utilizó ChatGPT para comparar alternativas tecnológicas para el frontend de DRIFT y apoyar la selección de Next.js como framework para la interfaz web.
 
 **Descartado:** Se descartó la alternativa de utilizar React con Vite, debido a que el equipo consideró que Next.js se ajustaba mejor a las necesidades y estructura planteadas para el proyecto.
+
 ---
 
 ### Registro 2 — Actualización del README
@@ -115,7 +116,9 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 > "Ayúdame a entender cómo hacer el C4 de contenedores de nuestro repositorio DRIFT. Ya tenemos el C4 de contexto, ¿cómo se relaciona con el nivel 2 y qué debería tener en cuenta para hacerlo correctamente?"
 
 **Uso:** Se utilizó para aclarar dudas sobre el C4 de contenedores y su relación con el C4 de contexto.
+
 **Descartado:** Se descartaron elementos y detalles que pertenecían a otros niveles del modelo C4
+
 ---
 
 ### Registro 6 — Renovación visual de la portada
