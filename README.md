@@ -144,6 +144,7 @@ DRIFT/
 │   ├── ia.md
 │   ├── interesados.md
 │   └── matriz.md
+│   └── correciones.md
 │
 ├── scripts/
 │   └── start.py
