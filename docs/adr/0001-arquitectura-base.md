@@ -137,3 +137,11 @@ src/main/java/com/drift
 ```
 
 Esta estructura representa únicamente el esqueleto inicial del proyecto y no contiene lógica de negocio implementada.
+
+
+---
+
+## Trazabilidad
+
+- **Commit de la decisión:** pendiente de asociar al commit correspondiente antes de `corte-1`.
+- **ADR posterior:** [ADR-0002](0002-arquitectura-base.md), que actualiza el stack tecnológico manteniendo la Arquitectura Hexagonal.
