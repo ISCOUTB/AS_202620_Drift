@@ -168,3 +168,20 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 > "¿Cómo actualizamos el pipeline de GitHub Actions para probar el backend, iniciar la API local, compilar el frontend y comprobar que la portada responda correctamente?"
 
 **Uso:** Se utilizó ChatGPT para ampliar el workflow de integración continua: ejecuta las pruebas del backend, comprueba la disponibilidad de FastAPI, compila el frontend con la URL de la API local y verifica que la portada se sirva correctamente.
+
+---
+
+### Registro 10 — Comando único de ejecución
+
+**Fecha:** 06/09/2026
+**Herramienta:** ChatGPT
+**Prompt utilizado:**
+
+> "Quiero que el proyecto pueda iniciar frontend y backend con un solo comando desde la raíz."
+
+**Uso:** Se utilizó ChatGPT como apoyo para definir y documentar un comando único de ejecución para DRIFT. Se organizó el script `start.py` dentro de `scripts/` y se actualizó el `README.md` para utilizar:
+
+```bash
+python scripts/start.py
+```
+
