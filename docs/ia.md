@@ -181,7 +181,3 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 
 **Uso:** Se utilizó ChatGPT como apoyo para definir y documentar un comando único de ejecución para DRIFT. Se organizó el script `start.py` dentro de `scripts/` y se actualizó el `README.md` para utilizar:
 
-```bash
-python scripts/start.py
-```
-
