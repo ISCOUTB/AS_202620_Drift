@@ -1,43 +1,163 @@
-# Uso de Inteligencia Artificial - DRIFT
+# Uso de Inteligencia Artificial — DRIFT
+
+
+## 1. Propósito
 
 En esta etapa inicial del proyecto se utilizó *ChatGPT* como herramienta de apoyo para el planteamiento y definición de *DRIFT*. Su uso permitió organizar ideas, explorar posibles funcionalidades y definir qué características podría incorporar la plataforma web.
 
-## Evidencia S1 
+## 2. Uso inicial
 
-| Fecha    | Herramienta | Utilidad                                                                               | Verificación                                                                          | Resultados descartados                                                                               |
-| -------- | ----------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| 09/08/2026 | ChatGPT     | Generación de ideas sobre funcionalidades para la página web de comparación de videojuegos. | Se revisaron las propuestas teniendo en cuenta el problema identificado y el alcance definido por el equipo.        | Se descartaron funcionalidades que excedían el alcance inicial del proyecto.                            |
-| 09/08/2026 | ChatGPT     | Apoyo para organizar y definir la propuesta inicial de DRIFT.                               | Se revisó que la propuesta respondiera al problema identificado y fuera viable para el proyecto. | Se descartaron ideas que no aportaban directamente al objetivo principal de DRIFT.                      |
-| 09/08/2026 | ChatGPT     | Apoyo para elaborar la ficha del problema.                                                  | El equipo revisó y ajustó la información de acuerdo con el problema identificado.                | Se descartaron formulaciones que no representaban correctamente el problema que DRIFT busca solucionar. |
-| 09/08/2026 | ChatGPT     | Exploración de posibles características para futuras etapas.                                | Se analizaron las propuestas teniendo en cuenta el alcance y evolución esperada del proyecto.    | Se descartaron funcionalidades que aumentaban innecesariamente la complejidad del proyecto inicial.     |
+ChatGPT fue utilizado principalmente para:
 
-## Evidencia S2
+* Generar ideas sobre funcionalidades para la página web.
+* Organizar y definir la propuesta inicial de DRIFT.
+* Apoyar la elaboración de la ficha del problema.
+* Explorar posibles características que podrían incorporarse en futuras etapas.
 
-| Fecha    | Herramienta | Utilidad                                                                                                                                                                                                                                      | Verificación                                                                                                           | Resultados descartados                                                                                                         |
-| -------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 15/08/2026 | ChatGPT     | Apoyo para formular y revisar escenarios de calidad medibles.                                                                                                                                                                                      | Se verificó que los escenarios mantuvieran coherencia con los atributos de calidad definidos y contaran con medidas verificables. | Se descartaron medidas subjetivas o que no podían ser comprobadas mediante una medición concreta.                                |
-| 16/08/2026 | ChatGPT     | Apoyo para revisar y organizar la documentación de arc42, incluyendo introducción, restricciones, contexto, estrategia de solución, vista de bloques, vista de tiempos de ejecución, decisiones arquitectónicas, requisitos de calidad y glosario. | El equipo contrastó las propuestas con la arquitectura y documentación desarrollada para DRIFT.                                   | Se descartaron contenidos que no correspondían con la arquitectura o que no eran necesarios para la documentación del proyecto.  |
-| 16/08/2026 | ChatGPT     | Revisión conceptual de las restricciones arquitectónicas.                                                                                                                                                                                          | Se revisó la diferencia entre restricciones externas, requisitos funcionales y atributos de calidad.                              | Se rechazaron como restricciones aquellos elementos que realmente correspondían a requisitos funcionales u objetivos de calidad. |
-| 16/08/2026 | ChatGPT     | Apoyo para organizar los documentos mediante enlaces desde el `README.md`.                                                                                                                                                                         | Se comprobó que los enlaces permitieran navegar correctamente hacia la documentación correspondiente.                             | Se descartaron enlaces o referencias que no correspondían con la estructura actual del repositorio.                              |
-| 16/08/2026 | ChatGPT     | Aclaración de conceptos relacionados con estilos arquitectónicos, tácticas y patrones de diseño.                                                                                                                                                   | El equipo contrastó las explicaciones con las alternativas consideradas para DRIFT y con las decisiones arquitectónicas tomadas.  | Se descartaron alternativas que no se ajustaban al alcance o necesidades del proyecto.                                           |
+## 3. Apoyo en la documentación arquitectónica
 
-## Evidencia S3
+Durante el desarrollo del proyecto se utilizó ChatGPT como apoyo para revisar y organizar la documentación relacionada con arc42, los escenarios de calidad y las restricciones arquitectónicas.
 
-| Fecha      | Herramienta | Utilidad                                                                                          | Verificación                                                                                                                                                                                   | Resultados descartados                                                                                                      |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 24/08/2026 | ChatGPT     | Comparación entre Next.js y React con Vite para seleccionar la tecnología del frontend de DRIFT.       | Se compararon las características de ambas alternativas con las necesidades del proyecto y se seleccionó Next.js.                                                                                         | Se descartó React con Vite como alternativa para el frontend del proyecto.                                                    |
-| 24/08/2026 | ChatGPT     | Apoyo para actualizar el README después de incorporar frontend y backend.                              | Se revisó que la estructura y las instrucciones de ejecución correspondieran con el estado actual del repositorio.                                                                                        | Se descartó mantener información desactualizada sobre la estructura y ejecución del proyecto.                                 |
-| 24/08/2026 | ChatGPT     | Análisis de la relación entre el árbol de utilidad, los escenarios de calidad y la matriz comparativa. | Se revisaron las relaciones entre los escenarios E1-E5 y los documentos relacionados. Se modificó E2 para representar una situación de mantenibilidad y se actualizaron las referencias correspondientes. | Se descartaron relaciones entre escenarios y atributos de calidad que no fueran coherentes con el objetivo de cada escenario. |
-| 24/08/2026 | ChatGPT     | Apoyo para configurar un pipeline de pruebas mediante GitHub Actions.                                  | Se configuró un workflow que ejecuta automáticamente las pruebas del backend utilizando `pytest` y se verificó su ejecución correcta mediante el resultado verde de GitHub Actions.                       | Se descartaron configuraciones que no ejecutaran las pruebas automáticamente o no permitieran evidenciar su resultado.        |
-| 27/08/2026 | ChatGPT     | Apoyo para comprender y elaborar el C4 de contenedores de DRIFT y su relación con el C4 de contexto.   | Se revisó que los elementos del C4 de contenedores correspondieran con los componentes y responsabilidades reales del sistema.                                                                            | Se descartaron elementos que pertenecían a un nivel de detalle superior al C4 de contenedores.                                |
+Se trabajó en:
 
-## Evidencia S4
+* *Sección 1:* Introducción y objetivos.
+* *Sección 2:* Restricciones.
+* *Sección 3:* Contexto y alcance.
+* *Sección 4:* Estrategia de solución.
+* *Sección 5:* Vista de Bloques.
+* *Sección 6:* Vista de Tiempos de Ejecucion.
+* *Sección 9:* Decisiones Arquitectonicas.
+* *Sección 10:* Requisitos de Calidad.
+* *Sección 12:* Glosario.
+* Escenarios de calidad medibles.
+* Revisión conceptual de las restricciones arquitectónicas.
+* Organización de los documentos mediante enlaces desde el `README.md`.
 
-| Fecha      | Herramienta | Uso realizado                                                                                            | Verificación del equipo                                                                                                                                                                | Resultados descartados                                                                                                           |
-| ---------- | ----------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 03/09/2026 | ChatGPT     | Apoyo para renovar la portada de DRIFT con buscador, categorías, sugerencias y tarjetas de videojuegos.  | Se revisó que la nueva interfaz correspondiera con las funcionalidades definidas para la aplicación y con el alcance del proyecto.                                                     | Se descartaron elementos visuales o funcionalidades que no aportaban a la exploración y búsqueda de videojuegos.                   |
-| 03/09/2026 | ChatGPT     | Apoyo para separar la lógica del frontend en dominio, aplicación, infraestructura e interfaz.            | Se verificó que cada responsabilidad estuviera ubicada en la capa correspondiente y que la interfaz no dependiera directamente de HTTP.                                                | Se rechazó una estructura donde los componentes de la interfaz manejaran directamente la comunicación con la API.                  |
-| 03/09/2026 | ChatGPT     | Apoyo para conectar el buscador del frontend con el endpoint de FastAPI.                                 | Se implementó un repositorio HTTP para consultar el endpoint de búsqueda y obtener la URL desde `NEXT_PUBLIC_DRIFT_API_URL`, utilizando una dirección local como valor predeterminado. | Se descartó escribir directamente la URL de la API dentro de los componentes de la interfaz.                                       |
-| 03/09/2026 | ChatGPT     | Apoyo para actualizar el workflow de GitHub Actions y verificar la integración entre backend y frontend. | Se verificó la ejecución de las pruebas del backend, la disponibilidad de FastAPI, la compilación del frontend y la respuesta correcta de la portada.                                  | Se descartaron configuraciones que solamente verificaran una parte del sistema y no permitieran comprobar la integración completa. |
+### 3.1 Revisión de restricciones y escenarios
 
+Durante la revisión se identificó que algunos elementos inicialmente incluidos en la sección de restricciones de arc42 correspondían realmente a requisitos funcionales o atributos de calidad. Por esta razón, se realizó una revisión conceptual para diferenciar las restricciones externas de los objetivos y requisitos del sistema.
 
+También se revisaron las medidas de los escenarios de calidad para mantener coherencia entre los diferentes documentos del proyecto.
+
+## 4. Revisión de conocimientos
+
+Se utilizó ChatGPT para **aclarar conceptos relacionados con estilos arquitectónicos, tácticas y patrones de diseño**, así como para revisar las alternativas consideradas para DRIFT.
+
+Esto permitió reforzar los conocimientos del equipo y apoyar la documentación de las decisiones tomadas durante esta etapa.
+
+## Herramientas de IA que se implementarán
+
+* Claude (Anthropic)
+* ChatGPT (OpenAI)
+* Gemini (Google)
+
+---
+# Log
+
+### Registro 1 — Selección de tecnología para el frontend
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Qué sería mejor para el frontend de DRIFT, Next.js o React con Vite? Explícame cuál conviene más para nuestro proyecto y por qué."
+
+**Uso:** Se utilizó ChatGPT para comparar alternativas tecnológicas para el frontend de DRIFT y apoyar la selección de Next.js como framework para la interfaz web.
+
+**Descartado:** Se descartó la alternativa de utilizar React con Vite, debido a que el equipo consideró que Next.js se ajustaba mejor a las necesidades y estructura planteadas para el proyecto.
+---
+
+### Registro 2 — Actualización del README
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Mira, el README está así. Tenemos que actualizarlo porque ahora el proyecto tiene frontend y backend, pero quiero mantener más o menos la estructura que ya tiene. ¿Qué deberíamos cambiar?"
+
+**Uso:** Se utilizó ChatGPT para revisar el README, identificar información desactualizada y actualizar las instrucciones de ejecución y la estructura del proyecto de acuerdo con los cambios realizados.
+
+---
+
+### Registro 3 — Relación entre escenarios, árbol de utilidad y matriz
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Te paso el contenido de la matriz y del árbol de utilidad para resolver la observación 4. ¿Cómo podemos hacer que los escenarios E1-E5 queden relacionados correctamente?"
+
+**Uso:** Se utilizó ChatGPT para analizar la relación entre el árbol de utilidad, los escenarios de calidad y la matriz comparativa. Como resultado, se modificó el escenario E2 para representar una situación de mantenibilidad y se actualizaron las referencias E1-E5 en los documentos relacionados.
+
+**Descartado:** Se descartaron las relaciones entre escenarios y atributos de calidad que no correspondían directamente con el objetivo de cada escenario. El equipo revisó las propuestas y mantuvo únicamente las relaciones que consideró coherentes con la documentación.
+
+---
+
+### Registro 4 — Configuración del pipeline de pruebas
+
+**Fecha:** 24/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "La observación dice que no tenemos pipeline y que la prueba existe pero no está evidenciado el verde. ¿Cómo podemos solucionarlo en GitHub?"
+
+**Uso:** Se utilizó ChatGPT para identificar una solución mediante GitHub Actions y configurar un workflow que ejecuta automáticamente las pruebas del backend utilizando `pytest`. La ejecución del pipeline finalizó correctamente y fue evidenciada mediante el resultado verde de GitHub Actions.
+**Descartado:** Se descartaron alternativas de configuración que únicamente ejecutaban las pruebas de manera local o que no generaban una evidencia automática de su ejecución en GitHub. Se optó por GitHub Actions como solución para automatizar y evidenciar el proceso.
+---
+
+### Registro 5 — C4 de contenedores
+**Fecha:** 27/08/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Ayúdame a entender cómo hacer el C4 de contenedores de nuestro repositorio DRIFT. Ya tenemos el C4 de contexto, ¿cómo se relaciona con el nivel 2 y qué debería tener en cuenta para hacerlo correctamente?"
+
+**Uso:** Se utilizó para aclarar dudas sobre el C4 de contenedores y su relación con el C4 de contexto.
+**Descartado:** Se descartaron elementos y detalles que pertenecían a otros niveles del modelo C4
+---
+
+### Registro 6 — Renovación visual de la portada
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "Ayúdame a renovar la portada de DRIFT para que tenga una interfaz más atractiva para explorar videojuegos, con buscador, categorías, sugerencias y tarjetas de juegos."
+
+**Uso:** Se utilizó ChatGPT como apoyo para estructurar la nueva portada de DRIFT en un componente de interfaz, incluyendo el buscador, filtros por categoría, sugerencias y tarjetas para mostrar videojuegos.
+
+---
+
+### Registro 7 — Separación del frontend por capas
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Cómo podemos separar la lógica del frontend de DRIFT en capas de dominio, aplicación, infraestructura e interfaz para que la página no dependa directamente de HTTP?"
+
+**Uso:** Se utilizó ChatGPT para organizar el frontend con un modelo de juego en el dominio, un caso de uso para la búsqueda, un puerto de salida y un adaptador HTTP. Esta estructura permitió mantener la interfaz separada de la comunicación con la API.
+**Descartado:** Se descartó una implementación en la que los componentes de la interfaz realizaran directamente las solicitudes HTTP a la API. El equipo decidió mantener la separación por capas para reducir el acoplamiento entre la interfaz y la infraestructura.
+---
+
+### Registro 8 — Conexión del buscador con FastAPI
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Cómo conectamos el buscador de videojuegos del frontend con el endpoint de FastAPI y configuramos la URL de la API para distintos entornos?"
+
+**Uso:** Se utilizó ChatGPT para implementar un repositorio HTTP que consulta el endpoint de búsqueda de videojuegos y obtiene su URL desde la variable de entorno `NEXT_PUBLIC_DRIFT_API_URL`, con una dirección local como valor predeterminado.
+
+---
+
+### Registro 9 — Verificación de integración en GitHub Actions
+
+**Fecha:** 03/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Cómo actualizamos el pipeline de GitHub Actions para probar el backend, iniciar la API local, compilar el frontend y comprobar que la portada responda correctamente?"
+
+**Uso:** Se utilizó ChatGPT para ampliar el workflow de integración continua: ejecuta las pruebas del backend, comprueba la disponibilidad de FastAPI, compila el frontend con la URL de la API local y verifica que la portada se sirva correctamente.
