@@ -9,6 +9,7 @@
 - **Entorno:** Sistema funcionando normalmente con hasta 50 usuarios concurrentes.
 - **Respuesta:** DRIFT consulta y muestra los precios disponibles del videojuego en las diferentes tiendas digitales.
 - **Medida verificable:** El resultado de la búsqueda deberá mostrarse en **≤ 3 segundos en el p95**.
+- **Método de verificación:** Se realizará una prueba de carga sobre el endpoint de búsqueda, simulando hasta 50 usuarios concurrentes. Se registrará el tiempo de respuesta de cada solicitud y se calculará el percentil 95 (p95). El escenario se considera cumplido si el p95 es ≤ 3 segundos.
 
 **Escenario completo:**
 
@@ -28,6 +29,7 @@
 * **Entorno:** Sistema funcionando normalmente y utilizando la fuente externa modificada.
 * **Respuesta:** DRIFT deberá permitir modificar el adaptador correspondiente sin realizar cambios significativos en el núcleo de la aplicación ni en las integraciones con las demás fuentes.
 * **Medida verificable:** El cambio deberá limitarse al adaptador de la fuente afectada, sin modificar el dominio ni los adaptadores de las demás fuentes.
+* - **Método de verificación:** Se realizará un cambio controlado en el adaptador de una fuente externa y se verificará mediante control de versiones que el cambio se encuentre limitado al adaptador afectado. Se ejecutarán las pruebas existentes para comprobar que el dominio y los demás componentes continúan funcionando sin modificaciones.
 
 **Escenario completo:**
 
@@ -45,6 +47,7 @@
 - **Entorno:** Usuario con acceso a los resultados de las diferentes tiendas digitales.
 - **Respuesta:** DRIFT presenta las opciones ordenadas o diferenciadas según precio, disponibilidad de plataforma y demás criterios considerados por el sistema.
 - **Medida verificable:** El usuario deberá poder identificar la opción recomendada en **máximo 3 interacciones** después de realizar la búsqueda.
+- **Método de verificación:** Se realizará una prueba de uso en la interfaz, contando las interacciones necesarias desde que se muestran los resultados de búsqueda hasta que el usuario identifica la opción recomendada. El escenario se considera cumplido si la recomendación puede identificarse en un máximo de 3 interacciones.
 
 **Escenario completo:**
 
@@ -63,6 +66,7 @@
 - **Entorno:** El usuario tiene previamente registrado su dispositivo y sus especificaciones.
 - **Respuesta:** DRIFT compara las especificaciones del dispositivo con los requisitos del videojuego e informa el nivel de compatibilidad o rendimiento estimado.
 - **Medida verificable:** El resultado deberá mostrarse en **≤ 5 segundos en el p95** después de realizar la consulta.
+-  **Método de verificación:** Se realizarán múltiples consultas de compatibilidad utilizando especificaciones de PC y requisitos de videojuegos previamente definidos. Se registrará el tiempo de respuesta de cada consulta y se calculará el p95. El escenario se considera cumplido si el p95 es ≤ 5 segundos.
 
 **Escenario completo:**
 
@@ -81,6 +85,7 @@
 - **Entorno:** DRIFT se encuentra funcionando normalmente y el usuario está realizando una comparación de precios.
 - **Respuesta:** DRIFT deberá continuar mostrando la información obtenida de las demás fuentes disponibles e indicar que una fuente no pudo ser consultada.
 - **Medida verificable:** La consulta deberá continuar disponible para el usuario y mostrar las demás fuentes en **≤ 5 segundos**, sin que el fallo de una fuente provoque la interrupción completa del servicio.
+- **Método de verificación:** Se simulará la indisponibilidad o timeout de una fuente externa durante una consulta. Se verificará que las demás fuentes continúen siendo mostradas, que el usuario reciba un aviso sobre la fuente afectada y que la respuesta se complete en ≤ 5 segundos.
 
 **Escenario completo:**
 
