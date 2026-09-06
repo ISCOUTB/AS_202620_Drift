@@ -1,5 +1,7 @@
 # ADR-0001: Selección de Arquitectura Base
 
+**Estado:** Superada parcialmente por ADR-0002 en cuanto al stack tecnológico. La decisión de Arquitectura Hexagonal se mantiene vigente.
+
 ## Contexto
 
 DRIFT es una plataforma orientada a la comparación de precios de videojuegos, integrando información proveniente de múltiples fuentes externas. El sistema deberá evolucionar para incorporar nuevas plataformas, servicios de análisis, motores de recomendación y posibles fuentes de datos adicionales.
