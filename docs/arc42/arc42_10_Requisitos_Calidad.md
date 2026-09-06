@@ -13,16 +13,16 @@ Esta sección amplía los objetivos de calidad ya introducidos en la Sección 1.
 | **Compatibilidad** | `#compatible` | Estimar si un videojuego puede ejecutarse adecuadamente en el dispositivo del usuario (Sección 1.2, prioridad 5). |
 
 
-Estas cinco categorías cubren la totalidad de los objetivos de calidad declarados en la Sección 1.2, más la testabilidad como consecuencia directa de la decisión de arquitectura documentada en la Sección 9.
+Estas cinco categorías cubren la totalidad de los objetivos de calidad declarados en la Sección 1.2 y mantienen trazabilidad con los escenarios de calidad definidos para DRIFT.
 
 ## 10.2 Escenarios de calidad
 
-Los siguientes escenarios detallan, en formato fuente–estímulo–artefacto–entorno–respuesta–medida, los objetivos de calidad de la tabla anterior. Los cinco primeros corresponden a los definidos en `docs/Escenarios.md`; se añade su trazabilidad hacia la categoría de calidad correspondiente.
+Los siguientes escenarios detallan, en formato fuente–estímulo–artefacto–entorno–respuesta–medida, los objetivos de calidad de la tabla anterior. Los escenarios mantienen trazabilidad con los definidos en `docs/escenarios.md`.
 
 | ID | Categoría | Fuente del estímulo | Estímulo | Artefacto | Entorno | Respuesta | Medida de respuesta |
 |---|---|---|---|---|---|---|---|
-| QS-01 | Rendimiento | Jugador | Realiza una búsqueda y comparación de precios de un videojuego | Servicio de Búsqueda y Comparación (Sección 5.2.1) | Operación normal, todas las fuentes externas disponibles | El sistema consulta las tiendas digitales y devuelve la comparación | ≤ 3 s en el percentil 95 |
-| QS-02 | Rendimiento | Jugador | Consulta la información de un videojuego específico | Núcleo de dominio / Adaptador de Proveedor de Información | Operación normal | El sistema devuelve la información del videojuego | ≤ 2 s en el percentil 95 |
-| QS-03 | Compatibilidad | Jugador | Solicita estimar la compatibilidad/rendimiento de un videojuego en su PC | Servicio de Estimación de Compatibilidad (Sección 5.2.1) | Operación normal, specs del dispositivo ya registradas | El sistema compara especificaciones vs. requisitos y devuelve una estimación | ≤ 5 s en el percentil 95 |
-| QS-04 | Disponibilidad | Fuente externa de precios (tienda digital) | Deja de responder o responde con error/timeout | Adaptador de Tiendas Digitales / sub-adaptador afectado (Sección 5.2.2) | Una fuente externa falla, las demás operan con normalidad | El sistema continúa mostrando la información de las fuentes disponibles e informa que la fuente afectada no está disponible | Respuesta completa (parcial + aviso) en ≤ 5 s |
-| QS-05 | Usabilidad | Jugador | Busca identificar la opción de compra más conveniente entre varias | Adaptador Web/API + Servicio de Recomendación | Operación normal, resultados de comparación ya disponibles | El sistema resalta o recomienda explícitamente la mejor opción | Identificable en un número reducido de interacciones *(pendiente de definir el número exacto en `docs/Escenarios.md`)* |
+| E1 | Rendimiento | Jugador | Realiza una búsqueda de un videojuego | Servicio de Búsqueda y Comparación | Hasta 50 usuarios concurrentes, operación normal | El sistema procesa la búsqueda y devuelve los resultados | ≤ 3 s en el percentil 95 |
+| E2 | Mantenibilidad | Equipo de desarrollo | Una API externa de precios cambia su contrato | Adaptador de la fuente externa | Durante una modificación de una integración externa | Se modifica el adaptador correspondiente sin alterar el núcleo de dominio ni otros adaptadores | El cambio queda aislado en el adaptador afectado |
+| E3 | Usabilidad | Jugador | Busca identificar la opción de compra más conveniente | Interfaz Web + Servicio de Recomendación | Operación normal | El sistema presenta claramente la opción recomendada | La opción recomendada debe ser identificable en un máximo de 3 interacciones |
+| E4 | Compatibilidad | Jugador | Consulta si un videojuego puede ejecutarse en su PC | Servicio de Estimación de Compatibilidad | Especificaciones del dispositivo disponibles | El sistema compara las especificaciones del usuario con los requisitos del videojuego y devuelve una estimación | ≤ 5 s en el percentil 95 |
+| E5 | Disponibilidad | Fuente externa de precios | Una fuente externa deja de responder o presenta un error | Adaptador de Tiendas Digitales | Una fuente falla mientras las demás continúan disponibles | El sistema continúa mostrando las fuentes disponibles e informa la indisponibilidad de la fuente afectada | Respuesta parcial con aviso en ≤ 5 s |
