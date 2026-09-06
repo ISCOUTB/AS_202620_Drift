@@ -179,7 +179,7 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 
 > "Quiero que el proyecto pueda iniciar frontend y backend con un solo comando desde la raíz."
 
-**Uso:** Se utilizó ChatGPT como apoyo para definir y documentar un comando único de ejecución para DRIFT. Se organizó el script `start.py` dentro de `scripts/` y se actualizó el `README.md` para utilizar:
+**Uso:** Se utilizó ChatGPT como apoyo para definir y documentar un comando único de ejecución para DRIFT. Se creo el script `start.py` y se actualizó el `README.md`.
 
 ---
 
