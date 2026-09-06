@@ -173,11 +173,26 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 
 ### Registro 10 — Comando único de ejecución
 
-**Fecha:** 06/09/2026
-**Herramienta:** ChatGPT
+**Fecha:** 06/09/2026  
+**Herramienta:** ChatGPT  
 **Prompt utilizado:**
 
 > "Quiero que el proyecto pueda iniciar frontend y backend con un solo comando desde la raíz."
 
 **Uso:** Se utilizó ChatGPT como apoyo para definir y documentar un comando único de ejecución para DRIFT. Se organizó el script `start.py` dentro de `scripts/` y se actualizó el `README.md` para utilizar:
+
+---
+
+### Registro 11 — Organización de scripts
+
+**Fecha:** 06/09/2026  
+**Herramienta:** ChatGPT  
+**Prompt utilizado:**
+
+> "¿Dónde debería colocar el start.py para que la estructura del repositorio quede más organizada?"
+
+**Uso:** Se consultó cómo organizar el script de ejecución dentro de la estructura del proyecto. Se decidió crear la carpeta `scripts/` y mover allí `start.py`.
+
+**Descartado:** Se descartó mantener `start.py` directamente en la raíz del repositorio, buscando separar los scripts de los archivos principales del proyecto.
+
 
