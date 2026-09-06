@@ -34,61 +34,56 @@ El backend está desarrollado con **FastAPI** y sigue los principios de la **Arq
 El frontend está desarrollado con **Next.js** y consume los servicios expuestos por el backend mediante una API REST.
 
 ```text
-DRIFT/  
-├── .github/  
-│   └── workflows/  
-│       └── ci.yml  
-│  
-├── backend/  
-│   ├── app/  
-│   │   ├── domain/  
-│   │   │   ├── model/  
-│   │   │   │   └── game.py  
-│   │   │   └── ports/  
-│   │   │       └── game_repository.py  
-│   │   │  
-│   │   ├── application/  
-│   │   │   └── usecases/  
-│   │   │       └── search_games.py  
-│   │   │  
-│   │   ├── infrastructure/  
-│   │   │   ├── external/  
-│   │   │   │   └── steam/  
-│   │   │   │       └── steam_game_repository.py  
-│   │   │   └── persistence/  
-│   │   │       └── in_memory_game_repository.py  
-│   │   │  
-│   │   └── main.py  
-│   │  
-│   └── tests/  
-│       └── test_health.py  
-│  
-├── frontend/  
-│   ├── app/  
-│   │   ├── layout.js  
-│   │   └── page.js  
-│   ├── components/  
-│   ├── repositories/  
-│   ├── services/  
-│   ├── public/  
-│   ├── next.config.js  
-│   ├── package.json  
-│   └── package-lock.json  
-│  
-├── docs/  
-│   ├── adr/  
-│   ├── arc42/  
-│   ├── c4/  
-│   ├── arbol_utilidad.md  
-│   ├── aspectos.md  
-│   ├── escenarios.md  
-│   ├── ficha_problema.md  
-│   ├── ia.md  
-│   ├── interesados.md  
-│   └── matriz.md  
-│  
-├── .gitignore  
-└── README.md
+DRIFT/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── backend/
+│   ├── app/
+│   │   ├── domain/
+│   │   │   ├── model/
+│   │   │   │   └── game.py
+│   │   │   └── ports/
+│   │   │       └── game_repository.py
+│   │   ├── application/
+│   │   │   └── usecases/
+│   │   │       └── search_games.py
+│   │   ├── infrastructure/
+│   │   │   ├── external/
+│   │   │   │   └── steam/
+│   │   │   │       └── steam_game_repository.py
+│   │   │   └── persistence/
+│   │   │       └── in_memory_game_repository.py
+│   │   └── main.py
+│   ├── tests/
+│   │   └── test_health.py
+│   └── requirements.txt
+├── frontend/
+│   ├── app/
+│   │   ├── layout.js
+│   │   └── page.js
+│   ├── domain/
+│   │   └── model/
+│   │       └── Game.js
+│   ├── application/
+│   │   ├── ports/
+│   │   │   └── GameSearchPort.js
+│   │   └── usecases/
+│   │       └── searchGames.js
+│   ├── infrastructure/
+│   │   └── http/
+│   │       └── FastApiGameRepository.js
+│   ├── ui/
+│   │   └── components/
+│   │       ├── DriftHome.js
+│   │       └── DriftHome.module.css
+│   ├── next.config.js
+│   ├── package.json
+│   └── package-lock.json
+├── docs/
+├── .gitignore
+├── README.md
+└── package-lock.json
 ```
 
 ---
