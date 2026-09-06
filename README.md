@@ -197,72 +197,80 @@ La decisión arquitectónica se encuentra documentada en:
 
 # Ejecución
 
-Para ejecutar DRIFT localmente se deben levantar el backend y el frontend por separado.
+DRIFT dispone de un **comando único de ejecución local** que permite iniciar el backend y el frontend desde la raíz del repositorio.
 
-## Backend
+## Requisitos previos
 
-Desde una terminal:
+Antes de ejecutar el proyecto se debe contar con:
 
-```bash
-cd backend
-```
+* Python instalado.
+* Node.js y npm instalados.
+* Las dependencias del backend instaladas.
+* Las dependencias del frontend instaladas.
 
-Instalar las dependencias necesarias:
+### Instalar dependencias del backend
 
-```bash
-python -m pip install -r requirements.txt
-```
-
-Iniciar el servidor:
+Desde la raíz del proyecto:
 
 ```bash
-uvicorn app.main:app --reload
+python -m pip install -r backend/requirements.txt
 ```
 
-El backend estará disponible en:
+### Instalar dependencias del frontend
+
+Desde la raíz del proyecto:
+
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+Estas instalaciones solo son necesarias cuando se configura el entorno por primera vez o cuando cambian las dependencias.
+
+## Comando único
+
+Una vez instaladas las dependencias, desde la raíz del repositorio:
+
+```bash
+python start.py
+```
+
+El script `start.py` inicia automáticamente los dos componentes principales de DRIFT:
+
+* **Backend:** FastAPI.
+* **Frontend:** Next.js.
+
+Al iniciar correctamente se mostrarán las direcciones:
 
 ```text
-http://localhost:8000
+Frontend: http://localhost:3000
+Backend:  http://localhost:8000
 ```
 
-La documentación interactiva de FastAPI estará disponible en:
+El backend también dispone de documentación interactiva de FastAPI en:
 
 ```text
 http://localhost:8000/docs
 ```
 
+Para detener ambos procesos se utiliza:
+
+```text
+Ctrl+C
+```
+
+El script se encarga de detener los procesos iniciados al finalizar la ejecución.
+
 ## Pruebas
 
-Desde otra terminal:
+Las pruebas automatizadas del backend pueden ejecutarse desde la raíz del proyecto mediante:
 
 ```bash
-cd backend  
-python -m pytest tests
+python -m pytest backend/tests
 ```
 
-Las pruebas incluyen el estado de la API y el corte vertical de búsqueda. La integración con Steam se simula durante las pruebas para evitar depender de la disponibilidad de un servicio externo.
-
-## Frontend
-
-Desde otra terminal:
-
-```bash
-cd frontend  
-npm install  
-npm run dev
-```
-
-El frontend estará disponible en:
-
-```text
-http://localhost:3000
-```
-
-El frontend consume la API del backend mediante el endpoint:
-
-```text
-GET http://localhost:8000/games/search?q=<videojuego>
-```
+Las pruebas validan el comportamiento de la API y del corte vertical implementado. La integración con Steam se simula durante las pruebas para evitar depender de la disponibilidad de un servicio externo.
 
 ---
 
