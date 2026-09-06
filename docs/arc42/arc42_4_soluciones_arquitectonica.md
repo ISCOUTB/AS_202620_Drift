@@ -11,7 +11,7 @@ La comparación con las alternativas consideradas y las consecuencias de esta de
 | Mantenibilidad | Incorporación de una nueva plataforma/fuente sin modificar el núcleo | Separación núcleo/adaptadores mediante puertos; cada fuente externa se integra a través de su propio adaptador. |
 | Disponibilidad | Fallo de una fuente externa de precios | Aislamiento de dependencias externas: el fallo de un adaptador no bloquea la respuesta del núcleo ni de los demás adaptadores. |
 | Rendimiento | Búsqueda y comparación de precios (≤ 3 s p95) | Aplicación única, sin comunicación innecesaria entre servicios internos; las integraciones externas se controlan desde los adaptadores. |
-| Testabilidad | *(no cubierto aún por un escenario en Escenarios.md — pendiente de agregar)* | Desacoplamiento de servicios externos mediante puertos, permitiendo dobles de prueba (mocks/stubs) para la lógica de dominio. |
+
  
 ## 4.2 Decisiones tecnológicas
  
