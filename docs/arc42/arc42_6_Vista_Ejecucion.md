@@ -3,6 +3,7 @@
 Esta sección documenta cómo interactúan en tiempo de ejecución los bloques de construcción definidos en la Sección 5. Siguiendo el criterio de arc42 (relevancia arquitectónica, no exhaustividad), se seleccionan **3 escenarios representativos**: el flujo principal del sistema, un caso de manejo de fallo (disponibilidad) y un caso de estimación de compatibilidad. Los nombres de los bloques usados en los diagramas son consistentes con la Sección 5.
 
 ## 6.1 Escenario: Búsqueda y comparación de precios
+> **Nota:** Este escenario representa el flujo de ejecución previsto para la arquitectura de DRIFT. El corte vertical actualmente implementado demuestra la búsqueda de videojuegos y consulta de precios mediante Steam; los componentes de recomendación y persistencia mostrados aquí corresponden a extensiones previstas del sistema.
 
 Corresponde al escenario de calidad de rendimiento documentado en `docs/escenarios.md` (búsqueda y comparación, ≤ 3 s p95).
 
@@ -42,8 +43,9 @@ El Servicio de Búsqueda delega en el Adaptador de Tiendas Digitales sin conocer
 ---
 
 ## 6.2 Escenario: Fallo de una fuente externa de precios
+> **Nota:** Este escenario representa el comportamiento previsto para el aislamiento de fallos entre fuentes externas. En el corte vertical actual se encuentra implementada la integración con Steam; las demás fuentes se representan como extensiones de la arquitectura.
 
-Corresponde al escenario de disponibilidad documentado en `docs/Escenarios.md` (respuesta ante fallo de fuente externa, ≤ 5 s).
+Corresponde al escenario de disponibilidad documentado en `docs/escenarios.md` (respuesta ante fallo de fuente externa, ≤ 5 s).
 
 ```mermaid
 sequenceDiagram
@@ -83,8 +85,9 @@ Este comportamiento materializa en tiempo de ejecución la restricción 2.3/2.4 
 ---
 
 ## 6.3 Escenario: Estimación de compatibilidad y rendimiento en PC
+> **Nota:** Este escenario representa el flujo de ejecución previsto para la funcionalidad de compatibilidad y rendimiento. Esta funcionalidad forma parte de la arquitectura objetivo, pero no del corte vertical actualmente implementado.
 
-Corresponde al escenario de calidad documentado en `docs/Escenarios.md` (estimación de compatibilidad/rendimiento, ≤ 5 s p95).
+Corresponde al escenario de calidad documentado en `docs/escenarios.md` (estimación de compatibilidad/rendimiento, ≤ 5 s p95).
 
 ```mermaid
 sequenceDiagram
