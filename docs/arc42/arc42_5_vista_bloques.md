@@ -90,7 +90,7 @@ flowchart TB
 | **Servicio de Recomendación** | A partir de la comparación, identifica la opción de compra más conveniente para el usuario. |
 | **Servicio de Estimación de Compatibilidad y Rendimiento en PC** | Compara las especificaciones del dispositivo del usuario con los requisitos del videojuego obtenidos por el puerto de información, y estima si el juego es compatible o cuál será su rendimiento aproximado. |
 
-**Objetivos de calidad soportados:** mantenibilidad y testabilidad — cada servicio depende únicamente de los puertos (interfaces), no de las implementaciones concretas de los adaptadores, lo que permite sustituirlos por dobles de prueba.
+**Objetivo de calidad soportado:** mantenibilidad — cada servicio depende únicamente de los puertos (interfaces), no de las implementaciones concretas de los adaptadores, lo que facilita sustituir o modificar las implementaciones externas sin afectar el núcleo.
 
 ### 5.2.2 Caja blanca — Adaptador de Tiendas Digitales
 
