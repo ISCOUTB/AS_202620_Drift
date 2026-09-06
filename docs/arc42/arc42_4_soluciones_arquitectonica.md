@@ -2,7 +2,7 @@
  
 DRIFT adopta **Arquitectura Hexagonal (Ports and Adapters)** como modelo arquitectónico principal. Esta decisión mantiene la lógica del sistema independiente de las tiendas digitales, proveedores de información y demás servicios externos con los que DRIFT se integra (ver Sección 3).
  
-La comparación con las alternativas consideradas y las consecuencias de esta decisión se documentan en [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md).
+La comparación con las alternativas consideradas y las consecuencias de esta decisión se documentan en **ADR-002**.
  
 ## 4.1 Decisiones frente a los objetivos de calidad
  
