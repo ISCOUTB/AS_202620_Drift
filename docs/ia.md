@@ -102,7 +102,9 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 > "La observación dice que no tenemos pipeline y que la prueba existe pero no está evidenciado el verde. ¿Cómo podemos solucionarlo en GitHub?"
 
 **Uso:** Se utilizó ChatGPT para identificar una solución mediante GitHub Actions y configurar un workflow que ejecuta automáticamente las pruebas del backend utilizando `pytest`. La ejecución del pipeline finalizó correctamente y fue evidenciada mediante el resultado verde de GitHub Actions.
+
 **Descartado:** Se descartaron alternativas de configuración que únicamente ejecutaban las pruebas de manera local o que no generaban una evidencia automática de su ejecución en GitHub. Se optó por GitHub Actions como solución para automatizar y evidenciar el proceso.
+
 ---
 
 ### Registro 5 — C4 de contenedores
@@ -137,7 +139,9 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 > "¿Cómo podemos separar la lógica del frontend de DRIFT en capas de dominio, aplicación, infraestructura e interfaz para que la página no dependa directamente de HTTP?"
 
 **Uso:** Se utilizó ChatGPT para organizar el frontend con un modelo de juego en el dominio, un caso de uso para la búsqueda, un puerto de salida y un adaptador HTTP. Esta estructura permitió mantener la interfaz separada de la comunicación con la API.
+
 **Descartado:** Se descartó una implementación en la que los componentes de la interfaz realizaran directamente las solicitudes HTTP a la API. El equipo decidió mantener la separación por capas para reducir el acoplamiento entre la interfaz y la infraestructura.
+
 ---
 
 ### Registro 8 — Conexión del buscador con FastAPI
