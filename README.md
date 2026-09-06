@@ -38,52 +38,119 @@ DRIFT/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
+│
 ├── backend/
 │   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   │
 │   │   ├── domain/
+│   │   │   ├── __init__.py
 │   │   │   ├── model/
+│   │   │   │   ├── __init__.py
 │   │   │   │   └── game.py
+│   │   │   │
 │   │   │   └── ports/
+│   │   │       ├── __init__.py
 │   │   │       └── game_repository.py
+│   │   │
 │   │   ├── application/
+│   │   │   ├── __init__.py
 │   │   │   └── usecases/
+│   │   │       ├── __init__.py
 │   │   │       └── search_games.py
-│   │   ├── infrastructure/
-│   │   │   ├── external/
-│   │   │   │   └── steam/
-│   │   │   │       └── steam_game_repository.py
-│   │   │   └── persistence/
-│   │   │       └── in_memory_game_repository.py
-│   │   └── main.py
+│   │   │
+│   │   └── infrastructure/
+│   │       ├── __init__.py
+│   │       │
+│   │       ├── api/
+│   │       │   ├── __init__.py
+│   │       │   └── api.md
+│   │       │
+│   │       ├── external/
+│   │       │   ├── __init__.py
+│   │       │   └── steam/
+│   │       │       ├── __init__.py
+│   │       │       └── steam_game_repository.py
+│   │       │
+│   │       ├── persistence/
+│   │       │   ├── __init__.py
+│   │       │   └── in_memory_game_repository.py
+│   │       │
+│   │       ├── playstation/
+│   │       │   └── gog.md
+│   │       │
+│   │       └── xbox/
+│   │           └── epic.md
+│   │
 │   ├── tests/
 │   │   └── test_health.py
+│   │
 │   └── requirements.txt
+│
 ├── frontend/
 │   ├── app/
 │   │   ├── layout.js
 │   │   └── page.js
+│   │
 │   ├── domain/
 │   │   └── model/
 │   │       └── Game.js
+│   │
 │   ├── application/
 │   │   ├── ports/
 │   │   │   └── GameSearchPort.js
+│   │   │
 │   │   └── usecases/
 │   │       └── searchGames.js
+│   │
 │   ├── infrastructure/
 │   │   └── http/
 │   │       └── FastApiGameRepository.js
+│   │
 │   ├── ui/
 │   │   └── components/
 │   │       ├── DriftHome.js
 │   │       └── DriftHome.module.css
+│   │
 │   ├── next.config.js
 │   ├── package.json
 │   └── package-lock.json
+│
 ├── docs/
-├── start.py
+│   ├── adr/
+│   │   ├── 0001-arquitectura-base.md
+│   │   └── 0002-arquitectura-base.md
+│   │
+│   ├── arc42/
+│   │   ├── arc42_1_introduccion_objetivos.md
+│   │   ├── arc42_2_restricciones.md
+│   │   ├── arc42_3_contexto_alcance.md
+│   │   ├── arc42_4_soluciones_arquitectonica.md
+│   │   ├── arc42_5_vista_bloques.md
+│   │   ├── arc42_6_Vista_Ejecucion.md
+│   │   ├── arc42_9_Decisiones_Arquitectonicas.md
+│   │   ├── arc42_10_Requisitos_Calidad.md
+│   │   └── arc42_12_Glosario.md
+│   │
+│   ├── c4/
+│   │   ├── contexto.md
+│   │   └── contenedores.md
+│   │
+│   ├── arbol_utilidad.md
+│   ├── aspectos.md
+│   ├── escenarios.md
+│   ├── ficha_problema.md
+│   ├── ia.md
+│   ├── interesados.md
+│   └── matriz.md
+│
+├── scripts/
+│   └── start.py
+│
 ├── .gitignore
 └── README.md
+
 ```
 
 ---
