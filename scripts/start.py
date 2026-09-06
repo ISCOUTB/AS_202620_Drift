@@ -17,14 +17,14 @@ try:
             "--port",
             "8000",
         ],
-        cwd="../backend",
+        cwd="backend",
     )
 
     processes.append(backend)
 
     frontend = subprocess.Popen(
         ["npm", "run", "dev"],
-        cwd="../frontend",
+        cwd="frontend",
         shell=True,
     )
 
