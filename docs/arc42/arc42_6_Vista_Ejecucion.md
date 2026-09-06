@@ -4,7 +4,7 @@ Esta sección documenta cómo interactúan en tiempo de ejecución los bloques d
 
 ## 6.1 Escenario: Búsqueda y comparación de precios
 
-Corresponde al escenario de calidad de rendimiento documentado en `docs/Escenarios.md` (búsqueda y comparación, ≤ 3 s p95).
+Corresponde al escenario de calidad de rendimiento documentado en [`docs/escenarios.md`](docs/escenarios.md) (búsqueda y comparación, ≤ 3 s p95).
 
 ```mermaid
 sequenceDiagram
