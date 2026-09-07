@@ -195,4 +195,17 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 
 **Descartado:** Se descartó mantener `start.py` directamente en la raíz del repositorio, buscando separar los scripts de los archivos principales del proyecto.
 
+---
 
+### Registro 12 — Prueba del corte vertical
+
+**Fecha:** 07/09/2026
+**Herramienta:** ChatGPT
+
+**Prompt utilizado:**
+
+> "Ya tenemos implementado el corte vertical de búsqueda de videojuegos. ¿Cómo podemos crear una prueba automatizada que valide el recorrido completo sin depender directamente de la API de Steam?"
+
+**Uso:** Se utilizó ChatGPT para orientar la estructura de la prueba automatizada del corte vertical, revisar el recorrido entre las capas y definir una forma de simular la respuesta de Steam durante las pruebas.
+
+**Descartado:** Se descartaron algunas propuestas iniciales de código para organizar el fixture y registrarlo en las pruebas, ya que generaban errores al momento de ejecutar pytest. Después de revisar el problema, se ajustó la estructura de los archivos hasta conseguir que las pruebas se ejecutaran correctamente.
