@@ -465,10 +465,18 @@ Frontend → API REST → Caso de uso → Puerto → Adaptador Steam → Fuente 
 
 La integración con Steam constituye la primera fuente externa real del sistema. Otras plataformas pueden incorporarse posteriormente mediante nuevos adaptadores que implementen el contrato definido por `GameRepository`, manteniendo el núcleo de DRIFT desacoplado de dichas plataformas.
 
-El flujo se valida mediante una prueba automatizada de extremo a extremo, ubicada en:
+Para ejecutar específicamente la prueba del corte vertical:
 
-- [backend/tests/test_search_games.py](backend/tests/test_search_games.py)
+```text
+cd backend
+python -m pytest tests/test_health.py::test_search_games_vertical_slice -v
+```
 
-La prueba recorre el flujo completo de búsqueda y utiliza un fixture para simular la respuesta de Steam.
+La prueba fue ejecutada correctamente, obteniendo:
+```text
+1 passed, 2 warnings in 1.22s
+```
+
+Los warnings corresponden a avisos de deprecación de algunas dependencias y no afectan el resultado de la prueba.
 
  
