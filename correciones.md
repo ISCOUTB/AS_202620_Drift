@@ -35,7 +35,7 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 - [`docs/aspectos.md`](docs/aspectos.md)
 - [`docs/escenarios.md`](docs/escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](docs/adr/adr/0002-arquitectura-base.md)
+- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
 
 ---
 
