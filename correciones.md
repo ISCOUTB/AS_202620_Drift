@@ -2,7 +2,7 @@
 
 ## Propósito
 
-Este documento registra la revisión realizada por el equipo DRIFT sobre las observaciones generadas durante las revisiones semanales del repositorio. 
+Este documento registra la revisión realizada por el equipo DRIFT sobre las observaciones generadas durante las revisiones semanales del repositorio.
 
 Las observaciones fueron contrastadas con el estado real del repositorio, su documentación, código, pruebas y configuración. Para cada hallazgo se determina si:
 
@@ -21,7 +21,9 @@ El objetivo es mantener trazabilidad entre el feedback recibido y la evidencia d
 
 **Observación recibida:**
 
+>
 > `docs/aspectos.md` en prosa, sin la tabla de 8 columnas ni enlaces a escenarios ni al ADR.
+>
 
 **Estado:** Corregido.
 
@@ -31,9 +33,9 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](aspectos.md)
-- [`docs/escenarios.md`](escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](../docs/aspectos.md)
+- [`docs/escenarios.md`](../docs/escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](../docs/adr/0002-arquitectura-base.md)
 
 ---
 
@@ -41,7 +43,9 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 **Observación recibida:**
 
+>
 > Ficha del problema sin tensiones de calidad.
+>
 
 **Estado:** Corregido.
 
@@ -49,11 +53,10 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 Se revisó la ficha del problema y se incorporaron las tensiones entre los objetivos de calidad relevantes para DRIFT, especialmente mantenibilidad, rendimiento, disponibilidad, usabilidad y compatibilidad.
 
-
 **Evidencia:**
 
-- [`docs/aspectos.md`](aspectos.md)
-- [`docs/arc42/arc42_1_introduccion_objetivos.md`](arc42/arc42_1_introduccion_objetivos.md)
+- [`docs/aspectos.md`](../docs/aspectos.md)
+- [`docs/arc42/arc42_1_introduccion_objetivos.md`](../docs/arc42/arc42_1_introduccion_objetivos.md)
 
 ---
 
@@ -61,7 +64,9 @@ Se revisó la ficha del problema y se incorporaron las tensiones entre los objet
 
 **Observación recibida:**
 
+>
 > Desbalance de contribución en el periodo (51 vs 9 commits en S3).
+>
 
 **Estado:** Observación válida.
 
@@ -84,7 +89,9 @@ El equipo equilibró la participación y mantener evidencia de las contribucione
 
 **Observación recibida:**
 
+>
 > README con arranque contradictorio (mvn sin pom.xml / uvicorn solo backend) y sin comando único.
+>
 
 **Estado:** Corregido.
 
@@ -95,8 +102,8 @@ El README fue actualizado para reflejar el stack tecnológico real del proyecto.
 **Evidencia:**
 
 ```bash
-cd backend
-python -m pip install -r requirements.txt
+cd backend  
+python -m pip install -r requirements.txt  
 uvicorn app.main:app --reload
 ```
 
@@ -104,7 +111,9 @@ uvicorn app.main:app --reload
 
 **Observación recibida:**
 
+> 
 > Sin pipeline: prueba existe sin evidencia de verde.
+> 
 
 **Estado:** Corregido.
 
@@ -133,13 +142,13 @@ El pipeline se ejecutó correctamente y los jobs definidos finalizaron en verde.
 
 **Estado:** Corregido.
 
-**Verificación:**Se actualizó la documentación arquitectónica para mantener trazabilidad entre los atributos y objetivos de calidad y los escenarios E1–E5 definidos para DRIFT.
+\*\*Verificación:\*\*Se actualizó la documentación arquitectónica para mantener trazabilidad entre los atributos y objetivos de calidad y los escenarios E1–E5 definidos para DRIFT.
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](aspectos.md)
-- [`docs/escenarios.md`](escenarios.md)
-- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](arc42/arc42_10_requisitos_de_calidad.md)
+- [`docs/aspectos.md`](../docs/aspectos.md)
+- [`docs/escenarios.md`](../docs/escenarios.md)
+- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](../docs/arc42/arc42_10_requisitos_de_calidad.md)
 
 ---
 
@@ -149,23 +158,23 @@ El pipeline se ejecutó correctamente y los jobs definidos finalizaron en verde.
 
 **Estado:** Corregido.
 
-**Verificación:**Se implementó una prueba automatizada del recorrido vertical de búsqueda de videojuegos.
+\*\*Verificación:\*\*Se implementó una prueba automatizada del recorrido vertical de búsqueda de videojuegos.
 
 El recorrido verificado es:
 
 ```
-GET /games/search  
-        ↓  
-FastAPI  
-        ↓  
-SearchGames  
-        ↓  
-GameRepository  
-        ↓  
-SteamGameRepository  
-        ↓  
-Game  
-        ↓  
+GET /games/search    
+↓    
+FastAPI    
+↓    
+SearchGames    
+↓    
+GameRepository    
+↓    
+SteamGameRepository    
+↓    
+Game    
+↓    
 Respuesta HTTP
 ```
 
@@ -177,6 +186,7 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 - [`backend/app/main.py`](../backend/app/main.py)
 - [`backend/app/application/usecases/search_games.py`](../backend/app/application/usecases/search_games.py)
 - [`backend/app/infrastructure/external/steam/steam_game_repository.py`](../backend/app/infrastructure/external/steam/steam_game_repository.py)
+
 ---
 
 ## 8. Tabla de trazabilidad en docs/aspectos.md
@@ -185,13 +195,13 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Estado:** Corregido.
 
-**Verificación:**La documentación fue actualizada para relacionar los atributos de calidad con los escenarios E1–E5 y la decisión arquitectónica correspondiente.
+\*\*Verificación:\*\*La documentación fue actualizada para relacionar los atributos de calidad con los escenarios E1–E5 y la decisión arquitectónica correspondiente.
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](aspectos.md)
-- [`docs/escenarios.md`](escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](../docs/aspectos.md)
+- [`docs/escenarios.md`](../docs/escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](../docs/adr/0002-arquitectura-base.md)
 
 ---
 
@@ -201,7 +211,7 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Estado:** Corregido.
 
-**Verificación:**Los ADR fueron actualizados para indicar su estado y la relación entre las decisiones arquitectónicas.
+\*\*Verificación:\*\*Los ADR fueron actualizados para indicar su estado y la relación entre las decisiones arquitectónicas.
 
 - ADR-0001 conserva la decisión inicial de Arquitectura Hexagonal y registra que el stack tecnológico fue posteriormente actualizado.
 - ADR-0002 registra la actualización del stack a Next.js + FastAPI y mantiene la Arquitectura Hexagonal como decisión arquitectónica.
@@ -209,8 +219,8 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`docs/adr/0001-arquitectura-base.md`](adr/0001-arquitectura-base.md)
-- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
+- [`docs/adr/0001-arquitectura-base.md`](../docs/adr/0001-arquitectura-base.md)
+- [`docs/adr/0002-arquitectura-base.md`](../docs/adr/0002-arquitectura-base.md)
 
 ---
 
@@ -220,7 +230,7 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Estado:** Corregido.
 
-**Verificación:**El README documenta los requisitos y comandos necesarios para instalar las dependencias y ejecutar el backend y frontend del proyecto.
+\*\*Verificación:\*\*El README documenta los requisitos y comandos necesarios para instalar las dependencias y ejecutar el backend y frontend del proyecto.
 
 **Evidencia:**
 
@@ -236,7 +246,7 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Estado:** Pendiente.
 
-**Verificación:**La etiqueta `corte-1` debe apuntar al commit exacto que será presentado como entrega del primer corte.
+\*\*Verificación:\*\*La etiqueta `corte-1` debe apuntar al commit exacto que será presentado como entrega del primer corte.
 
 No se debe crear la etiqueta hasta finalizar las correcciones y verificaciones correspondientes al corte.
 
@@ -245,10 +255,10 @@ No se debe crear la etiqueta hasta finalizar las correcciones y verificaciones c
 Una vez finalizados los cambios:
 
 ```bash
-git add .  
-git commit -m "Preparación entrega corte 1"  
-git tag corte-1  
-git push origin master  
+git add .    
+git commit -m "Preparación entrega corte 1"    
+git tag corte-1    
+git push origin master    
 git push origin corte-1
 ```
 
@@ -267,11 +277,11 @@ La rama utilizada deberá corresponder a la rama principal actual del repositori
 
 **Estado:** Pendiente.
 
-**Verificación:**Esta observación corresponde al reto arquitectónico que será asignado para la evaluación.
+\*\*Verificación:\*\*Esta observación corresponde al reto arquitectónico que será asignado para la evaluación.
 
 El ADR correspondiente deberá registrar el problema planteado por el reto, las alternativas consideradas, los criterios de decisión, la alternativa seleccionada, sus consecuencias y la trazabilidad correspondiente.
 
-**Acción pendiente:**Una vez definido el reto arquitectónico, crear el ADR correspondiente y asociarlo al commit donde se registre la decisión.
+\*\*Acción pendiente:\*\*Una vez definido el reto arquitectónico, crear el ADR correspondiente y asociarlo al commit donde se registre la decisión.
 
 ---
 
@@ -281,13 +291,13 @@ El ADR correspondiente deberá registrar el problema planteado por el reto, las 
 
 **Estado:** Parcialmente corregido.
 
-**Verificación:**Los escenarios de calidad ya contienen medidas verificables y se incorporó un método de verificación para cada escenario.
+\*\*Verificación:\*\*Los escenarios de calidad ya contienen medidas verificables y se incorporó un método de verificación para cada escenario.
 
 Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para la búsqueda con hasta 50 usuarios concurrentes y define un procedimiento para realizar la prueba de carga y calcular el percentil 95.
 
 **Evidencia:**
 
-- [`docs/escenarios.md`](escenarios.md)
+- [`docs/escenarios.md`](../docs/escenarios.md)
 
 **Pendiente:**
 
@@ -301,11 +311,11 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Estado:** Corregido.
 
-**Verificación:**La estructura de `docs/aspectos.md` fue actualizada para incorporar la información requerida para los atributos de calidad y su trazabilidad con los escenarios correspondientes.
+\*\*Verificación:\*\*La estructura de `docs/aspectos.md` fue actualizada para incorporar la información requerida para los atributos de calidad y su trazabilidad con los escenarios correspondientes.
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](aspectos.md)
+- [`docs/aspectos.md`](../docs/aspectos.md)
 
 ---
 
@@ -315,11 +325,11 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Estado:** Corregido.
 
-**Verificación:**La documentación de uso de IA registra los rechazos realizados por el equipo y el motivo correspondiente.
+\*\*Verificación:\*\*La documentación de uso de IA registra los rechazos realizados por el equipo y el motivo correspondiente.
 
 **Evidencia:**
 
-- [`docs/ia.md`](ia.md)
+- [`docs/ia.md`](../docs/ia.md)
 
 ---
 
@@ -327,7 +337,9 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Observación recibida:**
 
+> 
 > Evidenciar run de CI en verde.
+> 
 
 **Estado:** Corregido.
 
@@ -347,3 +359,5 @@ La ejecución finalizó exitosamente. Las pruebas automatizadas del backend repo
 **Resultado:**
 
 La ejecución de CI quedó en verde, proporcionando evidencia verificable de la ejecución exitosa del pipeline.
+
+ 
