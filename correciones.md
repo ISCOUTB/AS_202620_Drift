@@ -33,9 +33,9 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
-- [`docs/escenarios.md`](docs/escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
+- [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0002-arquitectura-base.md)
 
 ---
 
@@ -55,8 +55,8 @@ Se revisó la ficha del problema y se incorporaron las tensiones entre los objet
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
-- [`docs/arc42/arc42_1_introduccion_objetivos.md`](docs/arc42/arc42_1_introduccion_objetivos.md)
+- [`docs/aspectos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
+- [`docs/arc42/arc42_1_introduccion_objetivos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/arc42/arc42_1_introduccion_objetivos.md)
 
 ---
 
@@ -127,8 +127,8 @@ La ejecución analizada finalizó exitosamente. Las pruebas del backend reportar
 
 **Evidencia:**
 
-- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
-- [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+- [`.github/workflows/ci.yml`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/.github/workflows/ci.yml)
+- [`backend/tests/test_health.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/tests/test_health.py)
 - [Ejecución exitosa del backend en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561346006)
 - [Ejecución exitosa del frontend conectado a la API en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561376057)
 
@@ -146,9 +146,9 @@ El pipeline se ejecutó correctamente y los jobs definidos finalizaron en verde.
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
-- [`docs/escenarios.md`](docs/escenarios.md)
-- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](docs/arc42/arc42_10_requisitos_de_calidad.md)
+- [`docs/aspectos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
+- [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
+- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/arc42/arc42_10_Requisitos_Calidad.md)
 
 ---
 
@@ -182,10 +182,10 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`backend/tests/test_health.py`](../backend/tests/test_health.py)
-- [`backend/app/main.py`](../backend/app/main.py)
-- [`backend/app/application/usecases/search_games.py`](../backend/app/application/usecases/search_games.py)
-- [`backend/app/infrastructure/external/steam/steam_game_repository.py`](../backend/app/infrastructure/external/steam/steam_game_repository.py)
+- [`backend/tests/test_health.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/tests/test_health.py)
+- [`backend/app/main.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/app/main.py)
+- [`backend/app/application/usecases/search_games.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/app/application/usecases/search_games.py)
+- [`backend/app/infrastructure/external/steam/steam_game_repository.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/app/infrastructure/external/steam/steam_game_repository.py)
 
 ---
 
@@ -199,9 +199,9 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
-- [`docs/escenarios.md`](docs/escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
+- [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0002-arquitectura-base.md)
 
 ---
 
@@ -219,8 +219,8 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`docs/adr/0001-arquitectura-base.md`](docs/adr/0001-arquitectura-base.md)
-- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
+- [`docs/adr/0001-arquitectura-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0001-arquitectura-base.md)
+- [`docs/adr/0002-arquitectura-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0002-arquitectura-base.md)
 
 ---
 
@@ -234,9 +234,9 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`README.md`](../README.md)
-- [`backend/requirements.txt`](../backend/requirements.txt)
-- [`frontend/package.json`](../frontend/package.json)
+- [`README.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/README.md)
+- [`backend/requirements.txt`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/requirements.txt)
+- [`frontend/package.json`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/frontend/package.json)
 
 ---
 
@@ -297,7 +297,7 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Evidencia:**
 
-- [`docs/escenarios.md`](docs/escenarios.md)
+- [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
 
 **Pendiente:**
 
@@ -315,7 +315,7 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](docs/aspectos.md)
+- [`docs/aspectos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
 
 ---
 
@@ -329,7 +329,7 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Evidencia:**
 
-- [`docs/ia.md`](ia.md)
+- [`docs/ia.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/ia.md)
 
 ---
 
@@ -351,8 +351,8 @@ La ejecución finalizó exitosamente. Las pruebas automatizadas del backend repo
 
 **Evidencia disponible:**
 
-- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
-- [`backend/tests/test_health.py`](../backend/tests/test_health.py)
+- [`.github/workflows/ci.yml`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/.github/workflows/ci.yml)
+- [`backend/tests/test_health.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/tests/test_health.py)
 - [Ejecución exitosa del backend en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561346006)
 - [Ejecución exitosa del frontend conectado a la API en GitHub Actions](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/34060984657/job/101561376057)
 
