@@ -33,7 +33,7 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](aspectos.md)
+- [`docs/aspectos.md`](docs/aspectos.md)
 - [`docs/escenarios.md`](escenarios.md)
 - [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
 
