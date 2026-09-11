@@ -33,9 +33,9 @@ Se revisó `docs/aspectos.md` y se incorporó la estructura solicitada para los 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](../docs/aspectos.md)
-- [`docs/escenarios.md`](../docs/escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](../docs/adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/escenarios.md`](escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
 
 ---
 
@@ -55,8 +55,8 @@ Se revisó la ficha del problema y se incorporaron las tensiones entre los objet
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](../docs/aspectos.md)
-- [`docs/arc42/arc42_1_introduccion_objetivos.md`](../docs/arc42/arc42_1_introduccion_objetivos.md)
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/arc42/arc42_1_introduccion_objetivos.md`](arc42/arc42_1_introduccion_objetivos.md)
 
 ---
 
@@ -146,9 +146,9 @@ El pipeline se ejecutó correctamente y los jobs definidos finalizaron en verde.
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](../docs/aspectos.md)
-- [`docs/escenarios.md`](../docs/escenarios.md)
-- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](../docs/arc42/arc42_10_requisitos_de_calidad.md)
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/escenarios.md`](escenarios.md)
+- [`docs/arc42/arc42_10_requisitos_de_calidad.md`](arc42/arc42_10_requisitos_de_calidad.md)
 
 ---
 
@@ -199,9 +199,9 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](../docs/aspectos.md)
-- [`docs/escenarios.md`](../docs/escenarios.md)
-- [`docs/adr/0002-arquitectura-base.md`](../docs/adr/0002-arquitectura-base.md)
+- [`docs/aspectos.md`](aspectos.md)
+- [`docs/escenarios.md`](escenarios.md)
+- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
 
 ---
 
@@ -219,8 +219,8 @@ La prueba utiliza un mock de `httpx.get` para simular las respuestas de Steam y 
 
 **Evidencia:**
 
-- [`docs/adr/0001-arquitectura-base.md`](../docs/adr/0001-arquitectura-base.md)
-- [`docs/adr/0002-arquitectura-base.md`](../docs/adr/0002-arquitectura-base.md)
+- [`docs/adr/0001-arquitectura-base.md`](adr/0001-arquitectura-base.md)
+- [`docs/adr/0002-arquitectura-base.md`](adr/0002-arquitectura-base.md)
 
 ---
 
@@ -297,7 +297,7 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Evidencia:**
 
-- [`docs/escenarios.md`](../docs/escenarios.md)
+- [`docs/escenarios.md`](escenarios.md)
 
 **Pendiente:**
 
@@ -315,7 +315,7 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Evidencia:**
 
-- [`docs/aspectos.md`](../docs/aspectos.md)
+- [`docs/aspectos.md`](aspectos.md)
 
 ---
 
@@ -329,7 +329,7 @@ Por ejemplo, el escenario E1 establece un límite de ≤ 3 segundos en p95 para 
 
 **Evidencia:**
 
-- [`docs/ia.md`](../docs/ia.md)
+- [`docs/ia.md`](ia.md)
 
 ---
 
