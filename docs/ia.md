@@ -209,3 +209,18 @@ Esto permitió reforzar los conocimientos del equipo y apoyar la documentación 
 **Uso:** Se utilizó ChatGPT para orientar la estructura de la prueba automatizada del corte vertical, revisar el recorrido entre las capas y definir una forma de simular la respuesta de Steam durante las pruebas.
 
 **Descartado:** Se descartaron algunas propuestas iniciales de código para organizar el fixture y registrarlo en las pruebas, ya que generaban errores al momento de ejecutar pytest. Después de revisar el problema, se ajustó la estructura de los archivos hasta conseguir que las pruebas se ejecutaran correctamente.
+
+---
+
+### Registro 13 — Elaboración del diagrama C4 de componentes
+
+**Fecha:** 11/09/2026
+**Herramienta:** ChatGPT
+
+**Prompt utilizado:**
+
+>"En el proyecto DRIFT ya tenemos definido el diagrama C4 de contenedores. Necesitamos elaborar el nivel 3 de C4, correspondiente al diagrama de componentes, utilizando únicamente los componentes que realmente existen en el código actual del repositorio. ¿Cómo podemos organizar los componentes del frontend y backend, indicando la responsabilidad de cada uno y las relaciones entre ellos, sin inventar componentes que no estén implementados?"
+
+**Uso:** Se utilizó ChatGPT para orientar la elaboración del diagrama C4 de componentes (nivel 3), identificar los componentes existentes en el código de DRIFT, organizar sus responsabilidades y representar el flujo de comunicación entre frontend, backend y el servicio externo de Steam.
+
+**Descartado:** Se descartaron propuestas que incluían componentes que no existen actualmente en el repositorio, como bases de datos, cachés, controladores o servicios adicionales. También se ajustaron algunas relaciones para que el diagrama representara el código implementado actualmente y no una arquitectura futura.
