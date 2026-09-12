@@ -190,7 +190,7 @@ flowchart LR
 | Infraestructura | `SteamGameRepository` | Implementa `GameRepository` y consulta la API de Steam. |
 | Infraestructura | `InMemoryGameRepository` | Implementa `GameRepository` utilizando videojuegos almacenados en memoria. |
 
-### Flujo principal
+## Flujo principal
 
 El flujo principal de búsqueda comienza cuando el usuario realiza una consulta desde la interfaz de DRIFT. La solicitud pasa por el caso de uso del frontend y por su puerto de búsqueda, hasta llegar al adaptador `FastApiGameRepository`, que realiza una petición HTTP al backend.
 
@@ -198,13 +198,13 @@ En el backend, `main.py` recibe la petición y ejecuta el caso de uso `SearchGam
 
 Actualmente, la implementación utilizada por la API es `SteamGameRepository`, que consulta la API de Steam y transforma la información obtenida en objetos `Game`. Finalmente, los resultados regresan por el mismo flujo hasta el frontend, donde son mostrados al usuario.
 
-### Relación con la arquitectura
+## Relación con la arquitectura
 
 El nivel 3 permite observar cómo se aplica la separación de responsabilidades dentro del proyecto. La lógica de aplicación se mantiene separada de los adaptadores externos y el acceso a Steam se realiza mediante el puerto `GameRepository`.
 
 Además, se mantiene la estructura existente del repositorio. El diagrama no introduce bases de datos, controladores, servicios, cachés u otros componentes que actualmente no estén implementados.
 
-### Flujo resumido
+## Flujo resumido
 
 `Usuario → Interfaz → searchGames → GameSearchPort → FastApiGameRepository → FastAPI → SearchGames → GameRepository → SteamGameRepository → Steam API`
 
