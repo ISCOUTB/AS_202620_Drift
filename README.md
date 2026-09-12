@@ -167,6 +167,7 @@ DRIFT/
 | [`adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md) | Decisión y evolución de la arquitectura base de DRIFT                      |
 | [`c4/contexto.md`](docs/c4/contexto.md)                               | Diagrama de contexto C4 de DRIFT                                             |
 | [`c4/contenedores.md`](docs/c4/contenedores.md)                       | Diagrama de contenedores C4 (nivel 2) de DRIFT                               |
+| [`c4/componentes.md`](docs/c4/componentes.md)                         | Diagrama de contenedores C4 (nivel 3) de DRIFT                               |
 | [`ficha_problema.md`](docs/ficha_problema.md)                         | Definición y análisis de la problemática                                  |
 | [`aspectos.md`](docs/aspectos.md)                                     | Aspecto de calidad seleccionado y escenarios asociados                       |
 | [`arbol_utilidad.md`](docs/arbol_utilidad.md)                         | Árbol de utilidad de los atributos de calidad y relación con E1-E5         |
@@ -210,9 +211,11 @@ El **diagrama C4 de contexto** representa a DRIFT, sus usuarios y los sistemas e
 
 El **diagrama C4 de contenedores** descompone DRIFT en sus principales unidades arquitectónicas, mostrando las responsabilidades y relaciones entre los componentes internos del sistema.
 
+El **diagrama C4 de componentes** muestra con mayor detalle la estructura interna de DRIFT, identificando los componentes principales, sus responsabilidades y la forma en que se comunican para realizar las funciones del sistema.
+
 - [`docs/c4/contexto.md`](docs/c4/contexto.md)
 - [`docs/c4/contenedores.md`](docs/c4/contenedores.md)
-
+- [`docs/c4/componentes.md`](docs/c4/componentes.md)
 ---
 
 ## Interesados y escenarios de calidad
