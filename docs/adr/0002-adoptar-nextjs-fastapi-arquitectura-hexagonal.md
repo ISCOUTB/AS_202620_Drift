@@ -1,4 +1,6 @@
-# ADR-0002: Selección de Arquitectura Base
+# ADR-0002: Adoptar Next.js y FastAPI sobre arquitectura hexagonal
+
+**Estado:** Aceptado.
 
 ## Contexto
 

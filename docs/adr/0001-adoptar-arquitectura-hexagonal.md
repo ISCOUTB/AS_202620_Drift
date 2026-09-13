@@ -1,7 +1,6 @@
-# ADR-0001: Selección de Arquitectura Base
+# ADR-0001: Adoptar la arquitectura hexagonal
 
-**Estado:** Superada parcialmente por ADR-0002 en cuanto al stack tecnológico. La decisión de Arquitectura Hexagonal se mantiene vigente.
-
+**Estado:** Reemplazado por [ADR-0002](0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md).
 ## Contexto
 
 DRIFT es una plataforma orientada a la comparación de precios de videojuegos, integrando información proveniente de múltiples fuentes externas. El sistema deberá evolucionar para incorporar nuevas plataformas, servicios de análisis, motores de recomendación y posibles fuentes de datos adicionales.
@@ -144,4 +143,4 @@ Esta estructura representa únicamente el esqueleto inicial del proyecto y no co
 ## Trazabilidad
 
 - **Commit de la decisión:** pendiente de asociar al commit correspondiente antes de `corte-1`.
-- **ADR posterior:** [ADR-0002](0002-arquitectura-base.md), que actualiza el stack tecnológico manteniendo la Arquitectura Hexagonal.
+- **ADR posterior:** [ADR-0002](0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md), que actualiza el stack tecnológico manteniendo la Arquitectura Hexagonal.

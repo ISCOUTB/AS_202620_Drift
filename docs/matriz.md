@@ -17,7 +17,7 @@ Se comparan la arquitectura en capas, la arquitectura hexagonal y el monolito mo
 
 ## Relación con los escenarios de calidad
 
-La evaluación de los estilos arquitectónicos se relaciona con los escenarios E1-E5 definidos en el árbol de utilidad y detallados en [`docs/escenarios.md`](docs/escenarios.md). Estos escenarios permiten evaluar cómo cada alternativa responde a las necesidades de calidad de DRIFT.
+La evaluación de los estilos arquitectónicos se relaciona con los escenarios E1-E5 definidos en el árbol de utilidad y detallados en [escenarios.md](escenarios.md). Estos escenarios permiten evaluar cómo cada alternativa responde a las necesidades de calidad de DRIFT.
 
 | Escenario | Atributo de calidad | Arquitectura en capas | Arquitectura hexagonal | Monolito modular |
 |---|---|---|---|---|
