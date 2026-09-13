@@ -60,6 +60,8 @@ flowchart LR
 
             SEARCH["🔎 SearchGames<br/><br/>Caso de uso de búsqueda<br/>de videojuegos<br/><br/>Coordina la consulta<br/>mediante GameRepository"]
 
+            COMPAT["🖥️ EstimateCompatibility<br/><br/>Caso de uso de compatibilidad<br/>de PC<br/><br/>Evalúa el hardware del usuario<br/>frente a los requisitos del juego"]
+
         end
 
 
@@ -69,6 +71,10 @@ flowchart LR
 
             PORT["🔗 GameRepository<br/><br/>Puerto del dominio<br/><br/>Define la operación search()<br/>para consultar videojuegos"]
 
+            REQUIREMENTS["🧩 GameRequirements<br/><br/>Modelo del dominio<br/><br/>Requisitos mínimos y<br/>recomendados del videojuego"]
+
+            REQUIREMENTS_PORT["🔗 GameRequirementsRepository<br/><br/>Puerto del dominio<br/><br/>Define la operación para<br/>consultar requisitos de PC"]
+
         end
 
 
@@ -77,6 +83,10 @@ flowchart LR
             STEAM_REPO["🎮 SteamGameRepository<br/><br/>Adaptador externo<br/><br/>Implementa GameRepository<br/>y consulta la API de Steam"]
 
             MEMORY_REPO["💾 InMemoryGameRepository<br/><br/>Adaptador de persistencia<br/><br/>Implementa GameRepository<br/>y mantiene juegos en memoria"]
+
+            RESILIENT_REPO["🛡️ ResilientGameRepository<br/><br/>Adaptador de resiliencia<br/><br/>Coordina la fuente principal<br/>y el respaldo ante fallos"]
+
+            REQUIREMENTS_REPO["💾 InMemoryGameRequirementsRepository<br/><br/>Adaptador de persistencia<br/><br/>Implementa GameRequirementsRepository<br/>y mantiene requisitos en memoria"]
 
         end
 
@@ -108,37 +118,67 @@ flowchart LR
 
     SEARCH -->|"8. Solicita videojuegos"| PORT
 
-    PORT -.->|"9. Implementado por"| STEAM_REPO
+    PORT -.->|"9. Implementado por"| RESILIENT_REPO
 
-    PORT -.->|"10. Implementado por"| MEMORY_REPO
+    RESILIENT_REPO -->|"10. Fuente principal"| STEAM_REPO
+
+    RESILIENT_REPO -->|"11. Fuente de respaldo"| MEMORY_REPO
 
 
     %% =====================================================
     %% FLUJO CON STEAM
     %% =====================================================
 
-    STEAM_REPO -->|"11. Consulta búsqueda<br/>en Steam"| STEAM
+    STEAM_REPO -->|"12. Consulta búsqueda<br/>en Steam"| STEAM
 
-    STEAM -->|"12. Retorna información<br/>en formato JSON"| STEAM_REPO
+    STEAM -->|"13. Retorna información<br/>en formato JSON"| STEAM_REPO
 
-    STEAM_REPO -->|"13. Transforma datos"| GAME
+    STEAM_REPO -->|"14. Transforma datos"| GAME
 
-    GAME -->|"14. Devuelve objetos Game"| SEARCH
+    GAME -->|"15. Devuelve objetos Game"| SEARCH
 
 
     %% =====================================================
     %% RETORNO DEL BACKEND
     %% =====================================================
 
-    SEARCH -->|"15. Retorna lista de juegos"| API
+    SEARCH -->|"16. Retorna lista de juegos"| API
 
-    API -->|"16. Convierte resultados<br/>a respuesta JSON"| HTTP
+    API -->|"17. Convierte resultados<br/>a respuesta JSON"| HTTP
 
-    HTTP -->|"17. Recibe resultados"| FRONT_SEARCH
+    HTTP -->|"18. Recibe resultados"| FRONT_SEARCH
 
-    FRONT_SEARCH -->|"18. Devuelve juegos"| HOME
+    FRONT_SEARCH -->|"19. Devuelve juegos"| HOME
 
-    HOME -->|"19. Muestra nombres<br/>y precios"| USER
+    HOME -->|"20. Muestra nombres<br/>y precios"| USER
+
+%% =====================================================
+    %% FLUJO DE COMPATIBILIDAD DE PC
+    %% =====================================================
+
+    USER -->|"21. Consulta compatibilidad"| HOME
+
+    HOME -->|"22. Solicita compatibilidad"| HTTP
+
+    HTTP -->|"23. Solicitud de compatibilidad"| API
+
+    API -->|"24. Ejecuta caso de uso"| COMPAT
+
+    COMPAT -->|"25. Solicita requisitos"| REQUIREMENTS_PORT
+
+    REQUIREMENTS_PORT -.->|"26. Implementado por"| REQUIREMENTS_REPO
+
+    REQUIREMENTS_REPO -->|"27. Obtiene requisitos"| REQUIREMENTS
+
+    REQUIREMENTS -->|"28. Entrega requisitos"| COMPAT
+
+    COMPAT -->|"29. Retorna resultado"| API
+
+    API -->|"30. Respuesta JSON"| HTTP
+
+    HTTP -->|"31. Resultado"| HOME
+
+    HOME -->|"32. Muestra compatibilidad"| USER
 
 
     %% =====================================================
@@ -172,6 +212,21 @@ flowchart LR
     class GAME,PORT domain
 
     class STEAM_REPO,MEMORY_REPO infrastructure
+
+    subgraph LEGEND["📖 Leyenda"]
+
+    LEGEND_FRONTEND["Frontend"]
+
+    LEGEND_BACKEND["Backend / DRIFT"]
+
+    LEGEND_EXTERNAL["Servicio externo"]
+
+end
+    class SEARCH,COMPAT backend
+
+class GAME,PORT,REQUIREMENTS,REQUIREMENTS_PORT backend
+
+class STEAM_REPO,MEMORY_REPO,RESILIENT_REPO,REQUIREMENTS_REPO backend
 ```
 
 ### Componentes principales
