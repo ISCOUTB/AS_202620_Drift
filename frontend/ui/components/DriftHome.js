@@ -23,9 +23,25 @@ const categories = ["Acción", "Aventura", "Carreras", "Deportes", "RPG", "Estra
 function getBestPrice(prices = {}) {
   const entries = Object.entries(prices);
 
-  return entries.length
-    ? entries.reduce((best, current) => current[1] < best[1] ? current : best)
-    : null;
+  return entries.reduce((bestPrice, currentPrice) => {
+    if (bestPrice === null || currentPrice[1] < bestPrice[1]) {
+      return currentPrice;
+    }
+
+    return bestPrice;
+  }, null);
+}
+
+function getAvailabilityLabel(availablePlatforms) {
+  if (availablePlatforms.length > 1) {
+    return `Disponible en ${availablePlatforms.length} plataformas`;
+  }
+
+  if (availablePlatforms.length === 1) {
+    return `Disponible en ${availablePlatforms[0]}`;
+  }
+
+  return "Plataforma por confirmar";
 }
 
 function Stars() {
@@ -99,7 +115,10 @@ export default function DriftHome() {
   const [compatibilityError, setCompatibilityError] = useState("");
 
   const displayedSuggestions = useMemo(() => {
-    if (selectedCategory === "Todo") return suggestions;
+    if (selectedCategory === "Todo") {
+      return suggestions;
+    }
+
     return suggestions.filter((game) => game.genre.includes(selectedCategory));
   }, [selectedCategory]);
 
@@ -121,6 +140,7 @@ export default function DriftHome() {
       }
     } catch (searchError) {
       setGames([]);
+
       setError(
         searchError.message === "Escribe el nombre de un videojuego."
           ? searchError.message
@@ -186,6 +206,7 @@ export default function DriftHome() {
 
           <div className={styles.headerActions}>
             <button
+              type="button"
               className={styles.iconButton}
               aria-label="Abrir búsqueda"
               onClick={() => document.getElementById("game-search")?.focus()}
@@ -193,7 +214,11 @@ export default function DriftHome() {
               <span className={styles.searchIcon} />
             </button>
 
-            <button className={styles.profileButton} aria-label="Abrir perfil">
+            <button
+              type="button"
+              className={styles.profileButton}
+              aria-label="Abrir perfil"
+            >
               JD
             </button>
           </div>
@@ -231,6 +256,7 @@ export default function DriftHome() {
 
         <section className={styles.categories} aria-label="Categorías de videojuegos">
           <button
+            type="button"
             onClick={() => setSelectedCategory("Todo")}
             className={selectedCategory === "Todo" ? styles.categoryActive : ""}
           >
@@ -239,6 +265,7 @@ export default function DriftHome() {
 
           {categories.map((category) => (
             <button
+              type="button"
               key={category}
               onClick={() => setSelectedCategory(category)}
               className={selectedCategory === category ? styles.categoryActive : ""}
@@ -252,6 +279,7 @@ export default function DriftHome() {
           <div className={styles.catalogHeader}>
             <div className={styles.tabs}>
               <button
+                type="button"
                 onClick={() => {
                   setActiveTab("Sugeridos");
                   setError("");
@@ -262,6 +290,7 @@ export default function DriftHome() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab("Resultados")}
                 className={activeTab === "Resultados" ? styles.tabActive : ""}
               >
@@ -269,7 +298,7 @@ export default function DriftHome() {
               </button>
             </div>
 
-            <button className={styles.viewAll}>
+            <button type="button" className={styles.viewAll}>
               Ver todo <span>↗</span>
             </button>
           </div>
@@ -297,7 +326,8 @@ export default function DriftHome() {
 
               <form onSubmit={submitCompatibility}>
                 <label style={{ display: "block", marginBottom: "12px" }}>
-                  RAM disponible (GB)
+                  <span>RAM disponible (GB)</span>
+
                   <input
                     type="number"
                     min="1"
@@ -308,7 +338,8 @@ export default function DriftHome() {
                 </label>
 
                 <label style={{ display: "block", marginBottom: "12px" }}>
-                  Nivel de GPU
+                  <span>Nivel de GPU</span>
+
                   <input
                     type="number"
                     min="1"
@@ -360,12 +391,7 @@ export default function DriftHome() {
                 const bestPrice = getBestPrice(game.prices);
                 const availablePlatforms = Object.keys(game.prices);
                 const art = suggestions[index % suggestions.length];
-
-                const availability = availablePlatforms.length > 1
-                  ? `Disponible en ${availablePlatforms.length} plataformas`
-                  : availablePlatforms.length === 1
-                    ? `Disponible en ${availablePlatforms[0]}`
-                    : "Plataforma por confirmar";
+                const availability = getAvailabilityLabel(availablePlatforms);
 
                 return (
                   <GameCard
