@@ -1,226 +1,406 @@
 # Uso de Inteligencia Artificial — DRIFT
 
-
 ## 1. Propósito
 
-En esta etapa inicial del proyecto se utilizó *ChatGPT* como herramienta de apoyo para el planteamiento y definición de *DRIFT*. Su uso permitió organizar ideas, explorar posibles funcionalidades y definir qué características podría incorporar la plataforma web.
+Este documento registra el uso de herramientas de inteligencia artificial durante el desarrollo de DRIFT.
 
-## 2. Uso inicial
+La IA se utilizó como apoyo para comprender conceptos, proponer alternativas, revisar documentación, orientar implementaciones y detectar inconsistencias. Las decisiones arquitectónicas, los cambios aplicados y la validación final fueron responsabilidad del equipo.
 
-ChatGPT fue utilizado principalmente para:
+## 2. Principios de uso
 
-* Generar ideas sobre funcionalidades para la página web.
-* Organizar y definir la propuesta inicial de DRIFT.
-* Apoyar la elaboración de la ficha del problema.
-* Explorar posibles características que podrían incorporarse en futuras etapas.
+El equipo aplicó los siguientes criterios:
 
-## 3. Apoyo en la documentación arquitectónica
+- No se copiaron respuestas de IA sin revisión.
+- Cada cambio técnico se revisó en el código y se validó mediante pruebas, compilación o ejecución local cuando correspondía.
+- No se compartieron contraseñas, tokens, datos personales ni información sensible con la herramienta.
+- Las alternativas sugeridas por IA podían ser rechazadas si no se ajustaban al alcance, al código existente o a los objetivos de calidad.
+- La IA no reemplazó el criterio del equipo en decisiones arquitectónicas.
 
-Durante el desarrollo del proyecto se utilizó ChatGPT como apoyo para revisar y organizar la documentación relacionada con arc42, los escenarios de calidad y las restricciones arquitectónicas.
+## 3. Herramienta utilizada
 
-Se trabajó en:
+La herramienta de IA utilizada como apoyo durante esta etapa fue:
 
-* *Sección 1:* Introducción y objetivos.
-* *Sección 2:* Restricciones.
-* *Sección 3:* Contexto y alcance.
-* *Sección 4:* Estrategia de solución.
-* *Sección 5:* Vista de Bloques.
-* *Sección 6:* Vista de Tiempos de Ejecucion.
-* *Sección 9:* Decisiones Arquitectonicas.
-* *Sección 10:* Requisitos de Calidad.
-* *Sección 12:* Glosario.
-* Escenarios de calidad medibles.
-* Revisión conceptual de las restricciones arquitectónicas.
-* Organización de los documentos mediante enlaces desde el `README.md`.
+- **ChatGPT (OpenAI):** apoyo conceptual, revisión de documentación, orientación de código, pruebas y configuración.
 
-### 3.1 Revisión de restricciones y escenarios
+No se registra evidencia de uso de Claude, Gemini u otras herramientas de IA en los cambios documentados en este repositorio.
 
-Durante la revisión se identificó que algunos elementos inicialmente incluidos en la sección de restricciones de arc42 correspondían realmente a requisitos funcionales o atributos de calidad. Por esta razón, se realizó una revisión conceptual para diferenciar las restricciones externas de los objetivos y requisitos del sistema.
+## 4. Áreas en las que se utilizó IA
 
-También se revisaron las medidas de los escenarios de calidad para mantener coherencia entre los diferentes documentos del proyecto.
+ChatGPT se utilizó como apoyo en:
 
-## 4. Revisión de conocimientos
+- Definición y ajuste de la propuesta inicial de DRIFT.
+- Elaboración de documentación arc42, C4, ADR, escenarios y matriz arquitectónica.
+- Organización de frontend y backend mediante arquitectura hexagonal.
+- Configuración de GitHub Actions y SonarQube Cloud.
+- Implementación y validación del corte vertical de búsqueda.
+- Manejo de fallos de una fuente externa.
+- Estimación de compatibilidad de PC.
+- Diseño y ejecución de pruebas automatizadas.
+- Medición de rendimiento con k6.
+- Corrección de enlaces, trazabilidad y documentación del repositorio.
 
-Se utilizó ChatGPT para **aclarar conceptos relacionados con estilos arquitectónicos, tácticas y patrones de diseño**, así como para revisar las alternativas consideradas para DRIFT.
-
-Esto permitió reforzar los conocimientos del equipo y apoyar la documentación de las decisiones tomadas durante esta etapa.
-
-## Herramientas de IA que se implementarán
-
-* Claude (Anthropic)
-* ChatGPT (OpenAI)
-* Gemini (Google)
-
----
-# Log
+## 5. Registro de uso
 
 ### Registro 1 — Selección de tecnología para el frontend
 
-**Fecha:** 24/08/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-08-24
+**Herramienta:** ChatGPT
 
-> "¿Qué sería mejor para el frontend de DRIFT, Next.js o React con Vite? Explícame cuál conviene más para nuestro proyecto y por qué."
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT para comparar alternativas tecnológicas para el frontend de DRIFT y apoyar la selección de Next.js como framework para la interfaz web.
+> ¿Qué conviene más para el frontend de DRIFT: Next.js o React con Vite? Explica las diferencias y los criterios de decisión.
 
-**Descartado:** Se descartó la alternativa de utilizar React con Vite, debido a que el equipo consideró que Next.js se ajustaba mejor a las necesidades y estructura planteadas para el proyecto.
+**Uso:**
 
----
+Se utilizó como apoyo para comparar alternativas de frontend y documentar la selección de Next.js.
 
-### Registro 2 — Actualización del README
+**Decisión del equipo:**
 
-**Fecha:** 24/08/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+Se adoptó Next.js por su estructura, facilidad de integración con el backend y adecuación al proyecto.
 
-> "Mira, el README está así. Tenemos que actualizarlo porque ahora el proyecto tiene frontend y backend, pero quiero mantener más o menos la estructura que ya tiene. ¿Qué deberíamos cambiar?"
+**Alternativa descartada:**
 
-**Uso:** Se utilizó ChatGPT para revisar el README, identificar información desactualizada y actualizar las instrucciones de ejecución y la estructura del proyecto de acuerdo con los cambios realizados.
+React con Vite fue descartado porque el equipo consideró que Next.js se ajustaba mejor a la estructura prevista para DRIFT.
 
 ---
 
-### Registro 3 — Relación entre escenarios, árbol de utilidad y matriz
+### Registro 2 — Documentación inicial y ficha del problema
 
-**Fecha:** 24/08/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-08-24
+**Herramienta:** ChatGPT
 
-> "Te paso el contenido de la matriz y del árbol de utilidad para resolver la observación 4. ¿Cómo podemos hacer que los escenarios E1-E5 queden relacionados correctamente?"
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT para analizar la relación entre el árbol de utilidad, los escenarios de calidad y la matriz comparativa. Como resultado, se modificó el escenario E2 para representar una situación de mantenibilidad y se actualizaron las referencias E1-E5 en los documentos relacionados.
+> ¿Cómo podemos organizar la propuesta inicial, la ficha del problema y las funcionalidades de una plataforma para comparar videojuegos?
 
-**Descartado:** Se descartaron las relaciones entre escenarios y atributos de calidad que no correspondían directamente con el objetivo de cada escenario. El equipo revisó las propuestas y mantuvo únicamente las relaciones que consideró coherentes con la documentación.
+**Uso:**
+
+Se utilizó para organizar ideas iniciales, definir la problemática y explorar funcionalidades posibles.
+
+**Validación:**
+
+El equipo revisó y ajustó la propuesta para mantenerla dentro del alcance académico del proyecto.
 
 ---
 
-### Registro 4 — Configuración del pipeline de pruebas
+### Registro 3 — Escenarios, árbol de utilidad y matriz
 
-**Fecha:** 24/08/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-08-24
+**Herramienta:** ChatGPT
 
-> "La observación dice que no tenemos pipeline y que la prueba existe pero no está evidenciado el verde. ¿Cómo podemos solucionarlo en GitHub?"
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT para identificar una solución mediante GitHub Actions y configurar un workflow que ejecuta automáticamente las pruebas del backend utilizando `pytest`. La ejecución del pipeline finalizó correctamente y fue evidenciada mediante el resultado verde de GitHub Actions.
+> ¿Cómo relacionamos correctamente los escenarios E1–E5 con el árbol de utilidad, los atributos de calidad y la matriz de estilos arquitectónicos?
 
-**Descartado:** Se descartaron alternativas de configuración que únicamente ejecutaban las pruebas de manera local o que no generaban una evidencia automática de su ejecución en GitHub. Se optó por GitHub Actions como solución para automatizar y evidenciar el proceso.
+**Uso:**
+
+Se utilizó para revisar la trazabilidad entre escenarios de calidad, atributos, árbol de utilidad y alternativas arquitectónicas.
+
+**Alternativa descartada:**
+
+Se descartaron relaciones entre escenarios y atributos que no correspondían directamente con su propósito. El equipo conservó únicamente las relaciones coherentes con la documentación.
+
+---
+
+### Registro 4 — Configuración inicial del pipeline
+
+**Fecha:** 2026-08-24
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos configurar GitHub Actions para ejecutar automáticamente las pruebas del backend y dejar evidencia de CI?
+
+**Uso:**
+
+Se utilizó para orientar la creación de un workflow de GitHub Actions con pruebas automatizadas.
+
+**Validación:**
+
+La configuración fue revisada por el equipo y las pruebas se ejecutaron localmente antes de incluirse en el pipeline.
 
 ---
 
 ### Registro 5 — C4 de contenedores
-**Fecha:** 27/08/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
 
-> "Ayúdame a entender cómo hacer el C4 de contenedores de nuestro repositorio DRIFT. Ya tenemos el C4 de contexto, ¿cómo se relaciona con el nivel 2 y qué debería tener en cuenta para hacerlo correctamente?"
+**Fecha:** 2026-08-27
+**Herramienta:** ChatGPT
 
-**Uso:** Se utilizó para aclarar dudas sobre el C4 de contenedores y su relación con el C4 de contexto.
+**Consulta utilizada:**
 
-**Descartado:** Se descartaron elementos y detalles que pertenecían a otros niveles del modelo C4
+> Ya tenemos el C4 de contexto de DRIFT. ¿Cómo se relaciona con el nivel de contenedores y qué elementos reales del proyecto debemos representar?
+
+**Uso:**
+
+Se utilizó para aclarar el alcance del diagrama C4 de contenedores y su relación con el diagrama de contexto.
+
+**Alternativa descartada:**
+
+Se descartó incluir componentes que pertenecían a otros niveles de C4 o que no existían en el código.
 
 ---
 
 ### Registro 6 — Renovación visual de la portada
 
-**Fecha:** 03/09/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-09-03
+**Herramienta:** ChatGPT
 
-> "Ayúdame a renovar la portada de DRIFT para que tenga una interfaz más atractiva para explorar videojuegos, con buscador, categorías, sugerencias y tarjetas de juegos."
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT como apoyo para estructurar la nueva portada de DRIFT en un componente de interfaz, incluyendo el buscador, filtros por categoría, sugerencias y tarjetas para mostrar videojuegos.
+> ¿Cómo podemos organizar una interfaz para explorar videojuegos con buscador, categorías, sugerencias y tarjetas de resultados?
+
+**Uso:**
+
+Se utilizó como apoyo para estructurar la portada de DRIFT y los elementos de interfaz relacionados con la búsqueda.
+
+**Validación:**
+
+El equipo revisó visualmente la interfaz mediante ejecución local del frontend.
 
 ---
 
 ### Registro 7 — Separación del frontend por capas
 
-**Fecha:** 03/09/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-09-03
+**Herramienta:** ChatGPT
 
-> "¿Cómo podemos separar la lógica del frontend de DRIFT en capas de dominio, aplicación, infraestructura e interfaz para que la página no dependa directamente de HTTP?"
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT para organizar el frontend con un modelo de juego en el dominio, un caso de uso para la búsqueda, un puerto de salida y un adaptador HTTP. Esta estructura permitió mantener la interfaz separada de la comunicación con la API.
+> ¿Cómo separar el frontend en dominio, aplicación, infraestructura e interfaz para evitar que la vista dependa directamente de HTTP?
 
-**Descartado:** Se descartó una implementación en la que los componentes de la interfaz realizaran directamente las solicitudes HTTP a la API. El equipo decidió mantener la separación por capas para reducir el acoplamiento entre la interfaz y la infraestructura.
+**Uso:**
+
+Se utilizó para orientar la separación entre el modelo de dominio, caso de uso, puerto y adaptador HTTP del frontend.
+
+**Alternativa descartada:**
+
+Se descartó realizar solicitudes HTTP directamente desde los componentes de interfaz, porque aumentaba el acoplamiento con la infraestructura.
 
 ---
 
 ### Registro 8 — Conexión del buscador con FastAPI
 
-**Fecha:** 03/09/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-09-03
+**Herramienta:** ChatGPT
 
-> "¿Cómo conectamos el buscador de videojuegos del frontend con el endpoint de FastAPI y configuramos la URL de la API para distintos entornos?"
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT para implementar un repositorio HTTP que consulta el endpoint de búsqueda de videojuegos y obtiene su URL desde la variable de entorno `NEXT_PUBLIC_DRIFT_API_URL`, con una dirección local como valor predeterminado.
+> ¿Cómo conectamos el buscador de Next.js con el endpoint de FastAPI y configuramos la URL de la API para distintos entornos?
+
+**Uso:**
+
+Se utilizó para orientar la creación del repositorio HTTP del frontend y el uso de la variable `NEXT_PUBLIC_DRIFT_API_URL`.
+
+**Validación:**
+
+La integración se comprobó mediante ejecución local del frontend y del backend.
 
 ---
 
-### Registro 9 — Verificación de integración en GitHub Actions
+### Registro 9 — Smoke test de integración
 
-**Fecha:** 03/09/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-09-03
+**Herramienta:** ChatGPT
 
-> "¿Cómo actualizamos el pipeline de GitHub Actions para probar el backend, iniciar la API local, compilar el frontend y comprobar que la portada responda correctamente?"
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT para ampliar el workflow de integración continua: ejecuta las pruebas del backend, comprueba la disponibilidad de FastAPI, compila el frontend con la URL de la API local y verifica que la portada se sirva correctamente.
+> ¿Cómo actualizamos GitHub Actions para ejecutar pruebas del backend, iniciar FastAPI, compilar el frontend y comprobar que la portada responda?
+
+**Uso:**
+
+Se utilizó para ampliar el pipeline con un smoke test entre frontend y backend.
+
+**Validación:**
+
+El frontend compiló correctamente con `npm run build` y el backend aprobó sus pruebas automatizadas.
 
 ---
 
 ### Registro 10 — Comando único de ejecución
 
-**Fecha:** 06/09/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-09-06
+**Herramienta:** ChatGPT
 
-> "Quiero que el proyecto pueda iniciar frontend y backend con un solo comando desde la raíz."
+**Consulta utilizada:**
 
-**Uso:** Se utilizó ChatGPT como apoyo para definir y documentar un comando único de ejecución para DRIFT. Se creo el script `start.py` y se actualizó el `README.md`.
+> ¿Cómo podemos iniciar frontend y backend con un único comando desde la raíz del proyecto?
+
+**Uso:**
+
+Se utilizó para orientar la creación y documentación del script `scripts/start.py`.
+
+**Validación:**
+
+El equipo ejecutó `python scripts/start.py` y verificó el inicio del backend y frontend.
 
 ---
 
 ### Registro 11 — Organización de scripts
 
-**Fecha:** 06/09/2026  
-**Herramienta:** ChatGPT  
-**Prompt utilizado:**
+**Fecha:** 2026-09-06
+**Herramienta:** ChatGPT
 
-> "¿Dónde debería colocar el start.py para que la estructura del repositorio quede más organizada?"
+**Consulta utilizada:**
 
-**Uso:** Se consultó cómo organizar el script de ejecución dentro de la estructura del proyecto. Se decidió crear la carpeta `scripts/` y mover allí `start.py`.
+> ¿Dónde debe ubicarse el script de arranque para mantener organizada la estructura del repositorio?
 
-**Descartado:** Se descartó mantener `start.py` directamente en la raíz del repositorio, buscando separar los scripts de los archivos principales del proyecto.
+**Uso:**
+
+Se utilizó para evaluar la ubicación de `start.py`.
+
+**Decisión del equipo:**
+
+El script se ubicó en la carpeta `scripts/`.
+
+**Alternativa descartada:**
+
+Se descartó mantener `start.py` directamente en la raíz para separar scripts de los archivos principales del proyecto.
 
 ---
 
 ### Registro 12 — Prueba del corte vertical
 
-**Fecha:** 07/09/2026
+**Fecha:** 2026-09-07
 **Herramienta:** ChatGPT
 
-**Prompt utilizado:**
+**Consulta utilizada:**
 
-> "Ya tenemos implementado el corte vertical de búsqueda de videojuegos. ¿Cómo podemos crear una prueba automatizada que valide el recorrido completo sin depender directamente de la API de Steam?"
+> ¿Cómo creamos una prueba automatizada del corte vertical de búsqueda sin depender directamente de la API real de Steam?
 
-**Uso:** Se utilizó ChatGPT para orientar la estructura de la prueba automatizada del corte vertical, revisar el recorrido entre las capas y definir una forma de simular la respuesta de Steam durante las pruebas.
+**Uso:**
 
-**Descartado:** Se descartaron algunas propuestas iniciales de código para organizar el fixture y registrarlo en las pruebas, ya que generaban errores al momento de ejecutar pytest. Después de revisar el problema, se ajustó la estructura de los archivos hasta conseguir que las pruebas se ejecutaran correctamente.
+Se utilizó para orientar la prueba del recorrido completo mediante `TestClient` y respuestas simuladas de Steam.
+
+**Alternativa descartada:**
+
+Se descartaron propuestas iniciales de fixtures que causaban errores durante la ejecución de pytest. El equipo ajustó la estructura hasta obtener pruebas correctas.
 
 ---
 
-### Registro 13 — Elaboración del diagrama C4 de componentes
+### Registro 13 — Diagrama C4 de componentes
 
-**Fecha:** 11/09/2026
+**Fecha:** 2026-09-11
 **Herramienta:** ChatGPT
 
-**Prompt utilizado:**
+**Consulta utilizada:**
 
->"En el proyecto DRIFT ya tenemos definido el diagrama C4 de contenedores. Necesitamos elaborar el nivel 3 de C4, correspondiente al diagrama de componentes, utilizando únicamente los componentes que realmente existen en el código actual del repositorio. ¿Cómo podemos organizar los componentes del frontend y backend, indicando la responsabilidad de cada uno y las relaciones entre ellos, sin inventar componentes que no estén implementados?"
+> ¿Cómo elaboramos un diagrama C4 de componentes usando únicamente elementos que existen realmente en el código actual de DRIFT?
 
-**Uso:** Se utilizó ChatGPT para orientar la elaboración del diagrama C4 de componentes (nivel 3), identificar los componentes existentes en el código de DRIFT, organizar sus responsabilidades y representar el flujo de comunicación entre frontend, backend y el servicio externo de Steam.
+**Uso:**
 
-**Descartado:** Se descartaron propuestas que incluían componentes que no existen actualmente en el repositorio, como bases de datos, cachés, controladores o servicios adicionales. También se ajustaron algunas relaciones para que el diagrama representara el código implementado actualmente y no una arquitectura futura.
+Se utilizó para orientar el diagrama C4 de componentes y representar responsabilidades y relaciones entre frontend, backend y Steam.
+
+**Alternativa descartada:**
+
+Se descartaron componentes inexistentes, como bases de datos, cachés o servicios no implementados, para evitar documentar una arquitectura futura como si fuera actual.
+
+---
+
+### Registro 14 — Correcciones de documentación y trazabilidad
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo corregimos los enlaces rotos, los nombres de ADR, la ubicación de `correcciones.md` y la trazabilidad de E1–E5?
+
+**Uso:**
+
+Se utilizó para revisar enlaces, actualizar los nombres descriptivos de ADR, completar las evidencias en `docs/aspectos.md` y consolidar la documentación de correcciones.
+
+**Validación:**
+
+El equipo revisó las referencias con la búsqueda global de VS Code y comprobó que no quedaran nombres antiguos de ADR ni referencias a `docs/correciones.md`.
+
+---
+
+### Registro 15 — Disponibilidad ante fallos de Steam
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos evitar que DRIFT falle por completo cuando Steam no esté disponible y cómo comprobamos ese comportamiento?
+
+**Uso:**
+
+Se utilizó para orientar la implementación de `ResilientGameRepository`, un repositorio local de respaldo y una prueba automatizada de falla controlada de Steam.
+
+**Validación:**
+
+La prueba `test_search_uses_fallback_when_steam_is_unavailable` verifica que el sistema responda con información de respaldo e informe que Steam no estuvo disponible.
+
+**Alternativa descartada:**
+
+Se descartó ocultar la caída de Steam al usuario. La respuesta conserva el campo `unavailable_sources` para informar la fuente afectada.
+
+---
+
+### Registro 16 — Estimación de compatibilidad de PC
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo implementamos una estimación básica de compatibilidad de PC sin depender todavía de una fuente externa de requisitos técnicos?
+
+**Uso:**
+
+Se utilizó para orientar un caso de uso de compatibilidad, un puerto de requisitos y un repositorio en memoria con datos controlados.
+
+**Validación:**
+
+Se crearon pruebas para los estados `Compatible`, `Compatible con limitaciones`, `No compatible` y `Requisitos no disponibles`.
+
+**Alcance controlado:**
+
+Los requisitos actuales son datos académicos controlados. No se presentan como una integración real con una base de datos externa.
+
+---
+
+### Registro 17 — Medición y optimización de rendimiento
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo medimos el escenario E1 con 50 usuarios concurrentes y cómo mejoramos el rendimiento sin modificar artificialmente el umbral de calidad?
+
+**Uso:**
+
+Se utilizó para orientar la creación del script `scripts/k6_baseline.js`, interpretar la línea base y proponer optimizaciones en el adaptador de Steam.
+
+**Validación:**
+
+La primera medición obtuvo p95 de 14.63 segundos. Después de aplicar caché temporal, límite de resultados y consultas paralelas, la medición obtuvo p95 de 1.24 segundos con 50 solicitudes exitosas.
+
+**Alternativa descartada:**
+
+Se descartó aumentar el límite de tiempo del escenario E1 para aparentar cumplimiento. En lugar de modificar el objetivo, se optimizó la implementación y se volvió a ejecutar la prueba.
+
+---
+
+### Registro 18 — SonarQube Cloud
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo agregamos SonarQube Cloud al pipeline sin exponer el token de análisis?
+
+**Uso:**
+
+Se utilizó para orientar la configuración de `sonar-project.properties`, el job de SonarQube Cloud en GitHub Actions y el uso del secreto `SONAR_TOKEN`.
+
+**Validación:**
+
+La configuración fue revisada localmente. La ejecución del análisis en GitHub Actions se realizará cuando el equipo autorice el commit y push de los cambios.
+
+**Alternativa descartada:**
+
+Se descartó escribir el token de SonarQube Cloud directamente en el repositorio o en archivos versionados, porque expondría una credencial sensible.

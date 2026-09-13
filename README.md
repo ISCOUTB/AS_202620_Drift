@@ -4,17 +4,12 @@ Proyecto del curso **Arquitectura de Software (AS_202620)** — Universidad Tecn
 
 ## ¿Qué es DRIFT?
 
-**DRIFT** es una plataforma web orientada a jugadores que buscan tomar mejores decisiones al comprar videojuegos. El sistema reúne información de diferentes plataformas digitales para comparar precios, descuentos e historial de ofertas, teniendo en cuenta además las plataformas disponibles para cada usuario y el rendimiento esperado de sus dispositivos.
+**DRIFT** es una plataforma web para apoyar la decisión de compra de videojuegos. Permite buscar juegos, consultar precios disponibles, identificar la mejor opción mostrada y estimar compatibilidad básica de PC.
 
-La definición detallada de la problemática se encuentra en [`docs/ficha_problema.md`](docs/ficha_problema.md).
+El sistema está diseñado para incorporar nuevas fuentes externas de información sin afectar el núcleo de negocio.
 
-## Aspecto de calidad declarado
-
-Para DRIFT se prioriza la **mantenibilidad**, buscando que el sistema pueda incorporar nuevas plataformas, fuentes de información y funcionalidades sin generar cambios importantes en los demás componentes.
-
-La justificación y definición del aspecto seleccionado se encuentra en [`docs/aspectos.md`](docs/aspectos.md).
-
----
+- [Ficha del problema](docs/ficha_problema.md)
+- [Aspectos y escenarios de calidad](docs/aspectos.md)
 
 ## Equipo de desarrollo
 
@@ -23,276 +18,84 @@ La justificación y definición del aspecto seleccionado se encuentra en [`docs/
 - Luis Pérez Diaz
 - Joshua Reyes Leones
 
----
+## Arquitectura
+
+DRIFT adopta una **Arquitectura Hexagonal (Ports and Adapters)**.
+
+- El backend usa **FastAPI**.
+- El frontend usa **Next.js**.
+- La integración externa actual se realiza mediante un adaptador para **Steam**.
+- Los casos de uso dependen de puertos del dominio, no de servicios externos concretos.
+- Ante una falla de Steam, el sistema utiliza un catálogo local de respaldo e informa la fuente no disponible.
+
+Las decisiones principales están documentadas en:
+
+- [ADR-0001: Adoptar arquitectura hexagonal](docs/adr/0001-adoptar-arquitectura-hexagonal.md)
+- [ADR-0002: Adoptar Next.js y FastAPI sobre arquitectura hexagonal](docs/adr/0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md)
 
 ## Organización del proyecto
 
-DRIFT separa el frontend, el backend y la documentación arquitectónica.
-
-El backend está desarrollado con **FastAPI** y sigue los principios de la **Arquitectura Hexagonal (Ports and Adapters)**, separando el dominio, los casos de uso y la infraestructura. Actualmente cuenta con una integración real con **Steam** mediante un adaptador externo.
-
-El frontend está desarrollado con **Next.js** y consume los servicios expuestos por el backend mediante una API REST.
-
 ```text
 DRIFT/
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-│
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   │
+│   │   ├── application/usecases/
+│   │   │   ├── search_games.py
+│   │   │   └── estimate_compatibility.py
 │   │   ├── domain/
-│   │   │   ├── __init__.py
 │   │   │   ├── model/
-│   │   │   │   ├── __init__.py
-│   │   │   │   └── game.py
-│   │   │   │
+│   │   │   │   ├── game.py
+│   │   │   │   └── game_requirements.py
 │   │   │   └── ports/
-│   │   │       ├── __init__.py
-│   │   │       └── game_repository.py
-│   │   │
-│   │   ├── application/
-│   │   │   ├── __init__.py
-│   │   │   └── usecases/
-│   │   │       ├── __init__.py
-│   │   │       └── search_games.py
-│   │   │
-│   │   └── infrastructure/
-│   │       ├── __init__.py
-│   │       │
-│   │       ├── api/
-│   │       │   ├── __init__.py
-│   │       │   └── api.md
-│   │       │
-│   │       ├── external/
-│   │       │   ├── __init__.py
-│   │       │   └── steam/
-│   │       │       ├── __init__.py
-│   │       │       └── steam_game_repository.py
-│   │       │
-│   │       ├── persistence/
-│   │       │   ├── __init__.py
-│   │       │   └── in_memory_game_repository.py
-│   │       │
-│   │       ├── playstation/
-│   │       │   └── gog.md
-│   │       │
-│   │       └── xbox/
-│   │           └── epic.md
-│   │
-│   ├── tests/
-│   │   ├── conftest.py
-│   │   ├── steam_fixtures.py
-│   │   ├── test_health.py
-│   │   └── test_search_games.py
-│   │
-│   └── requirements.txt
-│
+│   │   │       ├── game_repository.py
+│   │   │       └── game_requirements_repository.py
+│   │   ├── infrastructure/
+│   │   │   ├── external/steam/steam_game_repository.py
+│   │   │   └── persistence/
+│   │   │       ├── in_memory_game_repository.py
+│   │   │       ├── in_memory_game_requirements_repository.py
+│   │   │       └── resilient_game_repository.py
+│   │   └── main.py
+│   └── tests/
+│       ├── test_search_games.py
+│       └── test_compatibility.py
 ├── frontend/
-│   ├── app/
-│   │   ├── layout.js
-│   │   └── page.js
-│   │
-│   ├── domain/
-│   │   └── model/
-│   │       └── Game.js
-│   │
 │   ├── application/
-│   │   ├── ports/
-│   │   │   └── GameSearchPort.js
-│   │   │
-│   │   └── usecases/
-│   │       └── searchGames.js
-│   │
+│   ├── domain/
 │   ├── infrastructure/
-│   │   └── http/
-│   │       └── FastApiGameRepository.js
-│   │
-│   ├── ui/
-│   │   └── components/
-│   │       ├── DriftHome.js
-│   │       └── DriftHome.module.css
-│   │
-│   ├── next.config.js
-│   ├── package.json
-│   └── package-lock.json
-│
+│   └── ui/components/DriftHome.js
 ├── docs/
 │   ├── adr/
-│   │   ├── 0001-arquitectura-base.md
-│   │   └── 0002-arquitectura-base.md
-│   │
 │   ├── arc42/
-│   │   ├── arc42_1_introduccion_objetivos.md
-│   │   ├── arc42_2_restricciones.md
-│   │   ├── arc42_3_contexto_alcance.md
-│   │   ├── arc42_4_soluciones_arquitectonica.md
-│   │   ├── arc42_5_vista_bloques.md
-│   │   ├── arc42_6_Vista_Ejecucion.md
-│   │   ├── arc42_9_Decisiones_Arquitectonicas.md
-│   │   ├── arc42_10_Requisitos_Calidad.md
-│   │   └── arc42_12_Glosario.md
-│   │
 │   ├── c4/
-│   │   ├── contexto.md
-│   │   └── contenedores.md
-│   │
-│   ├── arbol_utilidad.md
+│   ├── evidencias/
 │   ├── aspectos.md
 │   ├── escenarios.md
-│   ├── ficha_problema.md
 │   ├── ia.md
-│   ├── interesados.md
 │   └── matriz.md
-│   └── correciones.md
-│
 ├── scripts/
-│   └── start.py
-│
-├── .gitignore
+│   ├── start.py
+│   └── k6_baseline.js
+├── sonar-project.properties
+├── correcciones.md
 └── README.md
-
 ```
-
----
-
-## Documentación
-
-
-| Archivo                                                               | Contenido                                                                    |
-|-----------------------------------------------------------------------|------------------------------------------------------------------------------|
-| [`adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md) | Decisión y evolución de la arquitectura base de DRIFT                      |
-| [`c4/contexto.md`](docs/c4/contexto.md)                               | Diagrama de contexto C4 de DRIFT                                             |
-| [`c4/contenedores.md`](docs/c4/contenedores.md)                       | Diagrama de contenedores C4 (nivel 2) de DRIFT                               |
-| [`c4/componentes.md`](docs/c4/componentes.md)                         | Diagrama de contenedores C4 (nivel 3) de DRIFT                               |
-| [`ficha_problema.md`](docs/ficha_problema.md)                         | Definición y análisis de la problemática                                  |
-| [`aspectos.md`](docs/aspectos.md)                                     | Aspecto de calidad seleccionado y escenarios asociados                       |
-| [`arbol_utilidad.md`](docs/arbol_utilidad.md)                         | Árbol de utilidad de los atributos de calidad y relación con E1-E5         |
-| [`interesados.md`](docs/interesados.md)                               | Identificación y análisis de los interesados de DRIFT                      |
-| [`escenarios.md`](docs/escenarios.md)                                 | Escenarios de calidad medibles de DRIFT                                      |
-| [`matriz.md`](docs/matriz.md)                                         | Matriz comparativa de estilos arquitectónicos frente a los escenarios E1-E5 |
-| [`ia.md`](docs/ia.md)                                                 | Registro y criterios de uso de herramientas de IA                            |
-
-
----
-
-## Documentación de arquitectura — arc42
-
-La documentación de arquitectura de DRIFT se desarrolla siguiendo el modelo **arc42**. En ella se describen el propósito del sistema, sus objetivos de calidad, las restricciones arquitectónicas, el contexto y alcance, la estrategia de solución, la estructura interna, el comportamiento en tiempo de ejecución, las decisiones arquitectónicas y los requisitos de calidad detallados.
-
-
-| Sección                                 | Contenido                                                                | Documento                                                                                 |
-|------------------------------------------|--------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| **1. Introducción y objetivos**         | Propósito, alcance, objetivos de calidad e interesados.                 | [`arc42_1_introduccion_objetivos.md`](docs/arc42/arc42_1_introduccion_objetivos.md)       |
-| **2. Restricciones**                     | Restricciones que condicionan la arquitectura y su justificación.       | [`arc42_2_restricciones.md`](docs/arc42/arc42_2_restricciones.md)                         |
-| **3. Contexto y alcance**                | Contexto del sistema, actores, sistemas externos, límites e interfaces. | [`arc42_3_contexto_alcance.md`](docs/arc42/arc42_3_contexto_alcance.md)                   |
-| **4. Estrategia de solución**           | Principales decisiones y estrategias arquitectónicas de DRIFT.          | [`arc42_4_soluciones_arquitectonica.md`](docs/arc42/arc42_4_soluciones_arquitectonica.md) |
-| **5. Vista de bloques de construcción** | Descomposición estática del sistema, puertos y adaptadores.            | [`arc42_5_bloques_construccion.md`](docs/arc42/arc42_5_vista_bloques.md)           |
-| **6. Vista de tiempo de ejecución**     | Escenarios de interacción entre bloques de construcción en runtime.    | [`arc42_6_vista_runtime.md`](docs/arc42/arc42_6_Vista_Ejecucion.md)                         |
-| **9. Decisiones de arquitectura**        | Índice de ADR y resumen de las decisiones más importantes.             | [`arc42_9_decisiones_arquitectura.md`](docs/arc42/arc42_9_Decisiones_Arquitectonicas.md)     |
-| **10. Requisitos de calidad**            | Árbol/tabla de calidad y escenarios de calidad detallados y medibles.   | [`arc42_10_requisitos_calidad.md`](docs/arc42/arc42_10_Requisitos_Calidad.md)             |
-| **12. Glosario**                         | Términos técnicos y de dominio usados en la documentación.            | [`arc42_12_glosario.md`](docs/arc42/arc42_12_Glosario.md)                                 |
-
-
----
-
-## Contexto y análisis arquitectónico
-
-El proyecto incluye diferentes artefactos que permiten representar y analizar la arquitectura de DRIFT.
-
-El **árbol de utilidad** organiza los atributos de calidad de DRIFT y los escenarios asociados, mostrando cuáles son prioritarios para el proyecto.
-
-- [`docs/arbol_utilidad.md`](docs/arbol_utilidad.md)
-
-El **diagrama C4 de contexto** representa a DRIFT, sus usuarios y los sistemas externos con los que interactúa, mostrando los límites y relaciones principales del sistema.
-
-El **diagrama C4 de contenedores** descompone DRIFT en sus principales unidades arquitectónicas, mostrando las responsabilidades y relaciones entre los componentes internos del sistema.
-
-El **diagrama C4 de componentes** muestra con mayor detalle la estructura interna de DRIFT, identificando los componentes principales, sus responsabilidades y la forma en que se comunican para realizar las funciones del sistema.
-
-- [`docs/c4/contexto.md`](docs/c4/contexto.md)
-- [`docs/c4/contenedores.md`](docs/c4/contenedores.md)
-- [`docs/c4/componentes.md`](docs/c4/componentes.md)
----
-
-## Interesados y escenarios de calidad
-
-El proyecto incluye el análisis de los interesados de DRIFT y sus principales preocupaciones relacionadas con la calidad del sistema.
-
-El **mapa de interesados** identifica los actores relevantes para la arquitectura y sus prioridades.
-
-Los **escenarios medibles** traducen estas preocupaciones en situaciones verificables, especificando fuente, estímulo, artefacto, entorno, respuesta y una medida cuantificable.
-
-La documentación correspondiente se encuentra en:
-
-- [`docs/interesados.md`](docs/interesados.md)
-- [`docs/escenarios.md`](docs/escenarios.md)
-
-Los escenarios actuales contemplan principalmente:
-
-- Comparación de precios.
-- Consulta de información de videojuegos.
-- Identificación de la opción más conveniente.
-- Estimación de rendimiento y compatibilidad en PC.
-- Disponibilidad ante fallos de una fuente externa de precios.
-
----
-
-## Comparación de estilos arquitectónicos
-
-Para definir la estrategia arquitectónica de DRIFT se realizó una comparación entre diferentes estilos arquitectónicos, considerando los escenarios de calidad y las necesidades del sistema.
-
-La **matriz comparativa** evalúa la arquitectura en capas, la arquitectura hexagonal y el monolito modular. A partir de esta comparación se selecciona la **arquitectura hexagonal** como la alternativa más adecuada para DRIFT.
-
-- [`docs/matriz.md`](docs/matriz.md)
-
----
-
-## Inteligencia Artificial
-
-La IA forma parte de la propuesta de DRIFT como apoyo para la generación de recomendaciones personalizadas y el análisis de información relacionada con precios, plataformas y rendimiento. El uso de estas herramientas será registrado y justificado durante el desarrollo en [`docs/ia.md`](docs/ia.md).
-
----
-
-# Arquitectura
-
-El proyecto adopta una **Arquitectura Hexagonal (Ports and Adapters)**.
-
-La arquitectura busca mantener aislado el núcleo de la aplicación respecto a tecnologías externas como HTTP, FastAPI y las plataformas de videojuegos.
-
-La decisión arquitectónica se encuentra documentada en:
-
-- [`docs/adr/0002-arquitectura-base.md`](docs/adr/0002-arquitectura-base.md)
-
----
-
-# Ejecución
-
-DRIFT dispone de un **comando único de ejecución local** que permite iniciar el backend y el frontend desde la raíz del repositorio.
 
 ## Requisitos previos
 
-Antes de ejecutar el proyecto se debe contar con:
+- Python 3.12 o superior.
+- Node.js 22 o superior y npm.
+- Opcional para la prueba de rendimiento: [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/).
 
-* Python instalado.
-* Node.js y npm instalados.
-* Las dependencias del backend instaladas.
-* Las dependencias del frontend instaladas.
+## Instalación
 
-### Instalar dependencias del backend
-
-Desde la raíz del proyecto:
+Desde la raíz del repositorio, instala las dependencias del backend:
 
 ```bash
 python -m pip install -r backend/requirements.txt
 ```
 
-### Instalar dependencias del frontend
-
-Desde la raíz del proyecto:
+Después instala las dependencias del frontend:
 
 ```bash
 cd frontend
@@ -300,186 +103,136 @@ npm install
 cd ..
 ```
 
-Estas instalaciones solo son necesarias cuando se configura el entorno por primera vez o cuando cambian las dependencias.
+Estas instalaciones solo son necesarias al configurar el entorno o cuando cambian las dependencias.
 
-## Comando único
+## Ejecución local
 
-Una vez instaladas las dependencias, desde la raíz del repositorio:
-
-```bash
-python start.py
-```
-
-El script `start.py` inicia automáticamente los dos componentes principales de DRIFT:
-
-* **Backend:** FastAPI.
-* **Frontend:** Next.js.
-
-Al iniciar correctamente se mostrarán las direcciones:
-
-```text
-Frontend: http://localhost:3000
-Backend:  http://localhost:8000
-```
-
-El backend también dispone de documentación interactiva de FastAPI en:
-
-```text
-http://localhost:8000/docs
-```
-
-Para detener ambos procesos se utiliza:
-
-```text
-Ctrl+C
-```
-
-El script se encarga de detener los procesos iniciados al finalizar la ejecución.
-
-## Pruebas
-
-Las pruebas automatizadas del backend pueden ejecutarse desde la raíz del proyecto mediante:
+Desde la raíz del proyecto:
 
 ```bash
-python -m pytest backend/tests
+python scripts/start.py
 ```
 
-Las pruebas validan el comportamiento de la API y del corte vertical implementado. La integración con Steam se simula durante las pruebas para evitar depender de la disponibilidad de un servicio externo.
+El script inicia:
 
----
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:8000`
+- Documentación interactiva de la API: `http://localhost:8000/docs`
 
-# Corte vertical implementado
+Para detener ambos procesos, presiona `Ctrl + C` en la terminal donde se ejecutó el script.
 
-## Búsqueda de videojuegos y consulta de precios en Steam
+## Funcionalidades implementadas
 
-DRIFT cuenta actualmente con un **corte vertical funcional** que permite realizar una búsqueda de videojuegos desde la interfaz web, enviar la consulta al backend, procesarla mediante el caso de uso correspondiente y obtener información real desde Steam.
+### Búsqueda de videojuegos
 
-Este corte atraviesa las principales capas de la aplicación y demuestra la integración entre frontend, backend, dominio y una fuente externa real.
-
-### Flujo de ejecución
+El usuario puede buscar videojuegos desde el frontend. La solicitud recorre el frontend, la API REST, el caso de uso, el puerto del dominio y el adaptador de Steam.
 
 ```text
-Usuario  
-   ↓  
-Frontend Next.js  
-   ↓  
-searchGames  
-   ↓  
-GameSearchPort  
-   ↓  
-FastApiGameRepository  
-   ↓  
-GET /games/search?q=<videojuego>  
-   ↓  
-FastAPI  
-   ↓  
-SearchGames  
-   ↓  
-GameRepository  
-   ↓  
-SteamGameRepository  
-   ↓  
-API de Steam  
-   ↓  
-Game  
-   ↓  
-Respuesta al frontend
+Frontend → API REST → SearchGames → GameRepository → SteamGameRepository → Steam
 ```
 
-### Componentes involucrados
+La búsqueda implementa caché temporal, consulta paralela de detalles y un límite de resultados para mejorar el rendimiento.
 
+### Tolerancia a fallos de Steam
 
-| Componente              | Responsabilidad                                                               |
-|-------------------------|-------------------------------------------------------------------------------|
-| `DriftHome`             | Recibe la búsqueda del usuario y presenta los resultados.                    |
-| `searchGames`           | Gestiona la búsqueda desde el frontend.                                      |
-| `GameSearchPort`        | Define el contrato de búsqueda en el frontend.                               |
-| `FastApiGameRepository` | Realiza la comunicación HTTP con el backend.                                 |
-| `main.py`               | Expone el endpoint `/games/search` y conecta el adaptador con el caso de uso. |
-| `SearchGames`           | Ejecuta la operación de búsqueda mediante el puerto del dominio.            |
-| `GameRepository`        | Define el contrato que deben cumplir las fuentes de videojuegos.              |
-| `SteamGameRepository`   | Consulta Steam y transforma su respuesta en entidades `Game`.                 |
-| `Game`                  | Representa el videojuego y sus precios.                                       |
+Si Steam no está disponible, `ResilientGameRepository` utiliza un repositorio local de respaldo. La respuesta informa la fuente no disponible mediante el campo `unavailable_sources`.
 
+### Estimación de compatibilidad de PC
 
+El usuario puede seleccionar un juego, indicar memoria RAM y nivel de GPU, y consultar una estimación de compatibilidad.
 
-### Escenario de calidad demostrado
+La estimación entrega uno de estos resultados:
 
-El corte vertical se relaciona principalmente con el **Escenario E2 — Mantenibilidad**, definido en [`docs/escenarios.md`](docs/escenarios.md).
+- `Compatible`
+- `Compatible con limitaciones`
+- `No compatible`
+- `Requisitos no disponibles`
 
-El escenario plantea que, ante un cambio en la API de una fuente externa, el sistema debe permitir adaptar dicha integración sin realizar modificaciones importantes en el núcleo de la aplicación ni en los demás adaptadores.
+El catálogo de requisitos actual es controlado para fines académicos y puede reemplazarse posteriormente por una fuente externa.
 
-La implementación actual evidencia esta estrategia porque `SteamGameRepository` concentra la lógica específica de comunicación y transformación de los datos provenientes de Steam, mientras que `SearchGames`, `GameRepository` y `Game` permanecen desacoplados de la plataforma externa.
+## Pruebas y validación
 
-Por lo tanto, el corte vertical no solo demuestra que una búsqueda funciona de extremo a extremo, sino también que la arquitectura facilita el aislamiento de cambios en fuentes externas, apoyando el atributo de calidad prioritario de **mantenibilidad**.
+### Pruebas del backend
 
-### Prueba del corte vertical
+Desde la carpeta `backend`:
 
-La prueba `test_search_games_vertical_slice` verifica el flujo principal mediante una solicitud HTTP al endpoint:
-
-```text
-TestClient  
-   ↓  
-GET /games/search  
-   ↓  
-SearchGames  
-   ↓  
-GameRepository  
-   ↓  
-SteamGameRepository  
-   ↓  
-Respuesta simulada de Steam  
-   ↓  
-JSON de DRIFT
+```bash
+python -m pytest tests -q
 ```
 
-Durante la prueba, la respuesta de Steam se simula para que el resultado sea determinista y no dependa de una conexión externa.
+La suite actual incluye pruebas del corte vertical de búsqueda, tolerancia a fallos de Steam y estimación de compatibilidad.
 
-Esto permite validar el comportamiento del corte vertical tanto localmente como dentro del proceso de integración continua (CI).
+Última validación local: **8 pruebas aprobadas**.
 
----
+### Compilación del frontend
 
-# Integración continua
+Desde la carpeta `frontend`:
 
-DRIFT cuenta con un workflow de **GitHub Actions** ubicado en:
-
-- [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
-
-El workflow ejecuta automáticamente las validaciones del proyecto cuando se realizan cambios sobre la rama `master` o mediante Pull Requests.
-
-Actualmente contempla:
-
-- Ejecución de pruebas del backend con `pytest`.
-- Verificación del endpoint principal de FastAPI.
-- Construcción del frontend con Next.js.
-- Smoke test de la API desde el flujo de integración.
-
-Esto permite detectar errores de integración antes de considerar un cambio como estable.
-
----
-
-# Estado actual del corte vertical
-
-El corte vertical implementado cubre actualmente:
-
-```text
-Frontend → API REST → Caso de uso → Puerto → Adaptador Steam → Fuente externa
+```bash
+npm run build
 ```
 
-La integración con Steam constituye la primera fuente externa real del sistema. Otras plataformas pueden incorporarse posteriormente mediante nuevos adaptadores que implementen el contrato definido por `GameRepository`, manteniendo el núcleo de DRIFT desacoplado de dichas plataformas.
+Última validación local: compilación de producción aprobada.
 
-Para ejecutar específicamente la prueba del corte vertical:
+### Rendimiento — escenario E1
 
-```text
-cd backend
-python -m pytest tests/test_health.py::test_search_games_vertical_slice -v
+Con k6 se ejecutó una prueba de carga sobre `GET /games/search?q=Minecraft` con 50 usuarios virtuales concurrentes.
+
+Resultado posterior a la optimización:
+
+| Métrica | Resultado |
+|---|---:|
+| Solicitudes exitosas | 50 de 50 |
+| Solicitudes fallidas | 0 % |
+| p95 | 1.24 s |
+| Objetivo E1 | p95 ≤ 3 s |
+| Estado | Cumple |
+
+Para ejecutarla, inicia primero el proyecto con `python scripts/start.py`. En otra terminal ejecuta:
+
+```bash
+k6 run scripts/k6_baseline.js
 ```
 
-La prueba fue ejecutada correctamente, obteniendo:
-```text
-1 passed, 2 warnings in 1.22s
+En Windows, si k6 no está agregado al PATH:
+
+```powershell
+& "C:\Program Files\k6\k6.exe" run scripts/k6_baseline.js
 ```
 
-Los warnings corresponden a avisos de deprecación de algunas dependencias y no afectan el resultado de la prueba.
+La evidencia completa está en [docs/evidencias/e1-linea-base.md](docs/evidencias/e1-linea-base.md).
 
- 
+## Integración continua y calidad
+
+El workflow de GitHub Actions se encuentra en [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+El pipeline ejecuta:
+
+1. Pruebas automatizadas del backend.
+2. Smoke test entre frontend y API.
+3. Compilación del frontend con Next.js.
+4. Análisis de calidad con SonarQube Cloud.
+
+SonarQube Cloud está configurado mediante `sonar-project.properties` y el secreto de GitHub `SONAR_TOKEN`. El análisis se ejecutará en GitHub Actions cuando el equipo realice un push autorizado.
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [Aspectos de calidad](docs/aspectos.md) | Trazabilidad de E1 a E5, implementación y evidencias. |
+| [Escenarios de calidad](docs/escenarios.md) | Escenarios medibles para rendimiento, mantenibilidad, usabilidad, compatibilidad y disponibilidad. |
+| [Matriz arquitectónica](docs/matriz.md) | Comparación entre arquitectura en capas, hexagonal y monolito modular. |
+| [C4: contexto](docs/c4/contexto.md) | Diagrama de contexto del sistema. |
+| [C4: contenedores](docs/c4/contenedores.md) | Diagrama de contenedores de DRIFT. |
+| [arc42](docs/arc42/) | Documentación de arquitectura basada en arc42. |
+| [Uso de IA](docs/ia.md) | Registro y criterios de uso de herramientas de IA. |
+| [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3 y E4. |
+| [Conceptos transversales — arc42 sección 8](docs/arc42/08-conceptos-transversales.md) | Lenguaje ubicuo, mapa de contextos delimitados y propiedad de datos. |
+| [Evidencia S6](docs/semana-06-contextos-y-propiedad-de-datos.md) | Mapa de contextos, dueño único de datos, auditoría de violaciones y matriz de cumplimiento. |
+| [Correcciones](correcciones.md) | Trazabilidad entre el feedback y las correcciones realizadas. |
+
+## Alcance actual
+
+La fuente externa real implementada es Steam. La arquitectura permite integrar futuras plataformas mediante adaptadores que cumplan el contrato `GameRepository`.
+
+La compatibilidad de PC usa requisitos controlados para fines académicos. La integración con datos técnicos externos queda como evolución futura.
