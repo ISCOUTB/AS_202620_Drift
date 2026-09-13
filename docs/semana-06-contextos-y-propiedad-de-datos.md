@@ -29,7 +29,9 @@ Archivos revisados:
 
 ## 2. Mapa de contextos
 
-El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](arc42/08-conceptos-transversales.md).
+## 2. Mapa de contextos
+
+El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/arc42/08-conceptos-transversales.md).
 
 | Contexto | Responsabilidad | Tipo |
 |---|---|---|
@@ -119,7 +121,7 @@ Todos los escenarios de `docs/aspectos.md` pueden relacionarse con al menos un c
 | Violaciones detectadas sobre el código actual | Sección 4, V1 | Cumple | Se identificó la modificación de `unavailable_sources` desde infraestructura. |
 | Plan de corrección por violación | Sección 4, V1 | Cumple | El plan define responsable, ubicación y pasos de corrección. |
 | arc42 sección 8 con lenguaje ubicuo y mapa de contextos | `docs/arc42/08-conceptos-transversales.md` | Cumple | Documento creado para esta evidencia. |
-| C4 nivel 3 y ADR si los límites cambiaron desde el primer corte | Pendiente de comparación con el C4 del primer corte | No verificado | Tu compañero realizará esta revisión y el ADR si corresponde. |
+| C4 nivel 3 y ADR si los límites cambiaron desde el primer corte | [C4 nivel 3](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/c4/componentes.md) y [ADR-0003](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0003-reajuste-contextos-dominio.md) | Cumple | Los límites y responsabilidades fueron reajustados para representar resiliencia de fuentes externas y compatibilidad de PC. El cambio se documenta mediante ADR-0003. |
 | Aspectos relacionables con los contextos del mapa | Sección 5 y `docs/aspectos.md` | Cumple | E1–E5 se relacionan con uno o más contextos. |
 
 ## 7. Matriz transversal del contrato
