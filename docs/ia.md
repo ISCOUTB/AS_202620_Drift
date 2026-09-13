@@ -102,7 +102,7 @@ Se descartaron relaciones entre escenarios y atributos que no correspondían dir
 
 ---
 
-### Registro 4 — Configuración inicial del pipeline
+### Registro 4—Configuración inicial del pipeline
 
 **Fecha:** 2026-08-24
 **Herramienta:** ChatGPT
