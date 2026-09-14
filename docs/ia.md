@@ -67,7 +67,7 @@ React con Vite fue descartado porque el equipo consideró que Next.js se ajustab
 ### Registro 2 — Documentación inicial y ficha del problema
 
 **Fecha:** 2026-08-24
-**Herramienta:** ChatGPT
+**Herramienta:**ChatGPT
 
 **Consulta utilizada:**
 
