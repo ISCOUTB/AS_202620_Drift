@@ -105,7 +105,7 @@ cd ..
 
 Estas instalaciones solo son necesarias al configurar el entorno o cuando cambian las dependencias.
 
-## Ejecución local
+## Comando Unico de Ejecuccion
 
 Desde la raíz del proyecto:
 
