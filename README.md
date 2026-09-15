@@ -228,7 +228,7 @@ SonarQube Cloud está configurado mediante `sonar-project.properties` y el secre
 | [arc42](docs/arc42/) | Documentación de arquitectura basada en arc42. |
 | [Uso de IA](docs/ia.md) | Registro y criterios de uso de herramientas de IA. |
 | [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3 y E4. |
-| [Contextos delimitados y propiedad de los datos](docs/arc42/08-conceptos-transversales.md) | Lenguaje ubicuo, mapa de contextos delimitados y propiedad de datos. |
+| [Contextos delimitados y propiedad de los datos](docs/contextos_delimitados_propiedad_datos.md) | Lenguaje ubicuo, mapa de contextos delimitados y propiedad de datos. |
 | [Correcciones](correcciones.md) | Trazabilidad entre el feedback y las correcciones realizadas. |
 
 ## Alcance actual
