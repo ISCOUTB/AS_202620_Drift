@@ -1,37 +1,10 @@
-# Evidencia S6 — Contextos delimitados y propiedad de datos
+# Contextos delimitados y propiedad de datos
 
-| Campo | Valor |
-|---|---|
-| Semana | 6 |
-| Corte | Segundo corte |
-| Tipo | Grupal |
-| Rama de referencia | `master` |
-| Estado evaluado | Último commit de `master` anterior o igual al cierre de la actividad |
-| Artefactos relacionados | `docs/arc42/08-conceptos-transversales.md`, `docs/aspectos.md`, `docs/c4/`, `docs/adr/` |
+## 1. Mapa de contextos
 
-## 1. Alcance de la revisión
+## 1. Mapa de contextos
 
-La revisión se realizó sobre el código actual de DRIFT. El proyecto no cuenta con base de datos, migraciones ni tablas SQL; por esta razón, se revisaron las entidades de dominio, catálogos en memoria y estados temporales existentes en el código.
-
-Archivos revisados:
-
-- `backend/app/domain/model/game.py`
-- `backend/app/domain/model/game_requirements.py`
-- `backend/app/domain/ports/game_repository.py`
-- `backend/app/domain/ports/game_requirements_repository.py`
-- `backend/app/application/usecases/search_games.py`
-- `backend/app/application/usecases/estimate_compatibility.py`
-- `backend/app/infrastructure/external/steam/steam_game_repository.py`
-- `backend/app/infrastructure/persistence/in_memory_game_repository.py`
-- `backend/app/infrastructure/persistence/in_memory_game_requirements_repository.py`
-- `backend/app/infrastructure/persistence/resilient_game_repository.py`
-- `backend/app/main.py`
-
-## 2. Mapa de contextos
-
-## 2. Mapa de contextos
-
-El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/arc42/08-conceptos-transversales.md).
+El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](docs/arc42/arc42_8_conceptos_transversales.md).
 
 | Contexto | Responsabilidad | Tipo |
 |---|---|---|
@@ -40,7 +13,7 @@ El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](https:
 | Compatibilidad de PC | Estimar compatibilidad a partir de requisitos del juego, RAM y nivel de GPU. | Contexto de soporte. |
 | Experiencia de usuario | Buscar videojuegos, visualizar resultados y consultar compatibilidad. | Cliente de los contextos del dominio. |
 
-## 3. Tabla módulo → datos con dueño único
+## 2. Tabla módulo → datos con dueño único
 
 | Dato o entidad | Ubicación real | Contexto dueño único | Módulos que lo consultan o transforman |
 |---|---|---|---|
@@ -52,7 +25,7 @@ El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](https:
 | Catálogo de requisitos de PC | `backend/app/infrastructure/persistence/in_memory_game_requirements_repository.py` | Compatibilidad de PC | `EstimateCompatibility`. |
 | Resultado de compatibilidad | `backend/app/application/usecases/estimate_compatibility.py` | Compatibilidad de PC | `main.py` y frontend lo consumen. |
 
-## 4. Auditoría de propiedad de datos
+## 3. Auditoría de propiedad de datos
 
 Se revisaron los módulos que crean, transforman o modifican entidades y datos del dominio.
 
@@ -99,7 +72,7 @@ La información sobre fuentes no disponibles forma parte del resultado de búsqu
 - No se encontraron tablas SQL, migraciones ni operaciones de persistencia compartida.
 - La caché de Steam pertenece exclusivamente a `SteamGameRepository` y es estado técnico temporal.
 
-## 5. Relación con los escenarios de calidad
+## 4. Relación con los escenarios de calidad
 
 | Escenario | Contextos relacionados |
 |---|---|
