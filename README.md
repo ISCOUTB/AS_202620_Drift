@@ -224,11 +224,11 @@ SonarQube Cloud está configurado mediante `sonar-project.properties` y el secre
 | [Matriz arquitectónica](docs/matriz.md) | Comparación entre arquitectura en capas, hexagonal y monolito modular. |
 | [C4: contexto](docs/c4/contexto.md) | Diagrama de contexto del sistema. |
 | [C4: contenedores](docs/c4/contenedores.md) | Diagrama de contenedores de DRIFT. |
+| [C4: componentes](docs/c4/componentes.md) | Diagrama de componentes de DRIFT. |
 | [arc42](docs/arc42/) | Documentación de arquitectura basada en arc42. |
 | [Uso de IA](docs/ia.md) | Registro y criterios de uso de herramientas de IA. |
 | [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3 y E4. |
 | [Contextos delimitados y propiedad de los datos](docs/arc42/08-conceptos-transversales.md) | Lenguaje ubicuo, mapa de contextos delimitados y propiedad de datos. |
-| [Evidencia S6](docs/semana-06-contextos-y-propiedad-de-datos.md) | Mapa de contextos, dueño único de datos, auditoría de violaciones y matriz de cumplimiento. |
 | [Correcciones](correcciones.md) | Trazabilidad entre el feedback y las correcciones realizadas. |
 
 ## Alcance actual
