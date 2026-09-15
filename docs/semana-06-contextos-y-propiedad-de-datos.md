@@ -111,34 +111,3 @@ La información sobre fuentes no disponibles forma parte del resultado de búsqu
 
 Todos los escenarios de `docs/aspectos.md` pueden relacionarse con al menos un contexto del mapa.
 
-## 6. Matriz de cumplimiento S6
-
-| Criterio de evaluación | Evidencia técnica | Estado | Observaciones |
-|---|---|---|---|
-| Mapa de contextos con relaciones tipificadas | `docs/arc42/08-conceptos-transversales.md` | Cumple | Incluye cliente-proveedor, capa anticorrupción e identificador compartido. |
-| Tabla módulo a datos con dueño único por entidad | Sección 3 de este documento | Cumple | Cada entidad o dato tiene un único contexto dueño. |
-| La tabla cubre entidades existentes en el código | Sección 1 y sección 3 de este documento | Cumple | Incluye `Game`, `GameRequirements`, catálogos en memoria y caché temporal. |
-| Violaciones detectadas sobre el código actual | Sección 4, V1 | Cumple | Se identificó la modificación de `unavailable_sources` desde infraestructura. |
-| Plan de corrección por violación | Sección 4, V1 | Cumple | El plan define responsable, ubicación y pasos de corrección. |
-| arc42 sección 8 con lenguaje ubicuo y mapa de contextos | `docs/arc42/08-conceptos-transversales.md` | Cumple | Documento creado para esta evidencia. |
-| C4 nivel 3 y ADR si los límites cambiaron desde el primer corte | [C4 nivel 3](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/c4/componentes.md) y [ADR-0003](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0003-reajuste-contextos-dominio.md) | Cumple | Los límites y responsabilidades fueron reajustados para representar resiliencia de fuentes externas y compatibilidad de PC. El cambio se documenta mediante ADR-0003. |
-| Aspectos relacionables con los contextos del mapa | Sección 5 y `docs/aspectos.md` | Cumple | E1–E5 se relacionan con uno o más contextos. |
-
-## 7. Matriz transversal del contrato
-
-| Criterio | Evidencia técnica esperada | Estado | Observaciones |
-|---|---|---|---|
-| Repositorio público en organización ISCOUTB | URL del repositorio | Cumple | Repositorio: `ISCOUTB/AS_202620_Drift`. |
-| Estructura mínima presente | `docs/arc42`, `docs/adr`, `docs/c4`, `docs/aspectos.md`, `docs/ia.md`, `README.md` | Cumple | Las rutas requeridas existen en el proyecto. |
-| Estado calificado identificable | `origin/master` en `0c5bea9227a9d6c4d0122708b86988db87775e26`, fecha `2026-09-12T00:00:29-05:00` | No verificado | Es el commit remoto actual. Antes del cierre se debe registrar el hash definitivo que el equipo decida entregar. |
-| Nombres de ADR según la convención | Archivos en `docs/adr/` | Cumple | Los ADR usan número y título en kebab case. |
-| ADR aceptados no reescritos | `git log --follow` sobre ADR-0001 y ADR-0002 | No cumple | El historial registra actualizaciones posteriores a la creación de ambos ADR. No se reescribirá el historial; para cambios futuros se crearán ADR nuevos que enlacen con la decisión anterior. |
-| `docs/ia.md` actualizado | `docs/ia.md` | Cumple | Registra usos, decisiones aceptadas y rechazos con motivo técnico. |
-| Sin credenciales en el repositorio | `git grep`, revisión de `.env`, historial y revisión local de archivos | Cumple | No se detectaron claves privadas, patrones comunes de credenciales ni archivos `.env` versionados. `SONAR_TOKEN` se usa como secreto de GitHub, no como valor escrito en el código. |
-| Participación de todos los integrantes | `git shortlog -sne HEAD` | Cumple | Se verificaron los cuatro integrantes. Los alias se consolidaron por correo: Jerry 73, Luis 67, Mauricio 59 y Joshua 56 commits. |
-
-## 8. Conclusión
-
-DRIFT cuenta actualmente con tres contextos de dominio o soporte: Búsqueda y comparación, Integración de fuentes externas y Compatibilidad de PC. La Experiencia de usuario consume los servicios de estos contextos.
-
-La auditoría detectó una no conformidad concreta: `ResilientGameRepository` modifica `Game.unavailable_sources` desde infraestructura. El hallazgo se documentó con un plan de corrección para el siguiente incremento.
