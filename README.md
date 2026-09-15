@@ -174,7 +174,7 @@ npm run build
 
 Última validación local: compilación de producción aprobada.
 
-### Rendimiento — escenario E1
+### Pruebas de Rendimiento
 
 Con k6 se ejecutó una prueba de carga sobre `GET /games/search?q=Minecraft` con 50 usuarios virtuales concurrentes.
 
@@ -200,7 +200,7 @@ En Windows, si k6 no está agregado al PATH:
 & "C:\Program Files\k6\k6.exe" run scripts/k6_baseline.js
 ```
 
-La evidencia completa está en [docs/evidencias/e1-linea-base.md](docs/evidencias/e1-linea-base.md).
+La evidencia completa de este y demás escenarios se encuentra en [docs/evidencias/](docs/evidencias/).
 
 ## Integración continua y calidad
 
