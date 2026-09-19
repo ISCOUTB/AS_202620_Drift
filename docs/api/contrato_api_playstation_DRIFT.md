@@ -26,7 +26,6 @@ La integración con PlayStation obtiene información de videojuegos, incluidos p
 - **Formato de intercambio:** JSON.
 - **Método principal:** `GET`.
 - **Proveedor:** PlayStation Network, documentado mediante PSN Swagger.
-- **Consumidor:** DRIFT, mediante el componente que obtiene y actualiza información de PlayStation.
 - **Persistencia:** memoria/repositorio local de DRIFT.
 - **Aislamiento:** la API externa no se utiliza directamente desde el dominio; toda comunicación pasa por el adaptador.
 - **Especificaciones:** OpenAPI 3.1 (sección 3) y AsyncAPI 3.0 (sección 4).
@@ -41,7 +40,6 @@ DRIFT ── HTTP ──► PlayStation API
                        ▼
               Memoria local DRIFT
 ```
-
 La consulta a PlayStation es síncrona porque cada solicitud espera su respuesta antes de normalizar y almacenar los datos. Esa consulta ocurre durante la actualización de la información, no en cada búsqueda del usuario. Como la actualización se ejecuta de forma independiente de la búsqueda, su ciclo de vida se describe además mediante un contrato asíncrono.
 
 ## 3. Contrato síncrono REST
