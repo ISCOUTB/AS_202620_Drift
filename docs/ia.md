@@ -404,3 +404,25 @@ La configuración fue revisada localmente. La ejecución del análisis en GitHub
 **Alternativa descartada:**
 
 Se descartó escribir el token de SonarQube Cloud directamente en el repositorio o en archivos versionados, porque expondría una credencial sensible.
+
+---
+
+### Registro 19 — Integración de una nueva API para DRIFT
+
+Fecha: 2026-09-19 Herramienta: ChatGPT
+
+Consulta utilizada:
+
+> ¿Cómo podemos integrar una nueva API en DRIFT para consultar información de videojuegos y conectarla con el backend existente?
+
+Uso:
+
+Se utilizó ChatGPT como apoyo para revisar la integración de una nueva API externa en el backend de DRIFT. La orientación se enfocó en identificar el lugar adecuado para realizar la conexión, organizar el consumo de la API mediante la arquitectura existente y mantener separadas las responsabilidades del dominio, los casos de uso y la infraestructura.
+
+Validación:
+
+El equipo revisó la implementación de la nueva API dentro del repositorio y verificó su relación con el backend actual. También se revisó que la integración conservara la organización arquitectónica del proyecto y que no se mezclara directamente la lógica de consumo de la API con los componentes de interfaz.
+
+Alternativa descartada:
+
+Se descartó realizar las solicitudes a la nueva API directamente desde los componentes del frontend, debido a que esto aumentaría el acoplamiento y dificultaría el mantenimiento de la aplicación.
