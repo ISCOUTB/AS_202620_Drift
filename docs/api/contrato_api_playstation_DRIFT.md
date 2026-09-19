@@ -26,7 +26,6 @@ La integración con PlayStation obtiene información de videojuegos, incluidos p
 - **Formato de intercambio:** JSON.
 - **Método principal:** `GET`.
 - **Proveedor:** PlayStation Network, documentado mediante PSN Swagger.
-- **Documentación externa:** https://olegshulyakov.github.io/psn-swagger/
 - **Consumidor:** DRIFT, mediante el componente que obtiene y actualiza información de PlayStation.
 - **Persistencia:** memoria/repositorio local de DRIFT.
 - **Aislamiento:** la API externa no se utiliza directamente desde el dominio; toda comunicación pasa por el adaptador.
