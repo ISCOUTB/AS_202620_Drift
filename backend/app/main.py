@@ -29,7 +29,10 @@ from app.infrastructure.persistence.resilient_game_repository import (
     ResilientGameRepository,
 )
 
-app = FastAPI(title="DRIFT API")
+app = FastAPI(
+    title="DRIFT API",
+    version="1.0.0",
+)
 logger = logging.getLogger(__name__)
 
 app.add_middleware(
