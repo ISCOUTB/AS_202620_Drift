@@ -1,6 +1,6 @@
 # Contrato de API DRIFT
 
-> **Qué es este documento:** borrador del contrato de la API de DRIFT. Describe cómo se comunican el frontend, el backend y las fuentes externas para buscar videojuegos y estimar compatibilidad de PC.
+> **Qué es este documento:** contrato de la API de DRIFT. Describe cómo se comunican el frontend y el backend para buscar videojuegos y estimar la compatibilidad de un PC.
 >
 > **Qué NO es:** una lista de funcionalidades futuras ya implementadas. La sección de estado diferencia lo que funciona actualmente de lo que sigue pendiente.
 
@@ -25,265 +25,47 @@ DRIFT es una plataforma que ayuda a los jugadores a buscar videojuegos, comparar
 - **Formato de intercambio:** JSON.
 - **Servidor local:** `http://localhost:8000`.
 - **Autenticación:** no implementada en la versión actual.
-- **Versionado propuesto:** `1.0.0`.
-- **Fuente externa real:** Steam.
+- **Versionado:** `1.0.0`.
+- **Fuente externa:** Steam.
 - **Respaldo:** catálogo local en memoria cuando Steam no está disponible.
 
-La integración es síncrona porque la búsqueda de videojuegos y la compatibilidad necesitan una respuesta inmediata para mostrarse al usuario en la interfaz.
+La integración es síncrona porque las operaciones actuales necesitan una respuesta inmediata para mostrar los resultados al usuario.
 
 ## 3. Contrato síncrono REST
 
-```yaml
-openapi: 3.1.0
+El contrato REST de la API de DRIFT se encuentra definido en:
 
-info:
-  title: DRIFT API
-  version: 1.0.0
-  description: |
-    Contrato HTTP de la API de DRIFT.
-    Permite buscar videojuegos, consultar el estado del servicio
-    y estimar la compatibilidad de un juego con un computador.
+`docs/api/drift/openapi.yaml`
 
-servers:
-  - url: http://localhost:8000
-    description: Entorno local
+El contrato está especificado mediante **OpenAPI 3.1.0** y documenta las operaciones disponibles actualmente en el backend.
 
-tags:
-  - name: Estado
-    description: Verificación de disponibilidad de la API.
-  - name: Juegos
-    description: Búsqueda y consulta de videojuegos.
-  - name: Compatibilidad
-    description: Estimación de compatibilidad de PC.
+### Endpoints principales
 
-paths:
-  /:
-    get:
-      tags:
-        - Estado
-      summary: Consultar estado de la API
-      operationId: getHealthStatus
-      responses:
-        "200":
-          description: La API está disponible.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HealthResponse"
-              example:
-                status: ok
+| Método | Endpoint | Propósito |
+|---|---|---|
+| `GET` | `/` | Consultar el estado de disponibilidad de la API. |
+| `GET` | `/games/search?q={consulta}` | Buscar videojuegos por nombre. |
+| `POST` | `/games/{game_id}/compatibility` | Estimar la compatibilidad de un videojuego con las especificaciones de un PC. |
 
-  /games/search:
-    get:
-      tags:
-        - Juegos
-      summary: Buscar videojuegos por nombre
-      operationId: searchGames
-      parameters:
-        - name: q
-          in: query
-          required: true
-          description: Texto a buscar. Debe tener al menos un carácter.
-          schema:
-            type: string
-            minLength: 1
-          example: Portal 2
-      responses:
-        "200":
-          description: Lista de videojuegos encontrados.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GameSearchResult"
-              example:
-                - id: 620
-                  name: Portal 2
-                  prices:
-                    Steam: 26000.0
-                  unavailable_sources: []
-        "422":
-          description: Parámetro de búsqueda ausente o inválido.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+Las solicitudes y respuestas utilizan **HTTP y JSON**.
 
-  /games/{game_id}/compatibility:
-    post:
-      tags:
-        - Compatibilidad
-      summary: Estimar compatibilidad de un juego con un PC
-      operationId: estimateCompatibility
-      parameters:
-        - name: game_id
-          in: path
-          required: true
-          description: Identificador del videojuego.
-          schema:
-            type: integer
-          example: 620
-      requestBody:
-        required: true
-        description: Capacidades principales del computador del usuario.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CompatibilityRequest"
-            example:
-              ram_gb: 16
-              gpu_score: 80
-      responses:
-        "200":
-          description: Resultado de la estimación o aviso de requisitos no disponibles.
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/CompatibilityResult"
-                  - $ref: "#/components/schemas/RequirementsUnavailable"
-              examples:
-                compatible:
-                  summary: Equipo compatible
-                  value:
-                    game_id: 620
-                    status: Compatible
-                    minimum_ram_gb: 4
-                    recommended_ram_gb: 8
-                    minimum_gpu_score: 30
-                    recommended_gpu_score: 60
-                unavailable:
-                  summary: Juego sin requisitos registrados
-                  value:
-                    game_id: 999999
-                    status: Requisitos no disponibles
-        "422":
-          description: Cuerpo de solicitud o identificador inválido.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+El contrato OpenAPI define los parámetros, cuerpos de solicitud, respuestas y esquemas correspondientes a cada operación.
 
-components:
-  schemas:
-    HealthResponse:
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          example: ok
-
-    GameSearchResult:
-      type: object
-      required:
-        - id
-        - name
-        - prices
-        - unavailable_sources
-      properties:
-        id:
-          type: integer
-          description: Identificador del videojuego.
-          example: 620
-        name:
-          type: string
-          description: Nombre del videojuego.
-          example: Portal 2
-        prices:
-          type: object
-          description: Precios encontrados, indexados por plataforma.
-          additionalProperties:
-            type: number
-          example:
-            Steam: 26000.0
-        unavailable_sources:
-          type: array
-          description: Fuentes que no estuvieron disponibles durante la búsqueda.
-          items:
-            type: string
-          example: []
-
-    CompatibilityRequest:
-      type: object
-      required:
-        - ram_gb
-        - gpu_score
-      properties:
-        ram_gb:
-          type: integer
-          description: Memoria RAM disponible en GB.
-          example: 16
-        gpu_score:
-          type: integer
-          description: Puntaje de GPU utilizado por DRIFT para estimar compatibilidad.
-          example: 80
-
-    CompatibilityResult:
-      type: object
-      required:
-        - game_id
-        - status
-        - minimum_ram_gb
-        - recommended_ram_gb
-        - minimum_gpu_score
-        - recommended_gpu_score
-      properties:
-        game_id:
-          type: integer
-          example: 620
-        status:
-          type: string
-          enum:
-            - Compatible
-            - Compatible con limitaciones
-            - No compatible
-          example: Compatible
-        minimum_ram_gb:
-          type: integer
-          example: 4
-        recommended_ram_gb:
-          type: integer
-          example: 8
-        minimum_gpu_score:
-          type: integer
-          example: 30
-        recommended_gpu_score:
-          type: integer
-          example: 60
-
-    RequirementsUnavailable:
-      type: object
-      required:
-        - game_id
-        - status
-      properties:
-        game_id:
-          type: integer
-          example: 999999
-        status:
-          type: string
-          const: Requisitos no disponibles
-
-    ValidationError:
-      type: object
-      description: Respuesta estándar de FastAPI ante datos inválidos.
-      properties:
-        detail:
-          type: array
-          items:
-            type: object
-```
+El archivo `openapi.yaml` constituye el contrato técnico ejecutable y versionado, mientras que este documento proporciona su descripción funcional y arquitectónica.
 
 ## 4. Contratos asíncronos
 
-DRIFT no tiene contratos asíncronos implementados actualmente.
+La API actual de DRIFT no utiliza contratos asíncronos.
 
-La versión actual no usa eventos, colas de mensajería, Kafka, RabbitMQ ni AsyncAPI. La búsqueda y la estimación de compatibilidad se ejecutan de forma síncrona porque el usuario necesita recibir una respuesta inmediata en la interfaz.
+Las operaciones expuestas actualmente son síncronas y funcionan mediante el modelo solicitud-respuesta HTTP.
 
-Como posible evolución futura, el sistema podría publicar eventos relacionados con actualizaciones de precios o indisponibilidad de una fuente externa. Sin embargo, estos eventos no forman parte de la implementación actual y no deben presentarse como funcionalidades terminadas.
+No se utilizan actualmente eventos, colas de mensajería, Kafka, RabbitMQ ni otros mecanismos de comunicación asíncrona dentro de esta API.
+
+Los procesos asíncronos relacionados con la actualización de información de fuentes externas se documentan de manera independiente en el contrato de integración de PlayStation:
+
+`docs/api/playstation/asyncapi.yaml`
+
+Estos procesos forman parte de la estrategia de integración externa y no de los endpoints actuales de la API de DRIFT.
 
 ## 5. Estado actual de implementación
 
@@ -299,16 +81,43 @@ Como posible evolución futura, el sistema podría publicar eventos relacionados
 | Perfil y dispositivos del usuario | No | No |
 | Detalle individual de un videojuego | No | No |
 | Historial de precios | No | No |
-| Integración real con Epic, Xbox, PlayStation u otras fuentes | No | No |
-| Eventos o contratos AsyncAPI | No | No |
+| Integración real con otras fuentes adicionales | No | No |
+| Eventos o contratos AsyncAPI para la API de DRIFT | No | No |
 
-## 6. Endpoints propuestos para futuros incrementos
+## 6. Relación con la arquitectura
 
-| Endpoint propuesto | Propósito | Estado |
-|---|---|---|
-| `GET /games/{game_id}` | Consultar detalle de un videojuego. | Pendiente |
-| `GET /games/{game_id}/requirements` | Consultar requisitos mínimos y recomendados. | Pendiente |
-| `GET /games/{game_id}/prices/history` | Consultar historial de precios. | Pendiente |
-| `GET /platforms` | Consultar fuentes o plataformas disponibles. | Pendiente |
-| `POST /users/devices` | Registrar especificaciones de un PC. | Pendiente |
-| `GET /recommendations` | Obtener recomendaciones personalizadas. | Pendiente |
+La API de DRIFT forma parte de la arquitectura basada en puertos y adaptadores.
+
+El frontend Next.js consume los endpoints HTTP expuestos por FastAPI. El backend utiliza puertos para desacoplar los casos de uso de las implementaciones concretas de las fuentes externas.
+
+El acceso a Steam se realiza mediante un adaptador externo, mientras que el catálogo local permite disponer de información cuando la fuente externa no está disponible.
+
+```text
+Frontend Next.js
+       │
+       │ HTTP + JSON
+       ▼
+   FastAPI / DRIFT
+       │
+       ├── Búsqueda de videojuegos
+       │
+       ├── Compatibilidad de PC
+       │
+       ▼
+ Adaptadores externos
+       │
+       └── Steam
+```
+La API mantiene actualmente un modelo síncrono para las operaciones que requieren respuesta inmediata. Los procesos de actualización externa que puedan ejecutarse de manera independiente se documentan mediante contratos de integración específicos.
+
+## 7. Versionado del contrato
+
+La versión actual del contrato es:
+
+1.0.0
+
+El contrato ejecutable se mantiene en:
+
+[docs/api/drift/openapi.yaml](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/api/drift/openapi.yaml)
+
+Los cambios incompatibles en rutas, parámetros, solicitudes o respuestas deberán reflejarse en una nueva versión del contrato y validarse mediante las pruebas de contrato correspondientes.
