@@ -1,0 +1,260 @@
+openapi: 3.1.0
+
+info:
+  title: DRIFT API
+  version: 1.0.0
+  description: |
+    Contrato HTTP de la API de DRIFT.
+    Permite consultar el estado del servicio, buscar videojuegos
+    y estimar la compatibilidad de un juego con un computador.
+
+servers:
+  - url: http://localhost:8000
+    description: Entorno local
+
+tags:
+  - name: Estado
+    description: Verificación de disponibilidad de la API.
+  - name: Juegos
+    description: Búsqueda y consulta de videojuegos.
+  - name: Compatibilidad
+    description: Estimación de compatibilidad de PC.
+
+paths:
+
+  /:
+    get:
+      tags:
+        - Estado
+      summary: Consultar estado de la API
+      operationId: getHealthStatus
+      responses:
+        "200":
+          description: La API está disponible.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+
+  /games/search:
+    get:
+      tags:
+        - Juegos
+      summary: Buscar videojuegos por nombre
+      operationId: searchGames
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Texto utilizado para buscar videojuegos.
+          schema:
+            type: string
+            minLength: 1
+          example: Portal 2
+      responses:
+        "200":
+          description: Lista de videojuegos encontrados.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameSearchResult"
+              example:
+                - id: 620
+                  name: Portal 2
+                  prices:
+                    Steam: 26000.0
+                  unavailable_sources: []
+
+        "422":
+          description: Parámetro de búsqueda ausente o inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /games/{game_id}/compatibility:
+    post:
+      tags:
+        - Compatibilidad
+      summary: Estimar compatibilidad de un juego con un PC
+      operationId: estimateCompatibility
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          description: Identificador del videojuego.
+          schema:
+            type: integer
+          example: 620
+
+      requestBody:
+        required: true
+        description: Capacidades principales del computador del usuario.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompatibilityRequest"
+            example:
+              ram_gb: 16
+              gpu_score: 80
+
+      responses:
+        "200":
+          description: Resultado de la estimación o aviso de requisitos no disponibles.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CompatibilityResult"
+                  - $ref: "#/components/schemas/RequirementsUnavailable"
+
+              examples:
+                compatible:
+                  summary: Equipo compatible
+                  value:
+                    game_id: 620
+                    status: Compatible
+                    minimum_ram_gb: 4
+                    recommended_ram_gb: 8
+                    minimum_gpu_score: 30
+                    recommended_gpu_score: 60
+
+                unavailable:
+                  summary: Juego sin requisitos registrados
+                  value:
+                    game_id: 999999
+                    status: Requisitos no disponibles
+
+        "422":
+          description: Cuerpo de solicitud o identificador inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+components:
+
+  schemas:
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+
+    GameSearchResult:
+      type: object
+      required:
+        - id
+        - name
+        - prices
+        - unavailable_sources
+      properties:
+        id:
+          type: integer
+          description: Identificador del videojuego.
+          example: 620
+
+        name:
+          type: string
+          description: Nombre del videojuego.
+          example: Portal 2
+
+        prices:
+          type: object
+          description: Precios encontrados, indexados por plataforma.
+          additionalProperties:
+            type: number
+          example:
+            Steam: 26000.0
+
+        unavailable_sources:
+          type: array
+          description: Fuentes que no estuvieron disponibles durante la búsqueda.
+          items:
+            type: string
+          example: []
+
+    CompatibilityRequest:
+      type: object
+      required:
+        - ram_gb
+        - gpu_score
+      properties:
+        ram_gb:
+          type: integer
+          description: Memoria RAM disponible en GB.
+          example: 16
+
+        gpu_score:
+          type: integer
+          description: Puntaje de GPU utilizado por DRIFT para estimar compatibilidad.
+          example: 80
+
+    CompatibilityResult:
+      type: object
+      required:
+        - game_id
+        - status
+        - minimum_ram_gb
+        - recommended_ram_gb
+        - minimum_gpu_score
+        - recommended_gpu_score
+      properties:
+        game_id:
+          type: integer
+          example: 620
+
+        status:
+          type: string
+          enum:
+            - Compatible
+            - Compatible con limitaciones
+            - No compatible
+          example: Compatible
+
+        minimum_ram_gb:
+          type: integer
+          example: 4
+
+        recommended_ram_gb:
+          type: integer
+          example: 8
+
+        minimum_gpu_score:
+          type: integer
+          example: 30
+
+        recommended_gpu_score:
+          type: integer
+          example: 60
+
+    RequirementsUnavailable:
+      type: object
+      required:
+        - game_id
+        - status
+      properties:
+        game_id:
+          type: integer
+          example: 999999
+
+        status:
+          type: string
+          const: Requisitos no disponibles
+
+    ValidationError:
+      type: object
+      description: Respuesta estándar de FastAPI ante datos inválidos.
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
