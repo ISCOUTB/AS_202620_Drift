@@ -1,46 +1,51 @@
 # Contrato de Integración API — PlayStation
 
-> **Qué es este documento:** borrador del contrato de integración de DRIFT con la API de PlayStation (PSN Swagger). Describe cómo el backend obtiene información de videojuegos, la normaliza y la almacena en la memoria local de DRIFT.
+> **Qué es este documento:** contrato de integración de DRIFT con la API de PlayStation (PSN Swagger). Describe cómo el backend obtiene información de videojuegos, la normaliza y la incorpora al almacenamiento persistente de DRIFT.
 >
-> **Qué NO es:** una lista de funcionalidades futuras ya implementadas. La sección de estado diferencia lo que funciona actualmente de lo que sigue pendiente.
+> **Qué NO es:** una lista de funcionalidades futuras ya implementadas. La sección de estado diferencia lo que funciona actualmente de lo que corresponde a la estrategia de integración y a incrementos posteriores.
 
 ## 1. Alcance de la API
 
-La integración con PlayStation obtiene información de videojuegos, incluidos precios y disponibilidad cuando estén disponibles, y la almacena en la memoria local de DRIFT. Las consultas de los usuarios se resuelven con la información almacenada, sin depender de una llamada constante a la API externa, y el dominio de DRIFT permanece desacoplado del proveedor.
+La integración con PlayStation permite obtener información de videojuegos, incluidos precios y disponibilidad cuando estén disponibles, y transformarla al modelo interno de DRIFT. La información obtenida puede ser almacenada en MySQL para reducir la dependencia de consultas directas al proveedor externo durante las búsquedas de los usuarios.
 
 | Actor o sistema | Necesita realizar | Operación o interacción |
 |---|---|---|
-| Usuario | Buscar un videojuego | Consulta desde el frontend, resuelta contra la memoria local |
-| Usuario | Conocer precios disponibles en PlayStation | Visualiza los resultados de búsqueda |
-| Backend FastAPI | Obtener información de videojuegos de PlayStation | Solicitud `GET` al proveedor externo (PSN Swagger) |
+| Usuario | Buscar un videojuego | Consulta desde el frontend de DRIFT |
+| Usuario | Conocer precios disponibles en PlayStation | Visualiza los resultados disponibles en DRIFT |
+| Backend FastAPI | Obtener información de videojuegos de PlayStation | Solicitud `GET` al proveedor externo mediante PSN Swagger |
 | Backend FastAPI | Normalizar la información recibida | Transformación al modelo interno de DRIFT |
-| Backend FastAPI | Almacenar la información obtenida | Memoria/repositorio local de DRIFT |
-| Backend FastAPI | Informar el resultado de la actualización | Mensajes asíncronos de captura, finalización o fallo |
-| Backend FastAPI | Mantener respuesta ante falla de PlayStation | Usa la información almacenada localmente |
-| Adaptador PlayStation | Aislar la API externa del dominio | Encapsula solicitudes HTTP, transformación y errores |
+| Backend FastAPI | Almacenar la información obtenida | Persistencia en MySQL |
+| Backend FastAPI | Actualizar información del catálogo | Ejecución del proceso de actualización definido para la fuente |
+| Backend FastAPI | Mantener disponibilidad ante una falla externa | Utiliza la información previamente almacenada cuando esté disponible |
+| Adaptador PlayStation | Aislar la API externa del dominio | Encapsula solicitudes HTTP, transformación y manejo de errores |
 
 ## 2. Convenciones del contrato
 
-- **Estilo de integración:** REST síncrono hacia la API externa y contrato asíncrono para el flujo de actualización.
+- **Estilo de integración:** REST síncrono hacia la API externa y flujo asíncrono para procesos de actualización del catálogo.
 - **Protocolo hacia PlayStation:** HTTP/HTTPS.
 - **Formato de intercambio:** JSON.
 - **Método principal:** `GET`.
 - **Proveedor:** PlayStation Network, documentado mediante PSN Swagger.
-- **Persistencia:** memoria/repositorio local de DRIFT.
-- **Aislamiento:** la API externa no se utiliza directamente desde el dominio; toda comunicación pasa por el adaptador.
-- **Especificaciones:** OpenAPI 3.1 (sección 3) y AsyncAPI 3.0 (sección 4).
-- **Versionado propuesto:** `1.0.0`.
+- **Persistencia:** MySQL.
+- **Aislamiento:** la API externa no se utiliza directamente desde el dominio; toda comunicación pasa por el adaptador correspondiente.
+- **Especificaciones:** OpenAPI 3.1 para la integración REST y AsyncAPI 3.0 para el flujo de actualización.
+- **Versionado:** `1.0.0`.
 
 ```text
-DRIFT ── HTTP ──► PlayStation API
-                       │ JSON
-                       ▼
-             Adaptador PlayStation
-                       │ Normalización
-                       ▼
-              Memoria local DRIFT
+DRIFT ── HTTP/HTTPS + JSON ──► PlayStation API
+                                  │
+                                  ▼
+                         Adaptador PlayStation
+                                  │
+                           Normalización
+                                  │
+                                  ▼
+                                MySQL
 ```
-La consulta a PlayStation es síncrona porque cada solicitud espera su respuesta antes de normalizar y almacenar los datos. Esa consulta ocurre durante la actualización de la información, no en cada búsqueda del usuario. Como la actualización se ejecuta de forma independiente de la búsqueda, su ciclo de vida se describe además mediante un contrato asíncrono.
+
+La consulta a PlayStation utiliza comunicación síncrona porque cada solicitud necesita una respuesta del proveedor antes de poder procesar la información obtenida.
+
+La estrategia de actualización del catálogo se separa de las consultas interactivas del usuario. La información obtenida puede ser procesada, normalizada y almacenada periódicamente en MySQL, reduciendo la necesidad de consultar directamente al proveedor en cada búsqueda.
 
 ## 3. Contrato síncrono REST
 
@@ -53,7 +58,7 @@ info:
   description: |
     Contrato de consumo de la API externa de PlayStation (PSN Swagger)
     por parte de DRIFT. DRIFT actúa como consumidor: obtiene información
-    de videojuegos, la normaliza y la almacena en su memoria local.
+    de videojuegos, la normaliza y la almacena en MySQL.
 
 servers:
   - url: https://{host}
@@ -61,7 +66,7 @@ servers:
     variables:
       host:
         default: host-de-playstation
-        description: Host de la API, según la documentación de PSN Swagger.
+        description: Host de la API según la documentación de PSN Swagger.
 
 tags:
   - name: Videojuegos
@@ -74,10 +79,11 @@ paths:
         - Videojuegos
       summary: Consultar información de videojuegos en PlayStation
       description: |
-        Solicitud `GET` con `Accept: application/json`. El recurso concreto
-        se toma de la documentación de PSN Swagger según la necesidad
-        funcional de DRIFT.
+        Solicitud GET con Accept: application/json.
+        El recurso concreto se toma de la documentación de PSN Swagger
+        según la necesidad funcional de DRIFT.
       operationId: getPlayStationGames
+
       parameters:
         - name: recurso
           in: path
@@ -85,6 +91,7 @@ paths:
           description: Recurso concreto documentado en PSN Swagger.
           schema:
             type: string
+
       responses:
         "200":
           description: Solicitud exitosa. DRIFT procesa y almacena la información.
@@ -98,36 +105,49 @@ paths:
                 price: 0.0
                 currency: COP
                 platform: PlayStation
+
         "400":
           description: Solicitud incorrecta. DRIFT registra el error y descarta la respuesta.
+
         "401":
           description: No autorizado. DRIFT registra el error de autenticación.
+
         "403":
           description: Acceso prohibido. DRIFT registra el error de acceso.
+
         "404":
           description: Recurso no encontrado. DRIFT registra la ausencia del recurso.
+
         "429":
-          description: Límite de solicitudes superado. DRIFT aplica control de solicitudes o reintento.
+          description: Límite de solicitudes superado. DRIFT registra el error y puede aplicar control de solicitudes o reintento.
+
         "500":
           description: Error del servidor externo. DRIFT registra el error y conserva la información local disponible.
+
         "502":
           $ref: "#/components/responses/ServicioNoDisponible"
+
         "503":
           $ref: "#/components/responses/ServicioNoDisponible"
+
         "504":
           $ref: "#/components/responses/ServicioNoDisponible"
 
 components:
+
   responses:
     ServicioNoDisponible:
-      description: Servicio externo no disponible. DRIFT registra el error y utiliza información local cuando sea posible.
+      description: |
+        Servicio externo no disponible. DRIFT registra el error
+        y utiliza información previamente almacenada cuando sea posible.
 
   schemas:
+
     PlayStationGame:
       type: object
       description: |
-        Videojuego tal como lo entrega PlayStation. Puede incluir información
-        adicional según el recurso consultado.
+        Representación de un videojuego obtenida desde PlayStation.
+        Puede incluir información adicional según el recurso consultado.
       required:
         - id
         - name
@@ -137,27 +157,33 @@ components:
           type: string
           description: Identificador del videojuego en PlayStation.
           example: CUSA00000
+
         name:
           type: string
           description: Nombre del videojuego.
           example: Nombre del videojuego
+
         price:
           type: number
           description: Precio del videojuego.
           example: 0.0
+
         currency:
           type: string
           description: Moneda del precio.
           example: COP
+
         platform:
           type: string
+          description: Plataforma de origen.
           example: PlayStation
 
     NormalizedGame:
       type: object
       description: |
         Representación interna de DRIFT, independiente del proveedor.
-        Es el formato que el adaptador entrega y la memoria local almacena.
+        Es el formato que el adaptador entrega para su almacenamiento
+        y posterior utilización por el sistema.
       required:
         - id
         - name
@@ -171,24 +197,31 @@ components:
         id:
           type: string
           example: CUSA00000
+
         name:
           type: string
           example: Nombre del videojuego
+
         source:
           type: string
           const: playstation
+
         platform:
           type: string
           example: PlayStation
+
         price:
           type: number
           example: 0.0
+
         currency:
           type: string
           example: COP
+
         discount:
           type: integer
           example: 0
+
         captured_at:
           type: string
           format: date-time
@@ -196,16 +229,18 @@ components:
           example: "2026-09-19T00:00:00Z"
 ```
 
-## 4. Contratos asíncronos
+## 4. Contrato asíncrono
 
-El flujo de actualización de la información de PlayStation se describe como contrato asíncrono porque se ejecuta de forma independiente de la búsqueda del usuario. Cada etapa produce un mensaje:
+El flujo de actualización del catálogo se define mediante un contrato asíncrono independiente de las consultas interactivas de los usuarios.
+
+La estrategia contempla que una actualización sea solicitada y que el proceso obtenga información desde PlayStation, la normalice y la almacene en MySQL. El mecanismo concreto de programación o mensajería será definido durante la implementación.
 
 | Mensaje | Tipo | Cuándo se produce |
-|---|---|---|
-| `UpdateRequested` | Comando (recibido por DRIFT) | Se solicita iniciar una actualización. |
-| `GameCaptured` | Evento (publicado por DRIFT) | Un videojuego fue obtenido, normalizado y guardado en la memoria local. |
-| `UpdateCompleted` | Evento (publicado por DRIFT) | La actualización terminó. |
-| `UpdateFailed` | Evento (publicado por DRIFT) | La actualización falló; se conserva la información local disponible. |
+| ------- | ---- | ------------------ |
+| `UpdateRequested` | Comando | Se solicita iniciar una actualización del catálogo de PlayStation. |
+| `GameCaptured` | Evento | Un videojuego fue obtenido, normalizado y preparado para almacenamiento. |
+| `UpdateCompleted` | Evento | La actualización terminó correctamente. |
+| `UpdateFailed` | Evento | La actualización presentó un error; la información previamente almacenada se conserva. |
 
 ```yaml
 asyncapi: 3.0.0
@@ -214,14 +249,15 @@ info:
   title: Actualización de información de PlayStation en DRIFT
   version: 1.0.0
   description: |
-    Contrato asíncrono del flujo de actualización de la información de
-    PlayStation: solicitar información, recibir la respuesta JSON,
-    normalizarla y guardarla en la memoria local de DRIFT.
-    Las consultas de los usuarios no forman parte de este flujo.
+    Contrato asíncrono del flujo de actualización del catálogo de PlayStation.
+    El proceso permite solicitar una actualización, obtener información,
+    normalizarla y almacenarla en MySQL sin depender del ciclo de vida
+    de las consultas realizadas por los usuarios.
 
 defaultContentType: application/json
 
 channels:
+
   updateRequested:
     address: playstation.catalog.update.requested
     description: Solicitud de inicio de una actualización.
@@ -231,26 +267,27 @@ channels:
 
   gameCaptured:
     address: playstation.catalog.game.captured
-    description: Videojuego normalizado y guardado en la memoria local.
+    description: Videojuego obtenido y normalizado para su almacenamiento.
     messages:
       gameCaptured:
         $ref: "#/components/messages/GameCaptured"
 
   updateCompleted:
     address: playstation.catalog.update.completed
-    description: Fin exitoso de una actualización.
+    description: Finalización exitosa de una actualización.
     messages:
       updateCompleted:
         $ref: "#/components/messages/UpdateCompleted"
 
   updateFailed:
     address: playstation.catalog.update.failed
-    description: Fallo de una actualización.
+    description: Fallo durante una actualización.
     messages:
       updateFailed:
         $ref: "#/components/messages/UpdateFailed"
 
 operations:
+
   receiveUpdateRequest:
     action: receive
     summary: Recibir la solicitud de actualización.
@@ -276,7 +313,9 @@ operations:
       $ref: "#/channels/updateFailed"
 
 components:
+
   messages:
+
     UpdateRequested:
       name: UpdateRequested
       title: Actualización solicitada
@@ -328,6 +367,7 @@ components:
             occurred_at: "2026-09-19T00:00:05Z"
 
   schemas:
+
     UpdateRequestedPayload:
       type: object
       required:
@@ -337,13 +377,14 @@ components:
         source:
           type: string
           const: playstation
+
         requested_at:
           type: string
           format: date-time
 
     NormalizedGame:
       type: object
-      description: Misma representación normalizada definida en la sección 3.
+      description: Representación normalizada de un videojuego en DRIFT.
       required:
         - id
         - name
@@ -356,19 +397,26 @@ components:
       properties:
         id:
           type: string
+
         name:
           type: string
+
         source:
           type: string
           const: playstation
+
         platform:
           type: string
+
         price:
           type: number
+
         currency:
           type: string
+
         discount:
           type: integer
+
         captured_at:
           type: string
           format: date-time
@@ -383,9 +431,11 @@ components:
         source:
           type: string
           const: playstation
+
         games_loaded:
           type: integer
-          description: Cantidad de videojuegos guardados en la memoria local.
+          description: Cantidad de videojuegos procesados durante la actualización.
+
         completed_at:
           type: string
           format: date-time
@@ -401,53 +451,65 @@ components:
         source:
           type: string
           const: playstation
+
         reason:
           type: string
           description: Motivo del fallo.
+
         http_status:
           type: integer
           description: Código HTTP devuelto por la API externa, si aplica.
+
         local_data_preserved:
           type: boolean
-          description: Indica que la información local existente se conservó.
+          description: Indica que la información almacenada previamente se conserva.
+
         occurred_at:
           type: string
           format: date-time
 ```
 
-Este contrato no fija el transporte de los mensajes (broker o cola) ni el disparador de `UpdateRequested` (manual o periódico). Su estado de implementación se indica en la sección 5.
-
-Beneficios del flujo asíncrono:
-
-- Reduce la dependencia de la disponibilidad de la API externa.
-- Evita consultas innecesarias a PlayStation.
-- Facilita incorporar nuevas fuentes sin acoplar el dominio a PlayStation.
+El contrato asíncrono define la interacción lógica del proceso de actualización, pero no fija todavía el mecanismo concreto de transporte de mensajes ni el programador que iniciará la actualización.
 
 ## 5. Estado actual de implementación
 
-| Operación o funcionalidad | En el contrato | Implementado actualmente |
+| Operación o funcionalidad | En el contrato | Estado actual |
+| -------------------------- | -------------- | -------------- |
+| Puerto de fuente externa de catálogo (`GameCatalogSource`) | Sí | Implementado |
+| Integración con PlayStation mediante PSN Swagger | Sí | Implementada según la integración actual |
+| Normalización al modelo interno | Sí | Implementada mediante transformación al modelo `Game` |
+| Almacenamiento persistente del catálogo | Sí | Previsto mediante MySQL |
+| Búsqueda contra información almacenada | Sí | Parte del flujo de consulta de DRIFT |
+| Actualización de información de PlayStation | Sí | Parte de la estrategia de integración |
+| Conservación de información previamente almacenada ante falla externa | Sí | Considerada dentro de la estrategia de integración |
+| Publicación de mensajes definidos en AsyncAPI | Sí | Pendiente de implementación |
+| Programación automática de actualizaciones | Sí | Pendiente de implementación |
+| Control de solicitudes o reintentos ante `429` | Sí | Pendiente de implementación |
+| Historial de precios | No | No implementado |
+
+
+## 6. Capacidades de la integración
+
+La integración con PlayStation permite obtener información de videojuegos mediante PSN Swagger. La información recibida puede ser transformada al modelo interno de DRIFT para ser utilizada por la aplicación.
+
+| Operación | Propósito | Estado |
 |---|---|---|
-| Puerto de fuente externa de catálogo (`GameCatalogSource`) | Sí | Sí |
-| Adaptador PlayStation con PSN Swagger | Sí | No; el adaptador actual consulta PlatPrices |
-| Normalización al modelo interno | Sí | Sí, transformación a `Game` |
-| Almacenamiento en memoria local | Sí | Sí, mediante `InMemoryGameRepository` |
-| Búsqueda contra la información local | Sí | Sí, mediante `GET /games/search?q={consulta}` |
-| Actualización de la información local | Sí | Sí, mediante `POST /games/sync/platprices` |
-| Conservación de la información local ante falla externa | Sí | Sí, el catálogo anterior no se reemplaza |
-| Publicación de mensajes de actualización (AsyncAPI) | Sí | No; la actualización se ejecuta de forma directa, sin publicar mensajes |
-| Registro de errores de la API externa | Sí | No; el error se devuelve en la respuesta de la sincronización |
-| Control de solicitudes o reintento ante `429` | Sí | No |
-| Actualización periódica automática | Sí | No |
-| Historial de precios | No | No |
+| Buscar videojuegos | Consultar videojuegos mediante la API de PlayStation y obtener la información disponible para el resultado de búsqueda. | Implementado |
+| Obtener información comercial | Obtener información disponible sobre precio, moneda y disponibilidad cuando sea proporcionada por PlayStation. | Implementado |
+| Normalizar información | Transformar la respuesta de PlayStation al modelo interno de DRIFT. | Implementado |
+| Integrar resultados en DRIFT | Incorporar la información obtenida al flujo de búsqueda de videojuegos. | Implementado |
+| Actualizar información del catálogo | Obtener nuevamente información desde PlayStation para mantener actualizado el catálogo local. | En desarrollo |
+| Persistir información en MySQL | Almacenar la información normalizada para reducir consultas directas al proveedor externo. | Parte de la arquitectura objetivo |
+| Actualización periódica | Ejecutar automáticamente procesos de actualización del catálogo. | Pendiente |
 
-## 6. Endpoints propuestos para futuros incrementos
+## 7. Relación con la estrategia de integración
 
-Los recursos concretos dependerán de los endpoints disponibles en PSN Swagger y de las necesidades funcionales de DRIFT.
+La integración de PlayStation forma parte de la estrategia híbrida definida en el [**ADR-0004**](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0004-estrategia-de-integracion.md).
 
-| Endpoint propuesto | Propósito | Estado |
-|---|---|---|
-| `GET` Buscar videojuegos | Obtener videojuegos según un criterio de búsqueda. | Pendiente |
-| `GET` Consultar información de videojuego | Obtener información detallada. | Pendiente |
-| `GET` Consultar información comercial | Obtener precio, descuento y disponibilidad. | Pendiente |
-| `GET` Consultar imágenes | Obtener recursos visuales. | Pendiente |
-| `GET` Actualizar información local | Capturar nuevamente información desde PlayStation. | Pendiente |
+La comunicación con la API externa se realiza mediante HTTP/HTTPS y JSON. La actualización del catálogo se separa del flujo interactivo del usuario para permitir que la información externa sea obtenida y procesada de manera independiente.
+
+Esta estrategia permite reducir la dependencia de la disponibilidad inmediata del proveedor y controlar la frecuencia de las solicitudes externas.
+
+La información obtenida se normaliza antes de incorporarse al modelo interno de DRIFT, manteniendo el dominio desacoplado de las estructuras específicas de PlayStation.
+
+La misma estrategia puede aplicarse posteriormente a otras fuentes externas, como Xbox u otros proveedores, cuando sus características de disponibilidad, límites de solicitudes o costos hagan conveniente una actualización periódica y almacenamiento local.
