@@ -39,9 +39,10 @@ Las decisiones principales están documentadas en:
 DRIFT/
 ├── backend/
 │   ├── app/
-│   │   ├── application/usecases/
-│   │   │   ├── search_games.py
-│   │   │   └── estimate_compatibility.py
+│   │   ├── application/
+│   │   │   └── usecases/
+│   │   │       ├── search_games.py
+│   │   │       └── estimate_compatibility.py
 │   │   ├── domain/
 │   │   │   ├── model/
 │   │   │   │   ├── game.py
@@ -50,7 +51,9 @@ DRIFT/
 │   │   │       ├── game_repository.py
 │   │   │       └── game_requirements_repository.py
 │   │   ├── infrastructure/
-│   │   │   ├── external/steam/steam_game_repository.py
+│   │   │   ├── external/
+│   │   │   │   └── steam/
+│   │   │   │       └── steam_game_repository.py
 │   │   │   └── persistence/
 │   │   │       ├── in_memory_game_repository.py
 │   │   │       ├── in_memory_game_requirements_repository.py
@@ -59,25 +62,37 @@ DRIFT/
 │   └── tests/
 │       ├── test_search_games.py
 │       └── test_compatibility.py
+│
 ├── frontend/
 │   ├── application/
 │   ├── domain/
 │   ├── infrastructure/
-│   └── ui/components/DriftHome.js
+│   └── ui/
+│       └── components/
+│           └── DriftHome.js
+│
 ├── docs/
 │   ├── adr/
 │   ├── arc42/
 │   ├── c4/
 │   ├── evidencias/
+│   ├── api/
+│   │   ├── drift/
+│   │   │   ├── contrato_api_DRIFT.md
+│   │   │   └── openapi.yaml
+│   │   └── playstation/
+│   │       ├── contrato_api_playstation.md
+│   │       ├── openapi.yaml
+│   │       └── asyncapi.yaml
 │   ├── aspectos.md
 │   ├── escenarios.md
 │   ├── ia.md
 │   └── matriz.md
+│
 ├── scripts/
 │   ├── start.py
 │   └── k6_baseline.js
-├── api/
-│   ├── contrato_api_DRIFT.md
+│
 ├── sonar-project.properties
 ├── correcciones.md
 └── README.md
