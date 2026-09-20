@@ -121,3 +121,9 @@ El contrato ejecutable se mantiene en:
 [docs/api/drift/openapi.yaml](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/api/drift/openapi.yaml)
 
 Los cambios incompatibles en rutas, parámetros, solicitudes o respuestas deberán reflejarse en una nueva versión del contrato y validarse mediante las pruebas de contrato correspondientes.
+
+## 8. Historial de versiones
+
+| Versión | Fecha | Descripción |
+|---|---|---|
+| 1.0.0 | 2026-09-19 | Versión inicial del contrato HTTP de la API de DRIFT. Incluye estado de la API, búsqueda de videojuegos, sincronización del catálogo de PlayStation y estimación de compatibilidad. |
