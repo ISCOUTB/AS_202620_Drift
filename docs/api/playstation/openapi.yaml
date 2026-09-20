@@ -1,0 +1,534 @@
+openapi: 3.0.3
+
+info:
+  title: PlayStation API - GetGame
+  description: |
+    Contrato de integración de DRIFT con la API de PlayStation
+    documentada mediante PSN Swagger.
+
+    La operación GetGame permite consultar información de videojuegos
+    mediante parámetros de país, idioma, edad y código CUSA, además
+    de diferentes filtros opcionales de catálogo.
+  version: 1.0.0
+
+externalDocs:
+  description: PSN Swagger
+  url: https://olegshulyakov.github.io/psn-swagger/
+
+tags:
+  - name: Games
+    description: Operaciones relacionadas con videojuegos.
+
+paths:
+  /store/api/chihiro/00_09_000/container/{country}/{language}/{age}/{cusa}:
+    get:
+      tags:
+        - Games
+
+      summary: Obtener información de un videojuego
+
+      description: |
+        Consulta información de un videojuego de PlayStation mediante
+        su código CUSA y los parámetros regionales correspondientes.
+
+      operationId: getGame
+
+      parameters:
+        - name: country
+          in: path
+          required: true
+          description: |
+            Código de país utilizado para realizar la búsqueda.
+            Debe utilizarse un código de dos caracteres.
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          example: co
+
+        - name: language
+          in: path
+          required: true
+          description: |
+            Código de idioma utilizado para realizar la búsqueda.
+            Debe utilizarse un código de dos caracteres.
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          example: es
+
+        - name: age
+          in: path
+          required: true
+          description: Edad del usuario.
+          schema:
+            type: integer
+            format: int32
+          example: 18
+
+        - name: cusa
+          in: path
+          required: true
+          description: Código CUSA del videojuego.
+          schema:
+            type: string
+          example: CUSA00001
+
+        - name: size
+          in: query
+          required: false
+          description: Límite de resultados.
+          schema:
+            type: integer
+            format: int32
+          example: 10
+
+        - name: start
+          in: query
+          required: false
+          description: Desplazamiento inicial de los resultados.
+          schema:
+            type: integer
+            format: int32
+          example: 0
+
+        - name: sort
+          in: query
+          required: false
+          description: Campo utilizado para ordenar los resultados.
+          schema:
+            type: string
+            enum:
+              - timestamp
+              - release_date
+          example: release_date
+
+        - name: direction
+          in: query
+          required: false
+          description: Dirección de ordenamiento.
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: desc
+
+        - name: gameContentType
+          in: query
+          required: false
+          description: Tipo de contenido del videojuego.
+          schema:
+            type: string
+            enum:
+              - bundles
+              - games
+              - timed_trials
+          example: games
+
+        - name: subtitleLang
+          in: query
+          required: false
+          description: |
+            Código de idioma de subtítulos. Se pueden indicar varios
+            valores separados por coma.
+          schema:
+            type: string
+          example: en
+
+        - name: releaseDate
+          in: query
+          required: false
+          description: Filtro de fecha de lanzamiento.
+          schema:
+            type: string
+            enum:
+              - coming_soon
+              - last_7_days
+              - last_30_days
+
+        - name: gameDemo
+          in: query
+          required: false
+          description: Indica si se buscan demostraciones.
+          schema:
+            type: boolean
+          example: false
+
+        - name: price
+          in: query
+          required: false
+          description: Rango de precio.
+          schema:
+            type: string
+          example: 100-1000
+
+        - name: genre
+          in: query
+          required: false
+          description: Género del videojuego.
+          schema:
+            type: string
+          example: action
+
+        - name: topCategory
+          in: query
+          required: false
+          description: Categoría principal del videojuego.
+          schema:
+            type: string
+          example: downloadable_game
+
+        - name: voiceLang
+          in: query
+          required: false
+          description: |
+            Código de idioma de voz. Se pueden indicar varios valores
+            separados por coma.
+          schema:
+            type: string
+          example: en
+
+        - name: game_type
+          in: query
+          required: false
+          description: Tipo de videojuego.
+          schema:
+            type: string
+          example: ps4_full_games
+
+        - name: relationship
+          in: query
+          required: false
+          description: Relación del contenido.
+          schema:
+            type: string
+          example: bundles
+
+        - name: platform
+          in: query
+          required: false
+          description: Plataforma del videojuego.
+          schema:
+            type: string
+            enum:
+              - ps4
+              - ps3
+              - psvita
+          example: ps4
+
+      responses:
+
+        "200":
+          description: Información del videojuego obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayStationGame"
+
+        "400":
+          description: Solicitud inválida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayStationError"
+
+        "404":
+          description: No se encontraron datos para el videojuego.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayStationError"
+
+components:
+
+  schemas:
+
+    PlayStationGame:
+      type: object
+      properties:
+
+        age_limit:
+          type: integer
+
+        attributes:
+          type: object
+          description: Facetas y atributos disponibles para el contenido.
+
+        container_type:
+          type: string
+
+        content_origin:
+          type: integer
+
+        dob_required:
+          type: boolean
+
+        id:
+          type: string
+
+        images:
+          type: array
+          items: {}
+
+        links:
+          type: array
+          description: |
+            Información comercial y de contenido asociada
+            al videojuego.
+          items:
+            $ref: "#/components/schemas/GameLink"
+
+        long_desc:
+          type: string
+
+        metadata:
+          type: object
+
+        name:
+          type: string
+
+        promomedia:
+          type: array
+          items: {}
+
+        restricted:
+          type: boolean
+
+        revision:
+          type: integer
+
+        scene_layout:
+          type: object
+
+        size:
+          type: integer
+
+        sku_links:
+          type: array
+          items: {}
+
+        sort:
+          type: string
+
+        start:
+          type: integer
+
+        template_def:
+          type: object
+
+        timestamp:
+          type: integer
+
+        total_results:
+          type: integer
+
+      required:
+        - id
+        - name
+
+    GameLink:
+      type: object
+      properties:
+
+        bucket:
+          type: string
+
+        container_type:
+          type: string
+
+        content_type:
+          type: string
+
+        default_sku:
+          $ref: "#/components/schemas/DefaultSku"
+
+        gameContentTypesList:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              key:
+                type: string
+
+        game_contentType:
+          type: string
+
+        id:
+          type: string
+
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: integer
+              url:
+                type: string
+
+        name:
+          type: string
+
+        playable_platform:
+          type: array
+          items:
+            type: string
+
+        release_date:
+          type: string
+
+        restricted:
+          type: boolean
+
+        revision:
+          type: integer
+
+        short_name:
+          type: string
+
+        timestamp:
+          type: integer
+
+        top_category:
+          type: string
+
+        url:
+          type: string
+
+        provider_name:
+          type: string
+
+        parent_name:
+          type: string
+
+        cloud_only_platform:
+          type: array
+          items:
+            type: string
+
+        bundleChildTypeId:
+          type: integer
+
+    DefaultSku:
+      type: object
+      properties:
+
+        id:
+          type: string
+
+        name:
+          type: string
+
+        price:
+          type: number
+          format: float
+          description: Precio del videojuego.
+
+        display_price:
+          type: string
+          description: Precio mostrado al usuario.
+
+        amortizeFlag:
+          type: boolean
+
+        bundleExclusiveFlag:
+          type: boolean
+
+        chargeImmediatelyFlag:
+          type: boolean
+
+        charge_type_id:
+          type: integer
+
+        credit_card_required_flag:
+          type: integer
+
+        defaultSku:
+          type: boolean
+
+        eligibilities:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              operand:
+                type: string
+              operator:
+                type: string
+              name:
+                type: string
+              drms:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    libraryPath:
+                      type: string
+
+        entitlements:
+          type: array
+          items:
+            type: object
+
+        is_original:
+          type: boolean
+
+        platforms:
+          type: array
+          items:
+            type: integer
+
+        rewards:
+          type: array
+          items:
+            type: object
+
+        seasonPassExclusiveFlag:
+          type: boolean
+
+        skuAvailabilityOverrideFlag:
+          type: boolean
+
+        sku_type:
+          type: integer
+
+        type:
+          type: string
+
+        end_date:
+          type: string
+
+        augmented_description:
+          type: string
+
+        playability_date:
+          type: string
+
+        wallet_charge_date:
+          type: string
+
+    PlayStationError:
+      type: object
+      properties:
+
+        codeName:
+          type: string
+
+        cause:
+          type: string
+
+        errorUUID:
+          type: string
+
+      required:
+        - codeName
+        - cause
+        - errorUUID
