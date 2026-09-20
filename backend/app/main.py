@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictInt
 
 from app.application.usecases.estimate_compatibility import EstimateCompatibility
 from app.application.usecases.search_games import SearchGames
@@ -45,8 +45,8 @@ app.add_middleware(
 
 
 class CompatibilityRequest(BaseModel):
-    ram_gb: int
-    gpu_score: int
+    ram_gb: StrictInt
+    gpu_score: StrictInt
 
 
 playstation_catalog = InMemoryPlayStationCatalog()
