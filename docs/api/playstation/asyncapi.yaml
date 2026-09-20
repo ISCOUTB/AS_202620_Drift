@@ -1,0 +1,271 @@
+asyncapi: 3.0.0
+
+info:
+  title: DRIFT - Actualización de catálogo PlayStation
+  version: 1.0.0
+  description: |
+    Contrato asíncrono del flujo de actualización del catálogo de
+    videojuegos de PlayStation en DRIFT.
+
+    El proceso permite solicitar una actualización, obtener información
+    desde PlayStation, normalizarla y almacenarla en MySQL de manera
+    independiente de las consultas interactivas realizadas por los usuarios.
+
+    Este contrato define la estructura lógica de los mensajes del proceso.
+    El mecanismo concreto de transporte o mensajería será definido durante
+    la implementación.
+
+defaultContentType: application/json
+
+channels:
+
+  updateRequested:
+    address: playstation.catalog.update.requested
+    description: |
+      Canal lógico utilizado para solicitar una actualización
+      del catálogo de PlayStation.
+    messages:
+      UpdateRequested:
+        $ref: "#/components/messages/UpdateRequested"
+
+  gameCaptured:
+    address: playstation.catalog.game.captured
+    description: |
+      Canal lógico utilizado cuando un videojuego ha sido obtenido
+      y normalizado correctamente.
+    messages:
+      GameCaptured:
+        $ref: "#/components/messages/GameCaptured"
+
+  updateCompleted:
+    address: playstation.catalog.update.completed
+    description: |
+      Canal lógico utilizado cuando finaliza correctamente
+      una actualización del catálogo.
+    messages:
+      UpdateCompleted:
+        $ref: "#/components/messages/UpdateCompleted"
+
+  updateFailed:
+    address: playstation.catalog.update.failed
+    description: |
+      Canal lógico utilizado cuando una actualización presenta
+      un error.
+    messages:
+      UpdateFailed:
+        $ref: "#/components/messages/UpdateFailed"
+
+operations:
+
+  receiveUpdateRequest:
+    action: receive
+    summary: Recibir una solicitud de actualización.
+    description: |
+      El proceso de actualización recibe una solicitud para iniciar
+      la consulta y actualización del catálogo de PlayStation.
+    channel:
+      $ref: "#/channels/updateRequested"
+
+  publishGameCaptured:
+    action: send
+    summary: Publicar un videojuego capturado.
+    description: |
+      Se publica la información de un videojuego después de obtenerla
+      desde PlayStation y transformarla al modelo normalizado de DRIFT.
+    channel:
+      $ref: "#/channels/gameCaptured"
+
+  publishUpdateCompleted:
+    action: send
+    summary: Publicar la finalización de una actualización.
+    description: |
+      Se publica cuando el proceso de actualización termina correctamente.
+    channel:
+      $ref: "#/channels/updateCompleted"
+
+  publishUpdateFailed:
+    action: send
+    summary: Publicar un fallo de actualización.
+    description: |
+      Se publica cuando el proceso de actualización no puede completarse.
+      La información previamente almacenada se conserva.
+    channel:
+      $ref: "#/channels/updateFailed"
+
+components:
+
+  messages:
+
+    UpdateRequested:
+      name: UpdateRequested
+      title: Actualización solicitada
+      summary: Solicitud para iniciar una actualización del catálogo.
+      payload:
+        $ref: "#/components/schemas/UpdateRequestedPayload"
+
+    GameCaptured:
+      name: GameCaptured
+      title: Videojuego capturado
+      summary: Videojuego obtenido y normalizado.
+      payload:
+        $ref: "#/components/schemas/NormalizedGame"
+
+    UpdateCompleted:
+      name: UpdateCompleted
+      title: Actualización completada
+      summary: Actualización del catálogo finalizada correctamente.
+      payload:
+        $ref: "#/components/schemas/UpdateCompletedPayload"
+
+    UpdateFailed:
+      name: UpdateFailed
+      title: Actualización fallida
+      summary: Actualización del catálogo que terminó con un error.
+      payload:
+        $ref: "#/components/schemas/UpdateFailedPayload"
+
+  schemas:
+
+    UpdateRequestedPayload:
+      type: object
+      description: Información necesaria para solicitar una actualización.
+      required:
+        - source
+        - requested_at
+      properties:
+
+        source:
+          type: string
+          const: playstation
+          description: Fuente externa que será actualizada.
+          example: playstation
+
+        requested_at:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se solicitó la actualización.
+          example: "2026-09-19T20:00:00Z"
+
+    NormalizedGame:
+      type: object
+      description: |
+        Representación normalizada de un videojuego obtenida desde
+        PlayStation y preparada para ser almacenada por DRIFT.
+      required:
+        - id
+        - name
+        - source
+        - platform
+        - price
+        - currency
+        - captured_at
+      properties:
+
+        id:
+          type: string
+          description: Identificador del videojuego.
+          example: CUSA00001
+
+        name:
+          type: string
+          description: Nombre del videojuego.
+          example: Portal 2
+
+        source:
+          type: string
+          const: playstation
+          description: Fuente de origen de la información.
+          example: playstation
+
+        platform:
+          type: string
+          description: Plataforma del videojuego.
+          example: PlayStation
+
+        price:
+          type: number
+          format: float
+          description: Precio normalizado del videojuego.
+          example: 19.99
+
+        currency:
+          type: string
+          description: Moneda utilizada por el precio normalizado.
+          example: USD
+
+        discount:
+          type: integer
+          description: Descuento aplicado, cuando esté disponible.
+          example: 0
+
+        captured_at:
+          type: string
+          format: date-time
+          description: Momento en que DRIFT obtuvo la información.
+          example: "2026-09-19T20:00:00Z"
+
+    UpdateCompletedPayload:
+      type: object
+      description: Información sobre una actualización completada.
+      required:
+        - source
+        - games_loaded
+        - completed_at
+      properties:
+
+        source:
+          type: string
+          const: playstation
+          description: Fuente que fue actualizada.
+          example: playstation
+
+        games_loaded:
+          type: integer
+          minimum: 0
+          description: Cantidad de videojuegos procesados.
+          example: 25
+
+        completed_at:
+          type: string
+          format: date-time
+          description: Fecha y hora de finalización.
+          example: "2026-09-19T20:05:00Z"
+
+    UpdateFailedPayload:
+      type: object
+      description: Información sobre un fallo durante la actualización.
+      required:
+        - source
+        - reason
+        - local_data_preserved
+        - occurred_at
+      properties:
+
+        source:
+          type: string
+          const: playstation
+          description: Fuente que estaba siendo actualizada.
+          example: playstation
+
+        reason:
+          type: string
+          description: Motivo del fallo.
+          example: Servicio externo no disponible
+
+        http_status:
+          type: integer
+          description: Código HTTP recibido del proveedor, cuando aplique.
+          example: 503
+
+        local_data_preserved:
+          type: boolean
+          description: |
+            Indica si la información previamente almacenada
+            fue conservada.
+          example: true
+
+        occurred_at:
+          type: string
+          format: date-time
+          description: Fecha y hora en que ocurrió el fallo.
+          example: "2026-09-19T20:05:00Z"
