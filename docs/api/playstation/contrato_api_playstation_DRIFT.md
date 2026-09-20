@@ -143,3 +143,10 @@ Esta estrategia permite reducir la dependencia de la disponibilidad inmediata de
 La información obtenida se normaliza antes de incorporarse al modelo interno de DRIFT, manteniendo el dominio desacoplado de las estructuras específicas de PlayStation.
 
 La misma estrategia puede aplicarse posteriormente a otras fuentes externas, como Xbox u otros proveedores, cuando sus características de disponibilidad, límites de solicitudes o costos hagan conveniente una actualización periódica y almacenamiento local.
+
+
+## 8. Historial de versiones
+
+| Versión | Fecha | Descripción |
+|---|---|---|
+| 1.0.0 | 2026-09-19 | Versión inicial de los contratos de integración REST y asíncrono con PlayStation. |
