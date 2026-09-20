@@ -317,7 +317,7 @@ flowchart LR
 
         LEGEND_EXTERNAL["Servicio externo"]
 
-        LEGEND_PLANNED["Elemento previsto / futuro"]
+        LEGEND_PLANNED["Elemento previsto"]
 
     end
 
