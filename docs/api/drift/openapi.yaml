@@ -5,8 +5,9 @@ info:
   version: 1.0.0
   description: |
     Contrato HTTP de la API de DRIFT.
-    Permite consultar el estado del servicio, buscar videojuegos
-    y estimar la compatibilidad de un juego con un computador.
+    Permite consultar el estado del servicio, buscar videojuegos,
+    sincronizar el catálogo de PlayStation y estimar la compatibilidad
+    de un juego con un computador.
 
 servers:
   - url: http://localhost:8000
@@ -75,6 +76,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+
+  /games/sync/playstation:
+    post:
+      tags:
+        - Juegos
+      summary: Sincronizar el catálogo de PlayStation
+      operationId: syncPlayStationCatalog
+      responses:
+        "200":
+          description: Catálogo de PlayStation sincronizado correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+
+        "503":
+          description: No fue posible actualizar el catálogo de PlayStation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncError"
 
   /games/{game_id}/compatibility:
     post:
@@ -148,6 +170,35 @@ components:
         status:
           type: string
           example: ok
+
+    SyncError:
+      type: object
+      required:
+        - source
+        - reason
+        - local_data_preserved
+        - occurred_at
+      properties:
+        source:
+          type: string
+          example: playstation
+
+        reason:
+          type: string
+          example: Error al consultar la API de PlayStation
+
+        http_status:
+          type: integer
+          nullable: true
+          example: 429
+
+        local_data_preserved:
+          type: boolean
+          example: true
+
+        occurred_at:
+          type: string
+          format: date-time
 
     GameSearchResult:
       type: object
