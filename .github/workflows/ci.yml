@@ -25,8 +25,7 @@ jobs:
 
       - name: Instalar dependencias
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r backend/requirements.txt
+          python -m pip install --only-binary :all: fastapi==0.141.1 httpx==0.28.1 pytest==8.4.2 uvicorn==0.52.4 schemathesis==4.27.5
 
       - name: Ejecutar pruebas unitarias y del corte vertical
         working-directory: backend
