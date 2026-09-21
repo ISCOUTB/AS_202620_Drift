@@ -426,3 +426,39 @@ El equipo revisó la implementación de la nueva API dentro del repositorio y ve
 Alternativa descartada:
 
 Se descartó realizar las solicitudes a la nueva API directamente desde los componentes del frontend, debido a que esto aumentaría el acoplamiento y dificultaría el mantenimiento de la aplicación.
+
+---
+
+### Registro 20 — Prueba automatizada de contrato OpenAPI
+
+Fecha: 2026-09-20 Herramienta: ChatGPT
+
+Consulta utilizada:
+
+> ¿Cómo implementamos una prueba de contrato para validar automáticamente que los endpoints de DRIFT cumplen con el contrato OpenAPI?
+
+Uso:
+
+Se utilizó como apoyo para implementar una prueba automatizada mediante Schemathesis, tomando como fuente el contrato `docs/api/drift/openapi.yaml`. La prueba se implementó en `backend/tests/test_contract.py` y utiliza `pytest` para ejecutar los casos generados a partir de las operaciones definidas en el contrato.
+
+Alternativa descartada:
+
+Se descartó realizar únicamente pruebas manuales de cada endpoint, ya que no permitirían validar automáticamente todas las operaciones y esquemas definidos en el contrato OpenAPI. Se optó por Schemathesis para automatizar esta validación.
+
+---
+
+### Registro 20 — Validación ante cambio incompatible en el contrato
+
+Fecha: 2026-09-20 Herramienta: ChatGPT
+
+Consulta utilizada:
+
+> ¿Cómo podemos demostrar mediante una prueba automatizada que el contrato de la API detecta cambios incompatibles?
+
+Uso:
+
+Se utilizó como apoyo para validar que la prueba de contrato implementada con Schemathesis no solamente verifica el funcionamiento normal de los endpoints, sino que también detecta cambios que generan incompatibilidades con el contrato OpenAPI.
+
+Alternativa descartada:
+
+Se descartó utilizar únicamente una ejecución exitosa como evidencia, ya que esta demostraría que el contrato es válido en condiciones normales, pero no que la prueba sea capaz de detectar cambios incompatibles. Se utilizó un cambio controlado para comprobar explícitamente el comportamiento de la prueba ante una incompatibilidad.
