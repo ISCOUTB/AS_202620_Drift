@@ -46,7 +46,7 @@ app.add_middleware(
 
 class CompatibilityRequest(BaseModel):
     ram_gb: StrictInt
-    gpu_score: int
+    gpu_score: StrictInt
 
 
 playstation_catalog = InMemoryPlayStationCatalog()
