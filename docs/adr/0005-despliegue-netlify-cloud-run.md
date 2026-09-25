@@ -1,8 +1,8 @@
-# ADR-0003: Estrategia de despliegue de DRIFT
+# ADR-0005: Estrategia de despliegue de DRIFT
 
 ## Estado
 
-Parcialmente aceptado
+Aceptado
 
 ## Fecha
 
