@@ -19,7 +19,7 @@ export const options = {
 
 export default function () {
   const response = http.get(
-    "http://127.0.0.1:8000/games/search?q=Minecraft",
+    "https://drift-serverless.vercel.app/api/games/search?q=Minecraft",
   );
 
   check(response, {
