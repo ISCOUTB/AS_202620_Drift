@@ -229,7 +229,7 @@ components:
       properties:
 
         id:
-          type: integer
+          type: string
 
         name:
           type: string
