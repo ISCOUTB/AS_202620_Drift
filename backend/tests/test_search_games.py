@@ -23,7 +23,7 @@ def test_search_games_vertical_slice(mock_steam_search):
     data = response.json()
 
     assert len(data) == 1
-    assert data[0]["id"] == 620
+    assert data[0]["id"] == "620"
     assert data[0]["name"] == "Portal 2"
     assert data[0]["prices"]["Steam"] == 26.00
 
