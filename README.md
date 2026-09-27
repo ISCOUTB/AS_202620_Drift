@@ -42,26 +42,35 @@ DRIFT/
 │   │   ├── application/
 │   │   │   └── usecases/
 │   │   │       ├── search_games.py
-│   │   │       └── estimate_compatibility.py
+│   │   │       ├── estimate_compatibility.py
+│   │   │       └── sync_playstation_catalog.py
 │   │   ├── domain/
 │   │   │   ├── model/
 │   │   │   │   ├── game.py
-│   │   │   │   └── game_requirements.py
+│   │   │   │   ├── game_requirements.py
+│   │   │   │   └── normalized_game.py
 │   │   │   └── ports/
 │   │   │       ├── game_repository.py
-│   │   │       └── game_requirements_repository.py
+│   │   │       ├── game_requirements_repository.py
+│   │   │       └── game_catalog_source.py
 │   │   ├── infrastructure/
 │   │   │   ├── external/
-│   │   │   │   └── steam/
-│   │   │   │       └── steam_game_repository.py
+│   │   │   │   ├── steam/
+│   │   │   │   │   └── steam_game_repository.py
+│   │   │   │   └── playstation/
+│   │   │   │       └── playstation_game_catalog_source.py
 │   │   │   └── persistence/
 │   │   │       ├── in_memory_game_repository.py
 │   │   │       ├── in_memory_game_requirements_repository.py
+│   │   │       ├── in_memory_playstation_catalog.py
+│   │   │       ├── combined_game_repository.py
 │   │   │       └── resilient_game_repository.py
 │   │   └── main.py
-│   └── tests/
-│       ├── test_search_games.py
-│       └── test_compatibility.py
+│   ├── tests/
+│   │   ├── test_health.py
+│   │   ├── test_search_games.py
+│   │   └── test_compatibility.py
+│   └── requirements.txt
 │
 ├── frontend/
 │   ├── application/
@@ -89,9 +98,22 @@ DRIFT/
 │   ├── ia.md
 │   └── matriz.md
 │
+├── deployment/
+│   └── vercel/
+│       ├── api/
+│       │   └── index.py
+│       ├── requirements.txt
+│       ├── pyproject.toml
+│       └── .vercel/
+│           └── project.json
+│
 ├── scripts/
 │   ├── start.py
 │   └── k6_baseline.js
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── sonar-project.properties
 ├── correcciones.md
