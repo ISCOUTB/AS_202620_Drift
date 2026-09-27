@@ -81,7 +81,7 @@ def search_games_endpoint(
     return [
         {
             "id": game.id,
-            "name": game.name,
+            "tittle": game.name,
             "prices": game.prices,
             "unavailable_sources": game.unavailable_sources,
         }
