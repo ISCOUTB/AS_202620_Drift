@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime, timezone
 
@@ -33,11 +34,21 @@ app = FastAPI(
     title="DRIFT API",
     version="1.0.0",
 )
+
 logger = logging.getLogger(__name__)
+
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000",
+    ).split(",")
+    if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,6 +82,9 @@ estimate_compatibility = EstimateCompatibility(requirements_repository)
 def root():
     return {"status": "ok"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.get("/games/search")
 def search_games_endpoint(

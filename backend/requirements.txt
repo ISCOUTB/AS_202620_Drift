@@ -18,3 +18,4 @@ typing_extensions==4.16.0
 urllib3==2.7.0
 uvicorn==0.52.4
 schemathesis==4.27.5
+gunicorn==23.0.0
