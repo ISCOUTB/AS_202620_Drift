@@ -41,6 +41,13 @@ jobs:
 
           cat api.log
           exit 1
+
+      - name: Ejecutar contrato de la API DRIFT
+        run: |
+          schemathesis run docs/api/drift/openapi.yaml \
+            --url http://127.0.0.1:8000 \
+            --max-examples 5 \
+            --seed 42
           
       - name: Ejecutar pruebas unitarias y del corte vertical
         working-directory: backend
