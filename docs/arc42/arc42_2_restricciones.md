@@ -70,3 +70,24 @@ Actualmente se establecen las siguientes medidas:
 
 **Justificación:**  
 Estos tiempos representan condiciones medibles establecidas para el sistema y deben ser considerados durante las decisiones de diseño y arquitectura.
+
+---
+
+## 2.7 Límite de costo y restricción de tarjeta
+
+El proyecto se desarrolla utilizando el beneficio **Azure for Students**, disponible para estudiantes y utilizado para cubrir los recursos del despliegue del backend en Azure.
+
+El límite de costo considerado para el proyecto es de **$0 USD de gasto adicional mensual**, mientras los recursos utilizados permanezcan cubiertos por el beneficio académico disponible.
+
+| Componente | Servicio | Costo esperado |
+|---|---|---:|
+| Frontend | Vercel | $0 USD/mes dentro de la capa gratuita |
+| Backend | Azure App Service | Cubierto por Azure for Students |
+| CI/CD | GitHub Actions | $0 USD/mes |
+| **Gasto adicional esperado** | | **$0 USD/mes** |
+
+### Restricción de tarjeta
+
+El despliegue del backend se realiza mediante la cuenta académica de **Azure for Students**, por lo que el proyecto no depende de contratar un plan de pago personal para mantener el entorno desplegado.
+La restricción establecida para el proyecto es evitar generar cargos adicionales fuera del beneficio académico disponible.
+En caso de que el consumo de los recursos supere las condiciones o crédito disponible de Azure for Students, se deberá revisar el consumo o utilizar una alternativa de despliegue que no genere costos adicionales.
