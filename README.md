@@ -120,21 +120,52 @@ DRIFT/
 └── README.md
 ```
 
-## Requisitos previos
+## Recreación del entorno
+
+Para ejecutar DRIFT desde un equipo nuevo, siga los siguientes pasos.
+
+### 1. Clonar el repositorio
+
+Desde una terminal:
+
+```bash
+git clone https://github.com/ISCOUTB/AS_202620_Drift.git
+cd AS_202620_Drift
+```
+
+### 2. Verificar los requisitos
+
+El proyecto requiere:
 
 - Python 3.12 o superior.
-- Node.js 22 o superior y npm.
-- Opcional para la prueba de rendimiento: [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/).
+- Node.js 22 o superior.
+- npm.
+- Git.
 
-## Instalación
+Para comprobar las versiones instaladas:
 
-Desde la raíz del repositorio, instala las dependencias del backend:
+```bash
+python --version
+node --version
+npm --version
+git --version
+```
+
+Para las pruebas de rendimiento se requiere adicionalmente [k6](https://grafana.com/docs/k6/latest/).
+
+### 3. Instalar las dependencias del backend
+
+Desde la raíz del proyecto:
 
 ```bash
 python -m pip install -r backend/requirements.txt
 ```
 
-Después instala las dependencias del frontend:
+Esto instala las dependencias necesarias para ejecutar la API y las pruebas del backend.
+
+### 4. Instalar las dependencias del frontend
+
+Desde la raíz del proyecto:
 
 ```bash
 cd frontend
@@ -142,9 +173,9 @@ npm install
 cd ..
 ```
 
-Estas instalaciones solo son necesarias al configurar el entorno o cuando cambian las dependencias.
+Esto instala las dependencias definidas por el frontend.
 
-## Comando Unico de Ejecuccion
+### 5. Ejecutar DRIFT
 
 Desde la raíz del proyecto:
 
@@ -152,42 +183,42 @@ Desde la raíz del proyecto:
 python scripts/start.py
 ```
 
-El script inicia:
+El script inicia automáticamente los dos componentes principales:
 
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8000`
-- Documentación interactiva de la API: `http://localhost:8000/docs`
 
-Para detener ambos procesos, presiona `Ctrl + C` en la terminal donde se ejecutó el script.
+La documentación interactiva de la API queda disponible en:
 
-## Funcionalidades implementadas
+`http://localhost:8000/docs`
 
-### Búsqueda de videojuegos
+### 6. Verificar el funcionamiento
 
-El usuario puede buscar videojuegos desde el frontend. La solicitud recorre el frontend, la API REST, el caso de uso, el puerto del dominio y el adaptador de Steam.
+Con el proyecto en ejecución:
 
-```text
-Frontend → API REST → SearchGames → GameRepository → SteamGameRepository → Steam
+1. Abrir `http://localhost:3000` para acceder al frontend.
+2. Verificar que la aplicación permita realizar una búsqueda de videojuegos.
+3. Abrir `http://localhost:8000/docs` para comprobar que la API está disponible.
+4. Si se desea validar automáticamente el backend, abrir otra terminal y ejecutar:
+
+```bash
+cd backend
+python -m pytest tests -q
 ```
 
-La búsqueda implementa caché temporal, consulta paralela de detalles y un límite de resultados para mejorar el rendimiento.
+### 7. Detener el entorno
 
-### Tolerancia a fallos de Steam
+Para detener el frontend y el backend, regresar a la terminal donde se ejecutó:
 
-Si Steam no está disponible, `ResilientGameRepository` utiliza un repositorio local de respaldo. La respuesta informa la fuente no disponible mediante el campo `unavailable_sources`.
+```bash
+python scripts/start.py
+```
 
-### Estimación de compatibilidad de PC
+y presionar:
 
-El usuario puede seleccionar un juego, indicar memoria RAM y nivel de GPU, y consultar una estimación de compatibilidad.
-
-La estimación entrega uno de estos resultados:
-
-- `Compatible`
-- `Compatible con limitaciones`
-- `No compatible`
-- `Requisitos no disponibles`
-
-El catálogo de requisitos actual es controlado para fines académicos y puede reemplazarse posteriormente por una fuente externa.
+```text
+Ctrl + C
+```
 
 ## Pruebas y validación
 
