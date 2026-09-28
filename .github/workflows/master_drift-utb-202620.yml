@@ -13,10 +13,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Python version
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
 
@@ -32,17 +32,17 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Login to Azure
-        uses: azure/login@v2
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D4F801D00E2E44E8A456C38607E987DE }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4FE559CAB8714150A03C750BFB27C938 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CFC582F4DC534E1682A9FB6C4E2D1C8C }}
 
       - name: Deploy backend to Azure Web App
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@657f0700ea5214d56a0400d8ac5e8023c963d25d # v3.0.6
         with:
           app-name: "drift-utb-202620"
           slot-name: "Production"
