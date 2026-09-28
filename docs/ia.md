@@ -462,3 +462,69 @@ Se utilizó como apoyo para validar que la prueba de contrato implementada con S
 Alternativa descartada:
 
 Se descartó utilizar únicamente una ejecución exitosa como evidencia, ya que esta demostraría que el contrato es válido en condiciones normales, pero no que la prueba sea capaz de detectar cambios incompatibles. Se utilizó un cambio controlado para comprobar explícitamente el comportamiento de la prueba ante una incompatibilidad.
+
+--
+
+### Registro 21 — Planificación del despliegue de DRIFT
+
+Fecha: 2026-09-27 Herramienta: ChatGPT
+
+Consulta utilizada:
+
+> ¿Cómo podemos organizar el despliegue de DRIFT utilizando Azure para el backend, Vercel para el frontend y dejar preparada la integración con Supabase para cuando se implemente la base de datos?
+
+Uso:
+
+Se utilizó ChatGPT como apoyo para organizar la estrategia de despliegue de DRIFT, diferenciando las responsabilidades de Azure, Vercel y Supabase. Se revisó el flujo de despliegue del backend mediante Azure Web App, el despliegue del frontend mediante Vercel y el uso futuro de Supabase como servicio de base de datos.
+
+Validación:
+
+El equipo revisó la propuesta de despliegue y la relacionó con la arquitectura actual del proyecto. Se mantuvo Supabase como componente previsto para una etapa posterior, debido a que la base de datos todavía no forma parte de la implementación actual.
+
+Alternativa descartada:
+
+Se descartó presentar Supabase como un componente actualmente operativo, ya que su utilización está prevista para la etapa en la que se implemente la persistencia de datos.
+
+---
+
+### Registro 22 — Documentación de la decisión de despliegue
+
+Fecha: 2026-09-27 Herramienta: ChatGPT
+
+Consulta utilizada:
+
+> ¿Cómo documentamos mediante un ADR la decisión de utilizar Azure para el backend, Vercel para el frontend y Supabase para la futura base de datos?
+
+Uso:
+
+Se utilizó ChatGPT como apoyo para estructurar un Architecture Decision Record (ADR) relacionado con la estrategia de despliegue de DRIFT. La documentación busca registrar las tecnologías seleccionadas, sus responsabilidades y las razones técnicas de la decisión.
+
+Validación:
+
+El equipo revisó la estructura propuesta tomando como referencia los ADR existentes del repositorio y manteniendo la organización utilizada en la documentación arquitectónica de DRIFT.
+
+Alternativa descartada:
+
+Se descartó documentar las tecnologías de despliegue únicamente en el README, debido a que la decisión involucra criterios arquitectónicos que requieren una justificación y trazabilidad independiente.
+
+---
+
+### Registro 23 — Corrección de dependencias de GitHub Actions
+
+Fecha: 2026-09-27 Herramienta: ChatGPT
+
+Consulta utilizada:
+
+> ¿Cómo solucionamos los avisos de SonarQube que indican que las GitHub Actions deben utilizar el SHA completo del commit?
+
+Uso:
+
+Se utilizó ChatGPT como apoyo para analizar los avisos de seguridad de SonarQube relacionados con el uso de versiones mediante etiquetas como `@v4`, `@v5`, `@v2` y `@v3` en GitHub Actions. Se identificó la necesidad de fijar las acciones a un SHA completo para evitar que una referencia mutable cambie el código ejecutado por el pipeline.
+
+Validación:
+
+Se revisó el workflow de despliegue de DRIFT y se identificaron las acciones `actions/checkout`, `actions/setup-python`, `azure/login` y `azure/webapps-deploy` como dependencias que requieren fijación mediante SHA.
+
+Alternativa descartada:
+
+Se descartó mantener únicamente las etiquetas de versión (`@v4`, `@v5`, `@v2` y `@v3`), debido a que SonarQube identifica este patrón como un riesgo de seguridad relacionado con dependencias externas no fijadas.
