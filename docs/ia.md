@@ -463,7 +463,7 @@ Alternativa descartada:
 
 Se descartó utilizar únicamente una ejecución exitosa como evidencia, ya que esta demostraría que el contrato es válido en condiciones normales, pero no que la prueba sea capaz de detectar cambios incompatibles. Se utilizó un cambio controlado para comprobar explícitamente el comportamiento de la prueba ante una incompatibilidad.
 
---
+---
 
 ### Registro 21 — Planificación del despliegue de DRIFT
 
