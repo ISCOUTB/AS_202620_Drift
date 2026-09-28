@@ -63,3 +63,11 @@ def test_search_games_vertical_slice(monkeypatch):
     assert data[0]["id"] == "620"
     assert data[0]["name"] == "Portal 2"
     assert data[0]["prices"]["Steam"] == 26.00
+    metrics_response = client.get("/metrics")
+
+    assert metrics_response.status_code == 200
+
+    metrics = metrics_response.json()["search_latency"]
+    assert metrics["metric"] == "drift_search_latency_ms"
+    assert metrics["sample_count"] >= 1
+    assert metrics["p95_ms"] is not None

@@ -1,7 +1,11 @@
 import os
-import logging
 from datetime import datetime, timezone
-
+from time import perf_counter
+from app.infrastructure.observability import (
+    SearchMetrics,
+    configure_structured_logger,
+    log_event,
+)
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,7 +39,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-logger = logging.getLogger(__name__)
+logger = configure_structured_logger()
+search_metrics = SearchMetrics()
 
 allowed_origins = [
     origin.strip()
@@ -86,11 +91,35 @@ def root():
 def health():
     return {"status": "ok"}
 
+@app.get("/metrics")
+def metrics():
+    return {"search_latency": search_metrics.snapshot()}
+
 @app.get("/games/search")
 def search_games_endpoint(
     q: str = Query(..., min_length=1),
 ):
-    games = search_games.execute(q)
+    started_at = perf_counter()
+
+    try:
+        games = search_games.execute(q)
+    except Exception:
+        log_event(
+            logger,
+            "search_failed",
+            query_length=len(q),
+        )
+        raise
+
+    duration_ms = (perf_counter() - started_at) * 1000
+    search_metrics.record_search(duration_ms)
+
+    log_event(
+        logger,
+        "search_completed",
+        duration_ms=round(duration_ms, 2),
+        results_count=len(games),
+    )
 
     return [
         {
