@@ -1,46 +1,65 @@
 import os
 from datetime import datetime, timezone
 from time import perf_counter
-from app.infrastructure.observability import (
-    SearchMetrics,
-    configure_structured_logger,
-    log_event,
-)
+
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, StrictInt
 
-from app.application.usecases.estimate_compatibility import EstimateCompatibility
+from app.application.usecases.estimate_compatibility import (
+    EstimateCompatibility,
+)
 from app.application.usecases.search_games import SearchGames
-from app.application.usecases.sync_playstation_catalog import SyncPlayStationCatalog
+from app.application.usecases.sync_playstation_catalog import (
+    SyncPlayStationCatalog,
+)
+
 from app.infrastructure.external.playstation.playstation_game_catalog_source import (
     PlayStationGameCatalogSource,
 )
+
 from app.infrastructure.external.steam.steam_game_repository import (
     SteamGameRepository,
 )
+
+from app.infrastructure.observability import (
+    SearchMetrics,
+    configure_structured_logger,
+    log_event,
+)
+
 from app.infrastructure.persistence.combined_game_repository import (
     CombinedGameRepository,
 )
-from app.infrastructure.persistence.in_memory_game_repository import InMemoryGameRepository
-from app.infrastructure.persistence.in_memory_playstation_catalog import (
-    InMemoryPlayStationCatalog,
+
+from app.infrastructure.persistence.in_memory_game_repository import (
+    InMemoryGameRepository,
 )
+
 from app.infrastructure.persistence.in_memory_game_requirements_repository import (
     InMemoryGameRequirementsRepository,
 )
+
+from app.infrastructure.persistence.in_memory_playstation_catalog import (
+    InMemoryPlayStationCatalog,
+)
+
 from app.infrastructure.persistence.resilient_game_repository import (
     ResilientGameRepository,
 )
+
 
 app = FastAPI(
     title="DRIFT API",
     version="1.0.0",
 )
 
+
 logger = configure_structured_logger()
 search_metrics = SearchMetrics()
+
+
 
 allowed_origins = [
     origin.strip()
@@ -50,6 +69,7 @@ allowed_origins = [
     ).split(",")
     if origin.strip()
 ]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,7 +85,14 @@ class CompatibilityRequest(BaseModel):
     gpu_score: StrictInt
 
 
-playstation_catalog = InMemoryPlayStationCatalog()
+playstation_source = PlayStationGameCatalogSource()
+
+
+playstation_catalog = InMemoryPlayStationCatalog(
+    search_source=playstation_source,
+)
+
+
 repository = CombinedGameRepository(
     primary_repository=ResilientGameRepository(
         primary_repository=SteamGameRepository(),
@@ -73,27 +100,46 @@ repository = CombinedGameRepository(
     ),
     secondary_repository=playstation_catalog,
 )
+
+
 search_games = SearchGames(repository)
+
+
 sync_playstation_catalog = SyncPlayStationCatalog(
-    source=PlayStationGameCatalogSource(),
+    source=playstation_source,
     catalog=playstation_catalog,
 )
 
-requirements_repository = InMemoryGameRequirementsRepository()
-estimate_compatibility = EstimateCompatibility(requirements_repository)
+
+requirements_repository = (
+    InMemoryGameRequirementsRepository()
+)
+
+estimate_compatibility = EstimateCompatibility(
+    requirements_repository
+)
 
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
+
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
+
 
 @app.get("/metrics")
 def metrics():
-    return {"search_latency": search_metrics.snapshot()}
+    return {
+        "search_latency": search_metrics.snapshot()
+    }
+
 
 @app.get("/games/search")
 def search_games_endpoint(
@@ -103,21 +149,31 @@ def search_games_endpoint(
 
     try:
         games = search_games.execute(q)
+
     except Exception:
         log_event(
             logger,
             "search_failed",
             query_length=len(q),
         )
+
         raise
 
-    duration_ms = (perf_counter() - started_at) * 1000
-    search_metrics.record_search(duration_ms)
+    duration_ms = (
+        perf_counter() - started_at
+    ) * 1000
+
+    search_metrics.record_search(
+        duration_ms
+    )
 
     log_event(
         logger,
         "search_completed",
-        duration_ms=round(duration_ms, 2),
+        duration_ms=round(
+            duration_ms,
+            2,
+        ),
         results_count=len(games),
     )
 
@@ -126,7 +182,9 @@ def search_games_endpoint(
             "id": game.id,
             "name": game.name,
             "prices": game.prices,
-            "unavailable_sources": game.unavailable_sources,
+            "unavailable_sources": (
+                game.unavailable_sources
+            ),
         }
         for game in games
     ]
@@ -134,15 +192,26 @@ def search_games_endpoint(
 
 @app.post("/games/sync/playstation")
 def sync_playstation_catalog_endpoint():
+
     try:
         return sync_playstation_catalog.execute()
+
     except httpx.HTTPError as error:
-        logger.exception("No fue posible actualizar el catálogo de PlayStation")
+
+        logger.exception(
+            "No fue posible actualizar "
+            "el catálogo de PlayStation"
+        )
+
         status_code = (
             error.response.status_code
-            if isinstance(error, httpx.HTTPStatusError)
+            if isinstance(
+                error,
+                httpx.HTTPStatusError,
+            )
             else None
         )
+
         raise HTTPException(
             status_code=503,
             detail={
@@ -150,12 +219,19 @@ def sync_playstation_catalog_endpoint():
                 "reason": str(error),
                 "http_status": status_code,
                 "local_data_preserved": True,
-                "occurred_at": datetime.now(timezone.utc).isoformat(),
+                "occurred_at": (
+                    datetime.now(
+                        timezone.utc
+                    ).isoformat()
+                ),
             },
         ) from error
 
 
-@app.post("/games/{game_id}/compatibility")
+
+@app.post(
+    "/games/{game_id}/compatibility"
+)
 def estimate_compatibility_endpoint(
     game_id: int,
     request: CompatibilityRequest,
@@ -164,4 +240,4 @@ def estimate_compatibility_endpoint(
         game_id=game_id,
         ram_gb=request.ram_gb,
         gpu_score=request.gpu_score,
-    )
+    )   
