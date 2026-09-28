@@ -36,7 +36,7 @@ La siguiente captura muestra el acceso al backend desplegado en Azure desde un n
 
 > **Figura 1. Acceso público al backend de DRIFT desplegado en Azure App Service.**
 
-![Acceso público al backend](./evidencias/Azure-check.png)
+![Acceso público al backend](./Azure-check.png)
 
 La respuesta `{"status":"ok"}` confirma que el servicio se encuentra disponible y puede ser consultado mediante su URL pública.
 
@@ -80,7 +80,7 @@ La solicitud al endpoint `/health` produjo la siguiente respuesta:
 
 > **Figura 2. Health check del backend mediante el endpoint `/health`.**
 
-![Health check](./evidencias/healt.png)
+![Health check](./healt.png)
 
 La respuesta HTTP 200 y el contenido `{"status":"ok"}` permiten comprobar que el backend se encuentra disponible y respondiendo correctamente.
 
