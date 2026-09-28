@@ -233,7 +233,7 @@ def sync_playstation_catalog_endpoint():
     "/games/{game_id}/compatibility"
 )
 def estimate_compatibility_endpoint(
-    game_id: int,
+    game_id: str,
     request: CompatibilityRequest,
 ):
     return estimate_compatibility.execute(
