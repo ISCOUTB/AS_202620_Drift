@@ -60,7 +60,6 @@ logger = configure_structured_logger()
 search_metrics = SearchMetrics()
 
 
-
 allowed_origins = [
     origin.strip()
     for origin in os.getenv(
@@ -141,6 +140,11 @@ def metrics():
     }
 
 
+PLAYSTATION_COMPATIBILITY_IDS = {
+    "UP2061-NPUB31077_00-PORTAL2DIGITAL01": 620,
+}
+
+
 @app.get("/games/search")
 def search_games_endpoint(
     q: str = Query(..., min_length=1),
@@ -149,6 +153,28 @@ def search_games_endpoint(
 
     try:
         games = search_games.execute(q)
+        results = []
+
+        for game in games:
+            raw_id = str(game.id)
+
+            if raw_id.isdecimal():
+                compatibility_id = int(raw_id)
+            else:
+                compatibility_id = PLAYSTATION_COMPATIBILITY_IDS.get(
+                    raw_id
+                )
+
+           
+            if compatibility_id is None:
+                continue
+
+            results.append({
+                "id": str(compatibility_id),
+                "name": game.name,
+                "prices": game.prices,
+                "unavailable_sources": game.unavailable_sources,
+            })
 
     except Exception:
         log_event(
@@ -156,7 +182,6 @@ def search_games_endpoint(
             "search_failed",
             query_length=len(q),
         )
-
         raise
 
     duration_ms = (
@@ -174,20 +199,10 @@ def search_games_endpoint(
             duration_ms,
             2,
         ),
-        results_count=len(games),
+        results_count=len(results),
     )
 
-    return [
-        {
-            "id": game.id,
-            "name": game.name,
-            "prices": game.prices,
-            "unavailable_sources": (
-                game.unavailable_sources
-            ),
-        }
-        for game in games
-    ]
+    return results
 
 
 @app.post("/games/sync/playstation")
@@ -228,7 +243,6 @@ def sync_playstation_catalog_endpoint():
         ) from error
 
 
-
 @app.post(
     "/games/{game_id}/compatibility"
 )
@@ -240,4 +254,4 @@ def estimate_compatibility_endpoint(
         game_id=game_id,
         ram_gb=request.ram_gb,
         gpu_score=request.gpu_score,
-    )   
+    )
