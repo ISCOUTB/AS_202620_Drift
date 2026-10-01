@@ -528,3 +528,392 @@ Se revisó el workflow de despliegue de DRIFT y se identificaron las acciones `a
 Alternativa descartada:
 
 Se descartó mantener únicamente las etiquetas de versión (`@v4`, `@v5`, `@v2` y `@v3`), debido a que SonarQube identifica este patrón como un riesgo de seguridad relacionado con dependencias externas no fijadas.
+
+### Registro 24 — Revisión de arquitectura Hexagonal
+
+**Fecha:** 2026-09-28
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos revisar la estructura actual de DRIFT para verificar que mantiene la arquitectura Hexagonal y que las responsabilidades están correctamente separadas?
+
+**Uso:**
+
+Se utilizó ChatGPT como apoyo para revisar la organización del backend y verificar la separación entre dominio, aplicación, puertos e infraestructura.
+
+**Validación:**
+
+El equipo comparó las recomendaciones con la estructura real del repositorio y mantuvo únicamente los elementos que correspondían a componentes existentes.
+
+**Alternativa descartada:**
+
+Se descartó modificar la arquitectura existente sin evidencia de un problema concreto, manteniendo la estructura Hexagonal definida para DRIFT.
+
+---
+
+### Registro 25 — Revisión del repositorio Steam
+
+**Fecha:** 2026-09-28
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos mejorar `SteamGameRepository` para reducir el tiempo de respuesta de las búsquedas manteniendo la arquitectura actual?
+
+**Uso:**
+
+Se utilizó ChatGPT para analizar el flujo de consultas hacia Steam y proponer mecanismos de caché, limitación de resultados y ejecución paralela de consultas.
+
+**Validación:**
+
+El equipo revisó las modificaciones propuestas y las relacionó con la medición del escenario E1 mediante k6.
+
+**Alternativa descartada:**
+
+Se descartó modificar artificialmente el umbral de rendimiento y se mantuvo el objetivo establecido en el escenario E1.
+
+---
+
+### Registro 26 — Caché temporal de Steam
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos agregar una caché temporal a `SteamGameRepository` para evitar repetir consultas iguales a Steam?
+
+**Uso:**
+
+Se utilizó ChatGPT como apoyo para diseñar una caché en memoria con una duración limitada para las búsquedas realizadas contra Steam.
+
+**Validación:**
+
+El equipo revisó la implementación y verificó que la caché perteneciera al adaptador de Steam, manteniendo la responsabilidad aislada de los casos de uso.
+
+**Alternativa descartada:**
+
+Se descartó introducir una base de datos o sistema de caché externo para esta optimización, debido a que el alcance actual no requería incorporar infraestructura adicional.
+
+---
+
+### Registro 27 — Consultas paralelas a Steam
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos consultar en paralelo los detalles de los videojuegos obtenidos desde Steam para reducir la latencia?
+
+**Uso:**
+
+Se utilizó ChatGPT para analizar la posibilidad de ejecutar las consultas de detalles de Steam en paralelo mediante `ThreadPoolExecutor`.
+
+**Validación:**
+
+La implementación fue integrada en `SteamGameRepository` y posteriormente contrastada mediante la medición de rendimiento del escenario E1.
+
+**Alternativa descartada:**
+
+Se descartó realizar todas las consultas de detalles secuencialmente debido al impacto acumulativo de la latencia de las solicitudes externas.
+
+---
+
+### Registro 28 — Límite de resultados de Steam
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos limitar la cantidad de resultados obtenidos desde Steam para evitar realizar consultas innecesarias de detalles?
+
+**Uso:**
+
+Se utilizó ChatGPT como apoyo para limitar los resultados procesados por `SteamGameRepository` a los primeros cinco elementos.
+
+**Validación:**
+
+El equipo revisó que el límite se aplicara únicamente en el adaptador externo y que no modificara el contrato del caso de uso de búsqueda.
+
+**Alternativa descartada:**
+
+Se descartó solicitar y procesar decenas de detalles de videojuegos cuando la interfaz únicamente necesitaba un conjunto reducido de resultados.
+
+---
+
+### Registro 29 — Prueba de rendimiento con k6
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos construir una prueba de carga con k6 para el escenario E1 utilizando 50 usuarios concurrentes y midiendo el p95?
+
+**Uso:**
+
+Se utilizó ChatGPT para orientar la configuración de `scripts/k6_baseline.js` y la definición de los umbrales de rendimiento.
+
+**Validación:**
+
+El equipo ejecutó la prueba contra el endpoint de búsqueda y registró los resultados en `docs/evidencias/e1-linea-base.md`.
+
+**Alternativa descartada:**
+
+Se descartó utilizar únicamente una medición manual, debido a que no permitiría reproducir de forma consistente la condición de concurrencia definida en E1.
+
+---
+
+### Registro 30 — Análisis de resultados de rendimiento
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> Tenemos un p95 inicial de 14.63 segundos para E1. ¿Cómo podemos identificar qué parte de la búsqueda está generando la latencia?
+
+**Uso:**
+
+Se utilizó ChatGPT para analizar el flujo de búsqueda y relacionar la latencia con las consultas externas realizadas por `SteamGameRepository`.
+
+**Validación:**
+
+El equipo contrastó el análisis con la implementación real y utilizó los resultados para orientar las optimizaciones posteriores.
+
+**Alternativa descartada:**
+
+Se descartó asumir que el problema estaba en el frontend sin revisar primero el flujo de solicitudes del backend y la comunicación con Steam.
+
+---
+
+### Registro 31 — Validación posterior de E1
+
+**Fecha:** 2026-09-13
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> Después de optimizar `SteamGameRepository`, ¿cómo debemos volver a ejecutar E1 y comparar el resultado con el umbral de p95?
+
+**Uso:**
+
+Se utilizó ChatGPT para orientar la repetición de la prueba de carga y la comparación entre la línea base y la medición posterior.
+
+**Validación:**
+
+La segunda medición registró un p95 de 1.24 segundos con 50 solicitudes exitosas, y los resultados fueron documentados en `docs/evidencias/e1-linea-base.md`.
+
+**Alternativa descartada:**
+
+Se descartó modificar el umbral de E1 para considerar válida la medición inicial y se mantuvo el criterio de p95 ≤ 3 segundos.
+
+---
+
+### Registro 32 — Revisión del contrato de búsqueda
+
+**Fecha:** 2026-09-20
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos comprobar que un cambio en la respuesta de `/games/search` rompe el contrato esperado de la API?
+
+**Uso:**
+
+Se utilizó ChatGPT para analizar la relación entre las pruebas automatizadas, el contrato OpenAPI y la respuesta generada por el endpoint.
+
+**Validación:**
+
+El equipo utilizó un cambio controlado en el campo `name` de la respuesta para comprobar que el contrato pudiera detectar la incompatibilidad.
+
+**Alternativa descartada:**
+
+Se descartó utilizar únicamente una prueba de funcionamiento exitoso, ya que no demostraría el comportamiento ante una ruptura del contrato.
+
+---
+
+### Registro 33 — Ruptura controlada del contrato
+
+**Fecha:** 2026-09-20
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos introducir una ruptura controlada en el contrato de la API para demostrar que la prueba falla ante el defecto?
+
+**Uso:**
+
+Se utilizó ChatGPT como apoyo para definir una modificación intencional del campo `name` de la respuesta del endpoint.
+
+**Validación:**
+
+El cambio controlado produjo una ejecución fallida del pipeline de CI. Posteriormente se restauró el contrato original.
+
+**Alternativa descartada:**
+
+Se descartó utilizar un fallo aleatorio o una prueba sin relación con el contrato, ya que la evidencia debía demostrar específicamente la detección del defecto.
+
+---
+
+### Registro 34 — Revisión del fallo de CI
+
+**Fecha:** 2026-09-20
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos documentar la evidencia de un CI que falla después de introducir intencionalmente un cambio incompatible en la API?
+
+**Uso:**
+
+Se utilizó ChatGPT para organizar la trazabilidad entre el commit que introdujo el defecto, la ejecución fallida y el commit que restauró el contrato.
+
+**Validación:**
+
+El equipo verificó la secuencia histórica `9c102df → CI fallido → 9750878` y documentó la evidencia correspondiente.
+
+**Alternativa descartada:**
+
+Se descartó presentar únicamente el CI en verde como evidencia, porque no demostraría que la prueba detecta el defecto.
+
+---
+
+### Registro 35 — Revisión de responsabilidades de contextos
+
+**Fecha:** 2026-09-14
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos organizar las responsabilidades de `SearchGames`, `SteamGameRepository`, `ResilientGameRepository` y `EstimateCompatibility` sin romper la arquitectura Hexagonal?
+
+**Uso:**
+
+Se utilizó ChatGPT para revisar la separación de responsabilidades entre los contextos de búsqueda, integración externa y compatibilidad de PC.
+
+**Validación:**
+
+El equipo contrastó la propuesta con ADR-0003 y mantuvo las responsabilidades documentadas en la arquitectura.
+
+**Alternativa descartada:**
+
+Se descartó crear microservicios independientes para cada contexto debido al alcance y complejidad innecesaria para el proyecto actual.
+
+---
+
+### Registro 36 — Relación entre ADR y código existente
+
+**Fecha:** 2026-09-19
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos relacionar la decisión documentada en el ADR de integración con la implementación real de `SteamGameRepository`?
+
+**Uso:**
+
+Se utilizó ChatGPT para revisar la trazabilidad entre ADR-0004, el adaptador de Steam y la estrategia de integración con fuentes externas.
+
+**Validación:**
+
+El equipo revisó el ADR y el código existente, identificando la relación entre la estrategia híbrida y el aislamiento de las fuentes externas mediante adaptadores.
+
+**Alternativa descartada:**
+
+Se descartó presentar el ADR como si hubiera originado el adaptador cuando el historial demuestra que `SteamGameRepository` existía previamente.
+
+---
+
+### Registro 37 — Trazabilidad del componente seleccionado
+
+**Fecha:** 2026-09-30
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos construir la trazabilidad completa de `SteamGameRepository` desde su implementación hasta los escenarios y evidencias de calidad?
+
+**Uso:**
+
+Se utilizó ChatGPT para relacionar el componente con sus commits, ADR, escenario E1, script de k6 y evidencias de medición.
+
+**Validación:**
+
+El equipo contrastó la trazabilidad con el historial de Git y la documentación existente del proyecto.
+
+**Alternativa descartada:**
+
+Se descartó presentar únicamente la ruta del archivo como evidencia, debido a que la evaluación requiere relacionar implementación, decisión arquitectónica y evidencia de calidad.
+
+---
+
+### Registro 38 — Revisión de evidencias de arquitectura
+
+**Fecha:** 2026-09-30
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos organizar la evidencia de la evaluación S9 para que cada criterio tenga una trazabilidad verificable sin duplicar información?
+
+**Uso:**
+
+Se utilizó ChatGPT para revisar la relación entre los criterios de evaluación, los documentos del repositorio, los commits y las pruebas existentes.
+
+**Validación:**
+
+El equipo revisó cada criterio de manera independiente y organizó la evidencia en `docs/evidencias/`.
+
+**Alternativa descartada:**
+
+Se descartó reunir todas las evidencias en una única sección sin distinguir los criterios, porque dificultaría verificar la correspondencia entre cada requisito y su evidencia.
+
+---
+
+### Registro 39 — Revisión de evidencia de medición del servidor
+
+**Fecha:** 2026-09-30
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo debemos relacionar las mediciones realizadas en el servidor y en el despliegue con el escenario E1 sin duplicar la evidencia de rendimiento?
+
+**Uso:**
+
+Se utilizó ChatGPT para diferenciar la medición principal del escenario E1 de las mediciones complementarias realizadas sobre el despliegue serverless.
+
+**Validación:**
+
+El equipo revisó `docs/evidencias/e1-linea-base.md` y `docs/evidencias/Evidencia_TallerS8.md` para mantener cada medición en su contexto correspondiente.
+
+**Alternativa descartada:**
+
+Se descartó presentar las mediciones del servidor y del despliegue como si fueran exactamente la misma prueba, debido a que corresponden a contextos de ejecución diferentes.
+
+---
+
+### Registro 40 — Organización de evidencias S9
+
+**Fecha:** 2026-09-30
+**Herramienta:** ChatGPT
+
+**Consulta utilizada:**
+
+> ¿Cómo podemos documentar cada criterio de la matriz S9 utilizando únicamente evidencias que podamos comprobar en el repositorio?
+
+**Uso:**
+
+Se utilizó ChatGPT para organizar la evidencia documental y técnica correspondiente a los criterios de la matriz S9.
+
+**Validación:**
+
+El equipo revisó los archivos, commits, pruebas y resultados disponibles antes de incorporar cada evidencia.
+
+**Alternativa descartada:**
+
+Se descartó incluir afirmaciones que no pudieran relacionarse con un archivo, commit, ejecución de CI, prueba o resultado verificable.
