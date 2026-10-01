@@ -362,21 +362,21 @@ La cadena documental y técnica queda distribuida entre:
 
 
 [docs/aspectos.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
-    ↓
+    ->
 E1 — Eficiencia de desempeño
-    ↓
+    ->
 [docs/escenarios.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
-    ↓
+    ->
 Escenario 1
-    ↓
+    ->
 [docs/adr/0006-despliegue-serverless-api-busqueda.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0006-despliegue-serverless-api-busqueda.md)
-    ↓
+    ->
 Prueba mediante k6
-    ↓
+    ->
 [scripts/k6_baseline.js](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/scripts/k6_baseline.js)
-    ↓
+    ->
 [docs/evidencias/e1-linea-base.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/e1-linea-base.md)
-    ↓
+    ->
 [backend/app/infrastructure/external/steam/steam_game_repository.py](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/app/infrastructure/external/steam/steam_game_repository.py)
 
 
