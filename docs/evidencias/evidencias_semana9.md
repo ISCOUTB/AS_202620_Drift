@@ -166,7 +166,7 @@ Estas evidencias permiten localizar en el repositorio la porción concreta del s
 
 ### 2.2.1 Punto de entrada: aspecto de calidad
 
-En `docs/aspectos.md` se encuentra el aspecto de calidad:
+En [`docs/aspectos.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md) se encuentra el aspecto de calidad:
 
 **E1 — Eficiencia de desempeño**
 
@@ -179,7 +179,7 @@ El escenario establece:
 - **Respuesta:** DRIFT consulta y muestra los precios disponibles del videojuego en las diferentes tiendas digitales.
 - **Medida verificable:** p95 ≤ 3 segundos.
 
-La fila E1 enlaza con el escenario correspondiente en `docs/escenarios.md`.
+La fila E1 enlaza con el escenario correspondiente en [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md).
 
 ### 2.2.2 Escenario asociado
 
@@ -205,7 +205,7 @@ El método de verificación definido consiste en realizar una prueba de carga so
 
 La trazabilidad también se relaciona con los ADR documentados en `docs/adr/`.
 
-En particular, `docs/adr/0006-despliegue-serverless-api-busqueda.md` documenta el escenario de evaluación de la API de búsqueda y establece:
+En particular, [`docs/adr/0006-despliegue-serverless-api-busqueda.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0006-despliegue-serverless-api-busqueda.md) documenta el escenario de evaluación de la API de búsqueda y establece:
 
 - Hasta 50 usuarios concurrentes
 - p95 ≤ 3 segundos
@@ -228,9 +228,9 @@ Además, el ADR documenta el despliegue de la API de búsqueda como una pieza se
 
 La implementación del método de verificación se encuentra en:
 
-```text
-scripts/k6_baseline.js
-```
+
+[`scripts/k6_baseline.js`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/scripts/k6_baseline.js)
+
 
 El script define:
 
@@ -249,9 +249,8 @@ http_req_failed: ["rate<0.01"]
 
 La prueba realiza la solicitud sobre:
 
-```text
-https://drift-serverless.vercel.app/api/games/search?q=Minecraft
-```
+[`https://drift-serverless.vercel.app/api/games/search?q=Minecraft`](https://drift-serverless.vercel.app/api/games/search?q=Minecraft)
+
 
 También verifica que la respuesta HTTP tenga código 200.
 
@@ -272,9 +271,7 @@ Resultado:
 
 Los resultados de la prueba y la evolución del rendimiento se encuentran documentados en:
 
-```text
-docs/evidencias/e1-linea-base.md
-```
+[`docs/evidencias/e1-linea-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/e1-linea-base.md)
 
 El documento registra la configuración de la prueba con:
 
@@ -300,9 +297,8 @@ Posteriormente documenta la medición después de la optimización:
 
 Como evidencia complementaria de la ejecución de la API de búsqueda desplegada en Vercel se encuentra:
 
-```text
-docs/evidencias/Evidencia_TallerS8.md
-```
+[`docs/evidencias/Evidencia_TallerS8.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/Evidencia_TallerS8.md)
+
 
 Este documento corresponde al taller de evaluación serverless de DRIFT y documenta el prototipo desplegado como una función Python/FastAPI en Vercel.
 
@@ -315,9 +311,9 @@ La evidencia utiliza el mismo escenario general de evaluación:
 
 La prueba contra el endpoint público:
 
-```text
-https://drift-serverless.vercel.app/api/games/search?q=Minecraft
-```
+
+[`https://drift-serverless.vercel.app/api/games/search?q=Minecraft`](https://drift-serverless.vercel.app/api/games/search?q=Minecraft)
+
 
 registró:
 
@@ -337,7 +333,7 @@ El documento también registra una comparación entre la ejecución local y la e
 
 ### 2.2.7 Relación entre medición y código
 
-`docs/evidencias/e1-linea-base.md` documenta tres modificaciones aplicadas a `SteamGameRepository`:
+[`docs/evidencias/e1-linea-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/e1-linea-base.md) documenta tres modificaciones aplicadas a `SteamGameRepository`:
 
 - Caché de resultados de búsqueda durante 60 segundos.
 - Límite de cinco resultados por consulta.
@@ -345,9 +341,9 @@ El documento también registra una comparación entre la ejecución local y la e
 
 El archivo correspondiente es:
 
-```text
-backend/app/infrastructure/external/steam/steam_game_repository.py
-```
+
+[`backend/app/infrastructure/external/steam/steam_game_repository.py`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/app/infrastructure/external/steam/steam_game_repository.py)
+
 
 El historial de este archivo muestra:
 
@@ -358,31 +354,31 @@ b9ff5b0 Mi cambio
 
 El commit `a4b2d3c` fue fechado el 2026-09-13 y modificó el adaptador de Steam. La inspección del diff permitió verificar la incorporación de cambios relacionados con la implementación del repositorio, incluyendo el uso de `time` y `ThreadPoolExecutor`.
 
-La evidencia `docs/evidencias/Evidencia_TallerS8.md` documenta adicionalmente la ejecución de la pieza serverless desplegada en Vercel, manteniendo el contrato HTTP de búsqueda y utilizando el mismo escenario de carga definido para E1.
+La evidencia [`docs/evidencias/Evidencia_TallerS8.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/Evidencia_TallerS8.md) documenta adicionalmente la ejecución de la pieza serverless desplegada en Vercel, manteniendo el contrato HTTP de búsqueda y utilizando el mismo escenario de carga definido para E1.
 
 ### 2.2.8 Trazabilidad de la evidencia
 
 La cadena documental y técnica queda distribuida entre:
 
-```text
-[docs/aspectos.md
+
+[docs/aspectos.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/aspectos.md)
     ↓
 E1 — Eficiencia de desempeño
     ↓
-docs/escenarios.md
+[docs/escenarios.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
     ↓
 Escenario 1
     ↓
-docs/adr/0006-despliegue-serverless-api-busqueda.md
+[docs/adr/0006-despliegue-serverless-api-busqueda.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0006-despliegue-serverless-api-busqueda.md)
     ↓
 Prueba mediante k6
     ↓
-scripts/k6_baseline.js
+[scripts/k6_baseline.js](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/scripts/k6_baseline.js)
     ↓
-docs/evidencias/e1-linea-base.md
+[docs/evidencias/e1-linea-base.md](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/e1-linea-base.md)
     ↓
-backend/app/infrastructure/external/steam/steam_game_repository.py
-```
+[backend/app/infrastructure/external/steam/steam_game_repository.py](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/app/infrastructure/external/steam/steam_game_repository.py)
+
 
 Como evidencia complementaria de la ejecución desplegada:
 
@@ -403,7 +399,7 @@ Los resultados documentados incluyen la medición inicial de 14.63 segundos de p
 
 ## 2.3 ADR con la decisión argumentada por el equipo
 
-La estrategia de integración con fuentes externas de DRIFT está documentada en el **ADR-0004 — Estrategia de integración**, cuyo estado es Aceptado y cuyos decisores se identifican como el **Equipo DRIFT**.
+La estrategia de integración con fuentes externas de DRIFT está documentada en el [**ADR-0004 — Estrategia de integración**](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0004-estrategia-de-integracion.md), cuyo estado es Aceptado y cuyos decisores se identifican como el **Equipo DRIFT**.
 
 El ADR plantea el problema de integrar fuentes externas manteniendo la mantenibilidad del sistema y aislando las dependencias de proveedores externos. Para ello se analizaron tres alternativas:
 
@@ -413,13 +409,13 @@ El ADR plantea el problema de integrar fuentes externas manteniendo la mantenibi
 
 La decisión documentada fue adoptar una estrategia híbrida: operaciones síncronas para las consultas inmediatas de los usuarios y mecanismos asíncronos para actualizaciones periódicas de las fuentes externas. El ADR establece además que cada fuente externa debe estar encapsulada mediante un adaptador, evitando que la lógica del sistema dependa directamente del proveedor externo.
 
-**Evidencia:** `docs/adr/0004-estrategia-de-integracion.md`
+**Evidencia:** [`docs/adr/0004-estrategia-de-integracion.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0004-estrategia-de-integracion.md)
 
 La relación con la implementación seleccionada se observa en `backend/app/infrastructure/external/steam/steam_game_repository.py`. Este componente implementa el puerto `GameRepository` y concentra la comunicación HTTP con la API de Steam mediante las operaciones `storesearch` y `appdetails`. La información externa se transforma al modelo `Game`, manteniendo la integración con Steam localizada en infraestructura.
 
 La documentación arquitectónica también identifica explícitamente a `SteamGameRepository` como responsable de la integración con Steam y ubica el precio de Steam y la caché temporal dentro del contexto de **Integración de fuentes externas**.
 
-**Evidencia complementaria:** `docs/adr/0003-reajuste-contextos-dominio.md`
+**Evidencia complementaria:** [`docs/adr/0003-reajuste-contextos-dominio.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/adr/0003-reajuste-contextos-dominio.md)
 
 ADR-0003 incluye explícitamente `SteamGameRepository` dentro de la decisión de reajuste de responsabilidades y lo relaciona con el contexto de Integración de fuentes externas. La decisión mantiene la arquitectura Hexagonal y define responsabilidades específicas para `SearchGames`, `SteamGameRepository`, `InMemoryGameRepository` y `ResilientGameRepository`.
 
@@ -454,9 +450,9 @@ El cambio se realizó sobre el endpoint de búsqueda y altera el contrato espera
 
 La ruptura fue ejecutada contra el pipeline de integración continua y produjo una ejecución fallida:
 
-**CI fallido:** `36301332490`
+**CI fallido:** [`36301332490`](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/36301332490)
 
-Posteriormente, el commit `97508788fe2e9cad0f78b96eabac518da943a353`, con mensaje `fix: restaurar contrato de la API DRIFT`, revierte exactamente el cambio:
+Posteriormente, el commit `97508788fe2e9cad0f78b96eabac518da943a353`, con mensaje [`fix: restaurar contrato de la API DRIFT`](https://github.com/ISCOUTB/AS_202620_Drift/actions/runs/36301421472), revierte exactamente el cambio:
 
 ```diff
 - "tittle": game.name,
@@ -478,25 +474,25 @@ El historial de `backend/tests/` también registra pruebas automatizadas del bac
 
 ## 2.5 Medición escenario asociado
 
-El componente seleccionado está asociado al **Escenario E1 — Eficiencia de desempeño**, documentado en `docs/escenarios.md`.
+El componente seleccionado está asociado al **Escenario E1 — Eficiencia de desempeño**, documentado en [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md).
 
 E1 establece una condición de hasta **50 usuarios concurrentes** y una medida verificable de **p95 ≤ 3 segundos**. El procedimiento de verificación se encuentra definido mediante una prueba de carga sobre el endpoint de búsqueda.
 
-**Evidencia:** `docs/escenarios.md`
+**Evidencia:** [`docs/escenarios.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/escenarios.md)
 
 El procedimiento de medición está implementado en:
 
-`scripts/k6_baseline.js`
+[`scripts/k6_baseline.js`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/scripts/k6_baseline.js)
 
 Los resultados de la medición del escenario se encuentran registrados en:
 
-`docs/evidencias/e1-linea-base.md`
+[`docs/evidencias/e1-linea-base.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/e1-linea-base.md)
 
 Esta evidencia contiene la medición inicial y la medición posterior a las modificaciones realizadas en `SteamGameRepository`, incluyendo los valores de p95 correspondientes.
 
 Adicionalmente, los resultados obtenidos en el **servidor/despliegue serverless** se encuentran documentados en:
 
-`docs/evidencias/Evidencia_TallerS8.md`
+[`docs/evidencias/Evidencia_TallerS8.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/evidencias/Evidencia_TallerS8.md)
 
 Esta evidencia complementa la medición principal con los resultados obtenidos sobre el despliegue del sistema.
 
@@ -513,11 +509,11 @@ Con evidencia complementaria del despliegue en:
 
 El uso de Inteligencia Artificial durante el desarrollo de DRIFT está documentado en:
 
-`docs/ia.md`
+[`docs/ia.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/ia.md)
 
 El documento establece que ChatGPT fue utilizado como apoyo para comprender conceptos, proponer alternativas, revisar documentación, orientar implementaciones y detectar inconsistencias. También establece que las decisiones arquitectónicas, los cambios aplicados y la validación final fueron responsabilidad del equipo.
 
-**Evidencia:** `docs/ia.md`
+**Evidencia:** [`docs/ia.md`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/docs/ia.md)
 
 El registro documenta consultas realizadas durante el desarrollo y especifica el uso dado a las respuestas de IA, junto con la validación realizada por el equipo y, cuando corresponde, las alternativas descartadas por razones técnicas.
 
@@ -618,8 +614,8 @@ La secuencia de evidencia queda establecida como:
 
 La trazabilidad de las dependencias incorporadas al proyecto se verificó mediante el historial Git de los archivos de gestión de dependencias:
 
-- `backend/requirements.txt`
-- `frontend/package.json`
+- [`backend/requirements.txt`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/backend/requirements.txt)
+- [`frontend/package.json`](https://github.com/ISCOUTB/AS_202620_Drift/blob/master/frontend/package.json)
 
 ### Dependencias del backend
 
