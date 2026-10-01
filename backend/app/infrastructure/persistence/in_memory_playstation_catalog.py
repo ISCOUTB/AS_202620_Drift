@@ -4,9 +4,15 @@ from typing import List
 from app.domain.model.game import Game
 from app.domain.model.normalized_game import NormalizedGame
 from app.domain.ports.game_repository import GameRepository
+from app.domain.ports.game_catalog_repository import (
+    GameCatalogRepository,
+)
 
 
-class InMemoryPlayStationCatalog(GameRepository):
+class InMemoryPlayStationCatalog(
+    GameRepository,
+    GameCatalogRepository,
+):
     """
     Catálogo local de PlayStation.
 
