@@ -128,6 +128,21 @@ jobs:
           with:
             fetch-depth: 0
 
+        - name: Configurar Node.js
+          uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+          with:
+            node-version: "22"
+            cache: npm
+            cache-dependency-path: frontend/package-lock.json
+
+        - name: Instalar dependencias de pruebas del frontend
+          working-directory: frontend
+          run: npm ci --ignore-scripts
+
+        - name: Ejecutar pruebas y generar cobertura del frontend
+          working-directory: frontend
+          run: npm run test:coverage
+
         - name: Configurar Python
           uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
           with:
