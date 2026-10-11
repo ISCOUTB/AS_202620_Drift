@@ -1,6 +1,6 @@
 import time
 from threading import Lock
-from typing import List
+from typing import List, Optional
 
 import httpx
 
@@ -99,13 +99,9 @@ class CheapSharkGameRepository(GameRepository):
                 continue
 
             store_name = stores.get(store_id)
+            price = self._price_in_cop(deal, usd_to_cop)
 
-            if not store_name or not deal.get("title"):
-                continue
-
-            try:
-                price = round(float(deal["salePrice"]) * usd_to_cop, 2)
-            except (KeyError, TypeError, ValueError):
+            if not store_name or not deal.get("title") or price is None:
                 continue
 
             # El steamAppID permite unir el juego con el resultado de Steam.
@@ -128,6 +124,13 @@ class CheapSharkGameRepository(GameRepository):
                 game.prices[store_name] = price
 
         return list(games_by_id.values())
+
+    @staticmethod
+    def _price_in_cop(deal: dict, usd_to_cop: float) -> Optional[float]:
+        try:
+            return round(float(deal["salePrice"]) * usd_to_cop, 2)
+        except (KeyError, TypeError, ValueError):
+            return None
 
     def _get_stores(self) -> dict:
         if self._stores and time.monotonic() - self._stores_loaded_at < self._stores_duration_seconds:

@@ -896,6 +896,7 @@
 
 
 .resultCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -903,8 +904,6 @@
   border-radius: var(--radius);
   background: var(--glass);
   box-shadow: 0 16px 34px rgba(6, 2, 14, .3);
-  cursor: pointer;
-  outline: none;
   animation: riseIn .45s ease both;
   transition:
     transform .25s ease,
@@ -921,7 +920,7 @@
 
 
 .resultCard:hover,
-.resultCard:focus-visible,
+.resultCard:focus-within,
 .resultCardSelected {
   transform: translateY(-5px);
   border-color: var(--accent);
@@ -1054,10 +1053,23 @@
 
 .resultAction {
   margin-top: auto;
-  padding-top: 14px;
+  padding: 14px 0 0;
+  border: 0;
+  background: none;
   color: var(--accent);
   font: 600 .74rem var(--display);
   letter-spacing: .03em;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+
+/* El botón cubre toda la tarjeta: se puede pulsar en cualquier parte. */
+.resultAction::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
 

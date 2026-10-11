@@ -217,15 +217,6 @@ function ResultCard({ game, isSelected, onSelect }) {
       className={`${styles.resultCard} ${
         isSelected ? styles.resultCardSelected : ""
       }`}
-      onClick={() => onSelect(game)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect(game);
-        }
-      }}
     >
       <div
         className={styles.resultArt}
@@ -278,9 +269,13 @@ function ResultCard({ game, isSelected, onSelect }) {
           </p>
         )}
 
-        <span className={styles.resultAction}>
+        <button
+          type="button"
+          className={styles.resultAction}
+          onClick={() => onSelect(game)}
+        >
           Ver opciones y compatibilidad →
-        </span>
+        </button>
       </div>
     </article>
   );
@@ -407,13 +402,13 @@ export default function DriftHome() {
   const submitSearch = (event) => {
     event?.preventDefault();
 
-    runSearch(query);
+    void runSearch(query);
   };
 
 
   const searchSuggestion = (name) => {
     setQuery(name);
-    runSearch(name);
+    void runSearch(name);
 
     catalogRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -481,6 +476,13 @@ export default function DriftHome() {
   const selectedPrices = getSortedPrices(
     selectedGame?.prices
   );
+
+  const showSuggestions = activeTab === "Sugeridos";
+  const showLoading = !showSuggestions && loading;
+  const showResults =
+    !showSuggestions && !loading && games.length > 0;
+  const showEmptyState =
+    !showSuggestions && !loading && games.length === 0;
 
 
   return (
@@ -725,7 +727,7 @@ export default function DriftHome() {
                   >
                     <small>{featuredGame.name}</small>
 
-                    Comparar precios
+                    <span>Comparar precios</span>
                   </button>
                 </div>
               </section>
@@ -897,7 +899,7 @@ export default function DriftHome() {
               )}
 
 
-              {activeTab === "Sugeridos" ? (
+              {showSuggestions && (
 
                 <>
                   <div className={styles.sectionHeader}>
@@ -965,7 +967,9 @@ export default function DriftHome() {
                   </div>
                 </>
 
-              ) : loading ? (
+              )}
+
+              {showLoading && (
 
                 <div className={styles.gameGrid}>
                   {[0, 1, 2, 3].map((skeleton) => (
@@ -976,7 +980,9 @@ export default function DriftHome() {
                   ))}
                 </div>
 
-              ) : games.length > 0 ? (
+              )}
+
+              {showResults && (
 
                 <>
                   <div className={styles.sectionHeader}>
@@ -1016,7 +1022,9 @@ export default function DriftHome() {
                   </div>
                 </>
 
-              ) : (
+              )}
+
+              {showEmptyState && (
 
                 <p className={styles.emptyState}>
                   Busca un videojuego para comparar
