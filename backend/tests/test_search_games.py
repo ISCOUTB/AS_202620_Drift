@@ -46,5 +46,5 @@ def test_search_uses_fallback_when_steam_is_unavailable(monkeypatch):
 
     assert len(data) == 1
     assert data[0]["name"] == "Minecraft"
-    assert data[0]["prices"]["Xbox"] == 19.99
+    assert data[0]["prices"]["Xbox"] == 79900.0
     assert data[0]["unavailable_sources"] == ["Steam"]

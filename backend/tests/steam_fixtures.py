@@ -20,7 +20,7 @@ class _MockSteamResponse:
 def mock_steam_search(monkeypatch):
     """Simula la búsqueda de 'Portal 2' en la API pública de Steam."""
 
-    def mock_get(url, params=None):
+    def mock_get(url, params=None, **kwargs):
         if "storesearch" in url:
             return _MockSteamResponse({
                 "items": [

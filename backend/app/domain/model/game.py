@@ -8,8 +8,10 @@ class Game:
         name: str,
         prices: dict,
         unavailable_sources: Optional[list[str]] = None,
+        image: Optional[str] = None,
     ):
         self.id = str(id)
         self.name = name
         self.prices = prices
         self.unavailable_sources = unavailable_sources or []
+        self.image = image

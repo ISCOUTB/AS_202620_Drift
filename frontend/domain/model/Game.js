@@ -4,11 +4,13 @@ export function createGame({
   name,
   prices = {},
   unavailable_sources = [],
+  image = null,
 }) {
   return {
     id: String(id),
     name: String(name),
     prices,
     unavailableSources: unavailable_sources,
+    image,
   };
 }

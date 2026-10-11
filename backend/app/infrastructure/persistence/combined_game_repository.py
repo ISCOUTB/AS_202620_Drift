@@ -1,6 +1,7 @@
 import httpx
 import re
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
 from app.domain.model.game import Game
@@ -8,6 +9,10 @@ from app.domain.ports.game_repository import GameRepository
 
 
 def normalize_game_name(name: str) -> str:
+    # Eliminar símbolos como ™, ® y © antes de NFKD,
+    # que convertiría "™" en las letras "TM".
+    name = re.sub(r"[™®©]", " ", name)
+
     name = unicodedata.normalize("NFKD", name)
 
     name = "".join(
@@ -17,9 +22,6 @@ def normalize_game_name(name: str) -> str:
     )
 
     name = name.casefold()
-
-    # Eliminar símbolos como ™, ® y ©
-    name = re.sub(r"[™®©]", "", name)
 
     # Eliminar información adicional típica de PlayStation
     name = re.sub(
@@ -59,29 +61,66 @@ class CombinedGameRepository(GameRepository):
         self.secondary_repository = secondary_repository
 
     def search(self, query: str) -> List[Game]:
-        games = self.primary_repository.search(query)
+        # Las tiendas se consultan en paralelo, no una después de otra.
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            secondary_search = executor.submit(
+                self.secondary_repository.search,
+                query,
+            )
+
+            games = self.primary_repository.search(query)
+
+            try:
+                secondary_games = secondary_search.result()
+            except httpx.HTTPError:
+                # La tienda secundaria es opcional: conserva lo ya encontrado.
+                secondary_games = []
 
         games_by_name = {
             normalize_game_name(game.name): game
             for game in games
         }
 
-        try:
-            secondary_games = self.secondary_repository.search(query)
-        except httpx.HTTPError:
-            # PlayStation es secundaria: conserva Steam o el catálogo local.
-            secondary_games = []
+        games_by_id = {
+            game.id: game
+            for game in games
+        }
 
         for game in secondary_games:
             normalized_name = normalize_game_name(game.name)
 
-            existing_game = games_by_name.get(normalized_name)
+            # El id coincide cuando la tienda secundaria conoce el
+            # identificador de Steam; si no, se compara por nombre.
+            existing_game = (
+                games_by_id.get(game.id)
+                or games_by_name.get(normalized_name)
+            )
 
             if existing_game:
-                existing_game.prices.update(game.prices)
+                self._merge_prices(existing_game, game)
+                existing_game.image = existing_game.image or game.image
                 continue
 
             games.append(game)
             games_by_name[normalized_name] = game
+            games_by_id[game.id] = game
 
         return games
+
+    @staticmethod
+    def _merge_prices(existing_game: Game, game: Game) -> None:
+        """
+        Una tienda puede repetir el juego (ediciones, versiones o
+        entradas gratuitas de prueba): se conserva el menor precio
+        real y el cero solo si no existe otro.
+        """
+
+        for store, price in game.prices.items():
+            current_price = existing_game.prices.get(store)
+
+            if (
+                current_price is None
+                or current_price <= 0 < price
+                or 0 < price < current_price
+            ):
+                existing_game.prices[store] = price

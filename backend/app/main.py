@@ -15,6 +15,14 @@ from app.application.usecases.sync_playstation_catalog import (
     SyncPlayStationCatalog,
 )
 
+from app.infrastructure.external.cheapshark.cheapshark_game_repository import (
+    CheapSharkGameRepository,
+)
+
+from app.infrastructure.external.exchange.open_exchange_rate_provider import (
+    OpenExchangeRateProvider,
+)
+
 from app.infrastructure.external.playstation.playstation_game_catalog_source import (
     PlayStationGameCatalogSource,
 )
@@ -84,7 +92,12 @@ class CompatibilityRequest(BaseModel):
     gpu_score: StrictInt
 
 
-playstation_source = PlayStationGameCatalogSource()
+exchange_rates = OpenExchangeRateProvider()
+
+
+playstation_source = PlayStationGameCatalogSource(
+    exchange_rates=exchange_rates,
+)
 
 
 playstation_catalog = InMemoryPlayStationCatalog(
@@ -93,9 +106,14 @@ playstation_catalog = InMemoryPlayStationCatalog(
 
 
 repository = CombinedGameRepository(
-    primary_repository=ResilientGameRepository(
-        primary_repository=SteamGameRepository(),
-        fallback_repository=InMemoryGameRepository(),
+    primary_repository=CombinedGameRepository(
+        primary_repository=ResilientGameRepository(
+            primary_repository=SteamGameRepository(),
+            fallback_repository=InMemoryGameRepository(),
+        ),
+        secondary_repository=CheapSharkGameRepository(
+            exchange_rates=exchange_rates,
+        ),
     ),
     secondary_repository=playstation_catalog,
 )
@@ -174,6 +192,7 @@ def search_games_endpoint(
                 "name": game.name,
                 "prices": game.prices,
                 "unavailable_sources": game.unavailable_sources,
+                "image": game.image,
             })
 
     except Exception:
