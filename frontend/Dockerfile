@@ -2,7 +2,8 @@
 FROM node:22-alpine AS dependencias
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# Sin scripts de instalación de terceros.
+RUN npm ci --ignore-scripts
 
 FROM node:22-alpine AS construccion
 WORKDIR /app

@@ -7,12 +7,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 FROM base AS dependencias
-COPY requirements.txt .
-RUN pip install --prefix=/instalado -r requirements.txt
+COPY requirements.lock .
+# Solo paquetes precompilados y con hash verificado: no se ejecutan scripts de instalación.
+RUN pip install --prefix=/instalado --only-binary :all: --require-hashes -r requirements.lock
 
 FROM base
 COPY --from=dependencias /instalado /usr/local
-COPY . .
+# Solo el código de la aplicación: nada más del repositorio entra en la imagen.
+COPY app ./app
 RUN useradd --uid 10001 --no-create-home app
 USER app
 EXPOSE 8000
