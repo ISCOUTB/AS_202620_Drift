@@ -77,7 +77,9 @@ class InMemoryPlayStationCatalog(
         return Game(
             id=game.id,
             name=game.name,
-            prices={
-                "PlayStation": game.price,
-            },
+            prices=(
+                {}
+                if game.price is None
+                else {"PlayStation": game.price}
+            ),
         )

@@ -15,7 +15,7 @@ def test_health():
 
 
 def test_search_games_vertical_slice(monkeypatch):
-    def mock_get(url, params=None):
+    def mock_get(url, params=None, **kwargs):
         class MockResponse:
             def raise_for_status(self):
                 pass

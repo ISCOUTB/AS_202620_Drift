@@ -88,4 +88,5 @@ class SteamGameRepository(GameRepository):
             id=app_id,
             name=item["name"],
             prices=prices,
+            image=game_data.get("header_image"),
         )

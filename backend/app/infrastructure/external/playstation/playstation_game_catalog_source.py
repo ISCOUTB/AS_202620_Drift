@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
-from typing import Any, List
+from typing import Any, List, Optional
 from urllib.parse import quote
 
 import httpx
 
 from app.domain.model.normalized_game import NormalizedGame
+from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
 from app.domain.ports.game_catalog_source import GameCatalogSource
 
 
@@ -21,6 +22,9 @@ class PlayStationGameCatalogSource(GameCatalogSource):
         "https://store.playstation.com/"
         "store/api/chihiro/00_09_000/tumbler/co/es/999/"
     )
+
+    def __init__(self, exchange_rates: ExchangeRateProvider):
+        self._exchange_rates = exchange_rates
 
     def fetch_catalog(self) -> List[NormalizedGame]:
         """
@@ -114,15 +118,25 @@ class PlayStationGameCatalogSource(GameCatalogSource):
 
         return [payload]
 
-    @staticmethod
     def _normalize(
+        self,
         item: dict,
         captured_at: datetime,
     ) -> NormalizedGame:
 
         sku = item.get("default_sku") or {}
 
-        price = PlayStationGameCatalogSource._price(sku)
+        price = self._price(sku)
+        currency = self._currency(item, sku)
+
+        # La tienda de Colombia publica precios en USD; se convierten a
+        # COP para poder compararlos con los de las demás tiendas.
+        if price and currency == "USD":
+            price = round(
+                price * self._exchange_rates.usd_to_cop(),
+                2,
+            )
+            currency = "COP"
 
         return NormalizedGame(
             id=str(item["id"]),
@@ -132,12 +146,7 @@ class PlayStationGameCatalogSource(GameCatalogSource):
                 "playable_platform"
             ) or "PlayStation",
             price=price,
-            currency=(
-                sku.get("currency")
-                or sku.get("currency_code")
-                or item.get("currency")
-                or "COP"
-            ),
+            currency=currency,
             discount=PlayStationGameCatalogSource._discount(
                 sku
             ),
@@ -145,22 +154,40 @@ class PlayStationGameCatalogSource(GameCatalogSource):
         )
 
     @staticmethod
-    def _price(sku: dict) -> float:
+    def _currency(item: dict, sku: dict) -> str:
+        currency = (
+            sku.get("currency")
+            or sku.get("currency_code")
+            or item.get("currency")
+        )
+
+        if currency:
+            return str(currency).upper()
+
+        if str(sku.get("display_price") or "").startswith("US$"):
+            return "USD"
+
+        return "COP"
+
+    @staticmethod
+    def _price(sku: dict) -> Optional[float]:
+        """Devuelve None cuando PlayStation no publica un precio."""
+
         price = sku.get(
             "price",
-            sku.get("actual_price", 0),
+            sku.get("actual_price"),
         )
 
         if isinstance(price, dict):
             price = price.get(
                 "value",
-                price.get("amount", 0),
+                price.get("amount"),
             )
 
         try:
             return float(price) / 100
         except (TypeError, ValueError):
-            return 0.0
+            return None
 
     @staticmethod
     def _discount(sku: dict) -> int:

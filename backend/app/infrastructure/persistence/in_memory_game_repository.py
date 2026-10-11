@@ -6,41 +6,42 @@ from app.domain.ports.game_repository import GameRepository
 class InMemoryGameRepository(GameRepository):
 
     def __init__(self):
+        # Precios en pesos colombianos, como las demás fuentes.
         self.games = [
             Game(
                 1,
                 "Minecraft",
                 {
-                    "Steam": 29.99,
-                    "PlayStation": 29.99,
-                    "Xbox": 19.99
+                    "Steam": 119900.0,
+                    "PlayStation": 119900.0,
+                    "Xbox": 79900.0
                 }
             ),
             Game(
                 2,
                 "Cyberpunk 2077",
                 {
-                    "Steam": 59.99,
-                    "PlayStation": 49.99,
-                    "Xbox": 49.99
+                    "Steam": 239900.0,
+                    "PlayStation": 199900.0,
+                    "Xbox": 199900.0
                 }
             ),
             Game(
                 3,
                 "Elden Ring",
                 {
-                    "Steam": 59.99,
-                    "PlayStation": 59.99,
-                    "Xbox": 59.99
+                    "Steam": 239900.0,
+                    "PlayStation": 239900.0,
+                    "Xbox": 239900.0
                 }
             ),
             Game(
                 4,
                 "Red Dead Redemption 2",
                 {
-                    "Steam": 59.99,
-                    "PlayStation": 39.99,
-                    "Xbox": 44.99
+                    "Steam": 239900.0,
+                    "PlayStation": 159900.0,
+                    "Xbox": 179900.0
                 }
             )
         ]
