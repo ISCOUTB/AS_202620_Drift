@@ -447,13 +447,14 @@ export default function DriftHome() {
 
     let cancelled = false;
 
-    listGraphicsCards(fastApiGpuCatalogRepository).then((options) => {
+    // Estas listas nunca rechazan: ante un fallo devuelven la lista incluida.
+    void listGraphicsCards(fastApiGpuCatalogRepository).then((options) => {
       if (!cancelled) {
         setGpuOptions(options);
       }
     });
 
-    listProcessors(fastApiCpuCatalogRepository).then((options) => {
+    void listProcessors(fastApiCpuCatalogRepository).then((options) => {
       if (!cancelled) {
         setCpuOptions(options);
       }

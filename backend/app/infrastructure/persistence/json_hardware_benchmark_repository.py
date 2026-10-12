@@ -118,7 +118,7 @@ class JsonHardwareBenchmarkRepository(HardwareBenchmarkRepository):
         text = re.sub(r"[®™©]", " ", text)
         text = re.sub(self._noise_words, " ", text)
         text = re.sub(r"[^a-z0-9]+", " ", text)
-        text = re.sub(r"(\d+)\s*gb\b", r"\1gb", text)
+        text = re.sub(r"(\d{1,4})\s{0,3}gb\b", r"\1gb", text)
 
         return " ".join(text.split())
 

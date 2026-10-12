@@ -20,9 +20,9 @@ _INTEL_CORE = re.compile(r"\bi([3579])[\s-]*(\d{4,5})([a-z]{0,2}\d?)")
 _INTEL_ULTRA = re.compile(r"ultra\s*([579])")
 _RYZEN = re.compile(r"ryzen\s*([3579])\s*(?:pro\s*)?(\d{4})([a-z]{0,2})")
 _FX = re.compile(r"\bfx[\s-]*(\d)\d{3}")
-_OLD_FAMILIES = re.compile(
-    r"core\s*2\s*(duo|quad|extreme)|pentium|celeron|atom|athlon|phenom|\ba(4|6|8|10|12)[\s-]\d{4}"
-)
+_CORE_2 = re.compile(r"core\s*2\s*(duo|quad|extreme)")
+_AMD_A_SERIES = re.compile(r"\ba(4|6|8|10|12)[\s-]\d{4}")
+_OLD_FAMILY_WORDS = ("pentium", "celeron", "atom", "athlon", "phenom")
 
 # Sufijos de bajo consumo de portátil: rinden por debajo de su gama.
 _LOW_POWER_SUFFIXES = ("u", "y", "g1", "g4", "g7")
@@ -82,6 +82,14 @@ def _normalize(text: str) -> str:
     return re.sub(r"[®™©]", " ", text).casefold()
 
 
+def _is_old_family(normalized: str) -> bool:
+    return bool(
+        _CORE_2.search(normalized)
+        or _AMD_A_SERIES.search(normalized)
+        or any(word in normalized for word in _OLD_FAMILY_WORDS)
+    )
+
+
 def _recognized_levels(normalized: str) -> List[int]:
     levels = []
 
@@ -110,7 +118,7 @@ def _recognized_levels(normalized: str) -> List[int]:
     if "threadripper" in normalized:
         levels.append(5)
 
-    if _OLD_FAMILIES.search(normalized):
+    if _is_old_family(normalized):
         levels.append(1)
 
     return levels

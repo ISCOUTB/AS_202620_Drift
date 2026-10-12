@@ -29,7 +29,8 @@ _LABELS = {
     },
 }
 
-_SIZE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(gb|mb)", re.IGNORECASE)
+# Repeticiones acotadas: la búsqueda no puede retroceder sin límite.
+_SIZE = re.compile(r"(\d{1,6}(?:[.,]\d{1,3})?)\s{0,3}(gb|mb)", re.IGNORECASE)
 
 # Los identificadores de Steam son enteros positivos de hasta 8 cifras.
 _MAX_APP_ID = 99_999_999
