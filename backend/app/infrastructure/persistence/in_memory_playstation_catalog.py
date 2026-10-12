@@ -1,4 +1,5 @@
 from threading import Lock
+from urllib.parse import quote
 from typing import List
 
 from app.domain.model.game import Game
@@ -81,5 +82,15 @@ class InMemoryPlayStationCatalog(
                 {}
                 if game.price is None
                 else {"PlayStation": game.price}
+            ),
+            links=(
+                {}
+                if game.price is None
+                else {
+                    "PlayStation": (
+                        "https://store.playstation.com/es-co/product/"
+                        + quote(str(game.id), safe="-_")
+                    )
+                }
             ),
         )

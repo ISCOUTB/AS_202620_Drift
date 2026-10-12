@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: DRIFT API
-  version: 1.1.0
+  version: 1.4.0
   description: |
     Contrato HTTP de la API de DRIFT.
     Permite consultar el estado del servicio, buscar videojuegos,
@@ -128,7 +128,11 @@ paths:
 
             example:
               ram_gb: 16
-              gpu_score: 80
+              gpu_score: 4
+              gpu_name: NVIDIA GeForce RTX 3060
+              cpu_score: 4
+              cpu_name: AMD Ryzen 5 5600
+              storage_gb: 200
 
 
       responses:
@@ -164,6 +168,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/ValidationError"
 
+
+
+  /hardware/gpus:
+    get:
+      tags:
+        - Compatibilidad
+
+      summary: Listar tarjetas gráficas para el buscador de «Mi PC»
+
+      description: >
+        Nombres y nivel aproximado de las tarjetas conocidas. No incluye los
+        puntajes de benchmark: estos solo aparecen en el resultado de una
+        estimación. La lista queda vacía si el despliegue no tiene configurada
+        la copia de puntajes.
+
+      operationId: listGraphicsCards
+
+      responses:
+
+        "200":
+          description: Catálogo de tarjetas gráficas y origen de los puntajes.
+
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HardwareCatalogue"
+
+
+  /hardware/cpus:
+    get:
+      tags:
+        - Compatibilidad
+
+      summary: Listar procesadores para el buscador de «Mi PC»
+
+      description: >
+        Nombres y nivel aproximado de los procesadores conocidos, sin
+        puntajes de benchmark. La lista queda vacía si el despliegue no tiene
+        configurada la copia de puntajes.
+
+      operationId: listProcessors
+
+      responses:
+
+        "200":
+          description: Catálogo de procesadores y origen de los puntajes.
+
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HardwareCatalogue"
 
 
 components:
@@ -251,6 +306,12 @@ components:
             - "null"
           description: URL de la portada del juego, si alguna fuente la entrega.
 
+        links:
+          type: object
+          description: Página de compra en cada tienda, con las mismas claves que prices. Una tienda puede no tener enlace.
+          additionalProperties:
+            type: string
+
 
 
     CompatibilityRequest:
@@ -268,7 +329,33 @@ components:
 
         gpu_score:
           type: integer
-          description: Puntaje de GPU utilizado por DRIFT.
+          description: Nivel aproximado de la tarjeta gráfica, de 1 (integrada) a 5 (muy alta).
+
+        gpu_name:
+          type:
+            - string
+            - "null"
+          maxLength: 120
+          description: Modelo de la tarjeta gráfica. Si DRIFT lo reconoce, su nivel prevalece sobre gpu_score.
+
+        storage_gb:
+          type:
+            - integer
+            - "null"
+          description: Espacio libre en disco en GB. Opcional.
+
+        cpu_name:
+          type:
+            - string
+            - "null"
+          maxLength: 120
+          description: Modelo del procesador. Opcional; sin él el procesador no se compara.
+
+        cpu_score:
+          type:
+            - integer
+            - "null"
+          description: Nivel aproximado del procesador, de 1 a 5. Se usa si DRIFT no reconoce cpu_name.
 
 
 
@@ -298,10 +385,127 @@ components:
           type: integer
 
         minimum_gpu_score:
-          type: integer
+          type:
+            - integer
+            - "null"
+          description: Nulo cuando la fuente no publica una gráfica reconocible.
 
         recommended_gpu_score:
+          type:
+            - integer
+            - "null"
+
+        minimum_storage_gb:
+          type:
+            - integer
+            - "null"
+
+        recommended_storage_gb:
+          type:
+            - integer
+            - "null"
+
+        source:
+          type: string
+          description: Origen de los requisitos (Steam o DRIFT).
+
+        gpu_score_used:
           type: integer
+
+        gpu_recognized:
+          type:
+            - boolean
+            - "null"
+
+        gpu_benchmark:
+          type:
+            - object
+            - "null"
+          description: Origen del benchmark cuando la gráfica se comparó por puntaje; nulo si se comparó por niveles.
+
+        minimum_cpu_score:
+          type:
+            - integer
+            - "null"
+          description: Nivel del procesador mínimo; nulo si la fuente no publica un modelo reconocible.
+
+        recommended_cpu_score:
+          type:
+            - integer
+            - "null"
+
+        cpu_score_used:
+          type:
+            - integer
+            - "null"
+
+        cpu_recognized:
+          type:
+            - boolean
+            - "null"
+
+        cpu_benchmark:
+          type:
+            - object
+            - "null"
+          description: Origen del benchmark cuando el procesador se comparó por puntaje.
+
+        partial:
+          type: boolean
+          description: Verdadero cuando algún componente no se pudo comparar.
+
+        checks:
+          type: array
+          description: Resultado por componente (ram, cpu, gpu, storage).
+          items:
+            type: object
+
+        requirements_text:
+          type: object
+          description: Texto de los requisitos tal como lo publica la fuente.
+
+
+
+    HardwareCatalogue:
+      type: object
+
+      required:
+        - items
+
+      properties:
+
+        source:
+          type: string
+
+        benchmark:
+          type: string
+
+        retrieved_at:
+          type: string
+          description: Fecha en que se tomó la copia de los puntajes.
+
+        items:
+          type: array
+
+          items:
+            type: object
+
+            required:
+              - name
+              - laptop
+              - level
+
+            properties:
+
+              name:
+                type: string
+
+              laptop:
+                type: boolean
+
+              level:
+                type: integer
+                description: Nivel aproximado de 1 a 5, usado cuando no hay puntaje para comparar.
 
 
 

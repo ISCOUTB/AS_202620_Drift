@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.infrastructure.external.steam import steam_game_requirements_repository
 from app.main import app
 
 client = TestClient(app)
@@ -44,7 +45,21 @@ def test_compatibility_is_not_compatible_below_minimum_specs():
     assert response.json()["status"] == "No compatible"
 
 
-def test_compatibility_reports_missing_requirements():
+def test_compatibility_reports_missing_requirements(monkeypatch):
+    # Steam tampoco conoce el juego; se simula para no depender de la red.
+    class NoGameResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"999999": {"success": False}}
+
+    monkeypatch.setattr(
+        steam_game_requirements_repository.httpx,
+        "get",
+        lambda *args, **kwargs: NoGameResponse(),
+    )
+
     response = client.post(
         "/games/999999/compatibility",
         json={

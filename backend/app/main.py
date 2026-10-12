@@ -5,15 +5,23 @@ from time import perf_counter
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, StrictInt
+from typing import Optional
+
+from pydantic import BaseModel, Field, StrictInt
 
 from app.application.usecases.estimate_compatibility import (
     EstimateCompatibility,
+)
+from app.application.usecases.list_hardware_catalogue import (
+    ListHardwareCatalogue,
 )
 from app.application.usecases.search_games import SearchGames
 from app.application.usecases.sync_playstation_catalog import (
     SyncPlayStationCatalog,
 )
+
+from app.domain.services.cpu_classifier import classify_cpu, cpu_level_from_score
+from app.domain.services.gpu_classifier import classify_gpu, level_from_score
 
 from app.infrastructure.external.cheapshark.cheapshark_game_repository import (
     CheapSharkGameRepository,
@@ -31,6 +39,10 @@ from app.infrastructure.external.steam.steam_game_repository import (
     SteamGameRepository,
 )
 
+from app.infrastructure.external.steam.steam_game_requirements_repository import (
+    SteamGameRequirementsRepository,
+)
+
 from app.infrastructure.observability import (
     SearchMetrics,
     configure_structured_logger,
@@ -39,6 +51,10 @@ from app.infrastructure.observability import (
 
 from app.infrastructure.persistence.combined_game_repository import (
     CombinedGameRepository,
+)
+
+from app.infrastructure.persistence.fallback_game_requirements_repository import (
+    FallbackGameRequirementsRepository,
 )
 
 from app.infrastructure.persistence.in_memory_game_repository import (
@@ -51,6 +67,11 @@ from app.infrastructure.persistence.in_memory_game_requirements_repository impor
 
 from app.infrastructure.persistence.in_memory_playstation_catalog import (
     InMemoryPlayStationCatalog,
+)
+
+from app.infrastructure.persistence.json_hardware_benchmark_repository import (
+    cpu_benchmark_repository,
+    gpu_benchmark_repository,
 )
 
 from app.infrastructure.persistence.resilient_game_repository import (
@@ -90,6 +111,10 @@ app.add_middleware(
 class CompatibilityRequest(BaseModel):
     ram_gb: StrictInt
     gpu_score: StrictInt
+    storage_gb: Optional[StrictInt] = None
+    gpu_name: Optional[str] = Field(default=None, max_length=120)
+    cpu_score: Optional[StrictInt] = None
+    cpu_name: Optional[str] = Field(default=None, max_length=120)
 
 
 exchange_rates = OpenExchangeRateProvider()
@@ -130,12 +155,31 @@ sync_playstation_catalog = SyncPlayStationCatalog(
 )
 
 
-requirements_repository = (
-    InMemoryGameRequirementsRepository()
-)
+# Primero los requisitos curados por el equipo; para el resto, Steam.
+requirements_repository = FallbackGameRequirementsRepository([
+    InMemoryGameRequirementsRepository(),
+    SteamGameRequirementsRepository(),
+])
+
+gpu_benchmarks = gpu_benchmark_repository()
+cpu_benchmarks = cpu_benchmark_repository()
 
 estimate_compatibility = EstimateCompatibility(
-    requirements_repository
+    requirements_repository,
+    gpu_benchmarks,
+    cpu_benchmarks,
+)
+
+list_gpu_catalogue = ListHardwareCatalogue(
+    gpu_benchmarks,
+    classify_gpu,
+    level_from_score,
+)
+
+list_cpu_catalogue = ListHardwareCatalogue(
+    cpu_benchmarks,
+    classify_cpu,
+    cpu_level_from_score,
 )
 
 
@@ -159,6 +203,16 @@ def metrics():
         "search_latency": search_metrics.snapshot(),
         "source_degradation": search_metrics.degradation_snapshot(),
     }
+
+
+@app.get("/hardware/gpus")
+def list_graphics_cards():
+    return list_gpu_catalogue.execute()
+
+
+@app.get("/hardware/cpus")
+def list_processors():
+    return list_cpu_catalogue.execute()
 
 
 PLAYSTATION_COMPATIBILITY_IDS = {
@@ -196,6 +250,7 @@ def search_games_endpoint(
                 "prices": game.prices,
                 "unavailable_sources": game.unavailable_sources,
                 "image": game.image,
+                "links": game.links,
             })
 
     except Exception:
@@ -284,4 +339,8 @@ def estimate_compatibility_endpoint(
         game_id=game_id,
         ram_gb=request.ram_gb,
         gpu_score=request.gpu_score,
+        storage_gb=request.storage_gb,
+        gpu_name=request.gpu_name,
+        cpu_name=request.cpu_name,
+        cpu_score=request.cpu_score,
     )

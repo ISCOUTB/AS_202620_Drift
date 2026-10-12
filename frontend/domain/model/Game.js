@@ -5,6 +5,7 @@ export function createGame({
   prices = {},
   unavailable_sources = [],
   image = null,
+  links = {},
 }) {
   return {
     id: String(id),
@@ -12,5 +13,6 @@ export function createGame({
     prices,
     unavailableSources: unavailable_sources,
     image,
+    links,
   };
 }

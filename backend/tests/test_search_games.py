@@ -26,6 +26,9 @@ def test_search_games_vertical_slice(mock_steam_search):
     assert data[0]["id"] == "620"
     assert data[0]["name"] == "Portal 2"
     assert data[0]["prices"]["Steam"] == 26.00
+    assert data[0]["links"] == {
+        "Steam": "https://store.steampowered.com/app/620/",
+    }
 
 
 def test_search_uses_fallback_when_steam_is_unavailable(monkeypatch):

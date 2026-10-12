@@ -15,6 +15,7 @@ class CheapSharkGameRepository(GameRepository):
     """Adaptador de CheapShark: precios de tiendas de juegos de PC."""
 
     _base_url = "https://www.cheapshark.com/api/1.0"
+    _redirect_url = "https://www.cheapshark.com/redirect"
 
     # CheapShark rechaza peticiones sin un User-Agent descriptivo.
     _headers = {
@@ -101,6 +102,13 @@ class CheapSharkGameRepository(GameRepository):
 
             if current_price is None or price < current_price:
                 game.prices[store_name] = price
+
+                # CheapShark lleva a la oferta en la tienda mediante su
+                # enlace de redirección; el dealID ya viene codificado.
+                if deal.get("dealID"):
+                    game.links[store_name] = (
+                        f"{self._redirect_url}?dealID={deal['dealID']}"
+                    )
 
         return list(games_by_id.values())
 

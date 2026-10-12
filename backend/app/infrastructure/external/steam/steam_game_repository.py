@@ -79,4 +79,9 @@ class SteamGameRepository(GameRepository):
             name=item["name"],
             prices=prices,
             image=game_data.get("header_image"),
+            links=(
+                {"Steam": f"https://store.steampowered.com/app/{app_id}/"}
+                if prices
+                else {}
+            ),
         )

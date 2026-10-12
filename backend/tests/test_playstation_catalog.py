@@ -144,5 +144,10 @@ def test_playstation_usd_prices_are_converted_and_missing_prices_omitted(monkeyp
         "Steam": 199000.0,
         "PlayStation": 199960.0,
     }
+
+    # El enlace corresponde a la entrada cuyo precio se conservó ("B").
+    assert games[0].links == {
+        "PlayStation": "https://store.playstation.com/es-co/product/B",
+    }
     assert games[1].name == "Cyberpunk 2077: Phantom Liberty"
     assert games[1].prices == {}
