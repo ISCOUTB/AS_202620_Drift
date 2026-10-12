@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Genera un servidor autocontenido para la imagen Docker; Vercel lo ignora.
-  output: "standalone",
+  // El servidor autocontenido solo se genera para la imagen Docker, que lo
+  // pide con NEXT_OUTPUT=standalone. En Vercel rompe su paso final de build.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
 };
 
 module.exports = nextConfig;

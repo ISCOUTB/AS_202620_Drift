@@ -1,4 +1,4 @@
-# Frontend Next.js de DRIFT con salida standalone (next.config.js: output: "standalone").
+# Frontend Next.js de DRIFT con salida standalone (la activa NEXT_OUTPUT).
 FROM node:22-alpine AS dependencias
 WORKDIR /app
 COPY package*.json ./
@@ -7,7 +7,8 @@ RUN npm ci --ignore-scripts
 
 FROM node:22-alpine AS construccion
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_OUTPUT activa la salida standalone de next.config.js.
+ENV NEXT_TELEMETRY_DISABLED=1 NEXT_OUTPUT=standalone
 COPY --from=dependencias /app/node_modules ./node_modules
 COPY . .
 # Las variables NEXT_PUBLIC_* se fijan en el build: llega como build arg desde el compose.
