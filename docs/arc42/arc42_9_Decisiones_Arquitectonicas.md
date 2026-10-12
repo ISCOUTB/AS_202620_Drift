@@ -10,6 +10,9 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 |---|---|---|---|
 | [ADR-0001](../adr/0001-adoptar-arquitectura-hexagonal.md) | Selección de Arquitectura Hexagonal (Ports and Adapters) como arquitectura base, sobre stack Java | Superada por ADR-0002 en cuanto al stack; se mantiene la decisión de Arquitectura Hexagonal | Estructura completa del sistema (Sección 5); soporta principalmente la mantenibilidad |
 | [ADR-0002](../adr/0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md) | Cambio de stack tecnológico: Next.js (frontend) + FastAPI (backend), manteniendo Arquitectura Hexagonal | Aceptada | Reemplaza la tecnología concreta de implementación definida en ADR-0001, sin cambiar la decisión arquitectónica de fondo |
+| [ADR-0004](../adr/0004-estrategia-de-integracion.md) | Estrategia híbrida de integración con MySQL y actualización asíncrona | Superseded por ADR-0008 | Persistencia y modelo de ejecución |
+| [ADR-0008](../adr/0008-persistencia-y-modelo-de-ejecucion.md) | Catálogo en memoria y ejecución síncrona | Aceptado | Secciones 5, 7 y 11; sustituye a ADR-0004 |
+| [ADR-0009](../adr/0009-degradacion-controlada-de-fuentes.md) | Plazo por fuente y aviso en `unavailable_sources` | Aceptado | Sección 6 y escenario E6 |
 
 ## 9.2 Resumen
 
