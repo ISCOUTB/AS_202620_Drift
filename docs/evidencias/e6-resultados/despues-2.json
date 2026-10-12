@@ -1,0 +1,10 @@
+{
+  "solicitudes": 50,
+  "fallidas": 0,
+  "p50_ms": 823.13185,
+  "p95_ms": 3513.1435299999994,
+  "max_ms": 3648.5254,
+  "degradadas": 18,
+  "degradadas_sin_aviso": 0,
+  "duracion_corrida_ms": 3654.3498
+}

@@ -6,7 +6,7 @@
 
 ## 1. Alcance de la API
 
-La integración con PlayStation permite obtener información de videojuegos, incluidos precios y disponibilidad cuando estén disponibles, y transformarla al modelo interno de DRIFT. La información obtenida puede ser almacenada en MySQL para reducir la dependencia de consultas directas al proveedor externo durante las búsquedas de los usuarios.
+La integración con PlayStation permite obtener información de videojuegos, incluidos precios y disponibilidad cuando estén disponibles, y transformarla al modelo interno de DRIFT. La información obtenida se conserva en un catálogo en memoria (`InMemoryPlayStationCatalog`), que se pierde al reiniciar el proceso; ver [ADR-0008](../../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), que sustituye la persistencia en MySQL prevista en ADR-0004.
 
 | Actor o sistema | Necesita realizar | Operación o interacción |
 |---|---|---|
@@ -14,19 +14,19 @@ La integración con PlayStation permite obtener información de videojuegos, inc
 | Usuario | Conocer precios disponibles en PlayStation | Visualiza los resultados disponibles en DRIFT |
 | Backend FastAPI | Obtener información de videojuegos de PlayStation | Solicitud `GET` al proveedor externo mediante PSN Swagger |
 | Backend FastAPI | Normalizar la información recibida | Transformación al modelo interno de DRIFT |
-| Backend FastAPI | Almacenar la información obtenida | Persistencia en MySQL |
+| Backend FastAPI | Almacenar la información obtenida | Catálogo en memoria (`InMemoryPlayStationCatalog`), sin persistencia entre reinicios |
 | Backend FastAPI | Actualizar información del catálogo | Ejecución del proceso de actualización definido para la fuente |
 | Backend FastAPI | Mantener disponibilidad ante una falla externa | Utiliza la información previamente almacenada cuando esté disponible |
 | Adaptador PlayStation | Aislar la API externa del dominio | Encapsula solicitudes HTTP, transformación y manejo de errores |
 
 ## 2. Convenciones del contrato
 
-- **Estilo de integración:** REST síncrono hacia la API externa y flujo asíncrono para procesos de actualización del catálogo.
+- **Estilo de integración:** REST síncrono hacia la API externa. La actualización del catálogo también es síncrona en la implementación actual (ADR-0008); el contrato asíncrono describe una evolución futura no implementada.
 - **Protocolo hacia PlayStation:** HTTP/HTTPS.
 - **Formato de intercambio:** JSON.
 - **Método principal:** `GET`.
 - **Proveedor:** PlayStation Network, documentado mediante PSN Swagger.
-- **Persistencia:** MySQL.
+- **Persistencia:** ninguna entre reinicios; catálogo en memoria (ADR-0008).
 - **Aislamiento:** la API externa no se utiliza directamente desde el dominio; toda comunicación pasa por el adaptador correspondiente.
 - **Especificaciones:** OpenAPI 3.0.3 para la integración REST y AsyncAPI 3.0 para el flujo de actualización.
 - **Versionado:** `1.0.0`.
@@ -49,12 +49,12 @@ DRIFT ── HTTP/HTTPS + JSON ──► PlayStation API
                            Normalización
                                   │
                                   ▼
-                                MySQL
+                     Catálogo en memoria
 ```
 
 La consulta a PlayStation utiliza comunicación síncrona porque cada solicitud necesita una respuesta del proveedor antes de poder procesar la información obtenida.
 
-La estrategia de actualización del catálogo se separa de las consultas interactivas del usuario. La información obtenida puede ser procesada, normalizada y almacenada periódicamente en MySQL, reduciendo la necesidad de consultar directamente al proveedor en cada búsqueda.
+La estrategia de actualización del catálogo se separa de las consultas interactivas del usuario. La sincronización se invoca de forma síncrona con `POST /games/sync/playstation` y reemplaza el catálogo en memoria; no hay planificador ni cola. Si el catálogo no contiene el juego buscado, la búsqueda consulta a PlayStation directamente, con un plazo de 3 s y aviso en `unavailable_sources` si no responde (ADR-0008).
 
 ## 3. Contrato síncrono REST
 
@@ -109,7 +109,7 @@ El contrato define la estructura de estos mensajes, pero el mecanismo concreto d
 | Puerto de fuente externa de catálogo (`GameCatalogSource`) | Sí | Implementado |
 | Integración con PlayStation mediante PSN Swagger | Sí | Implementada según la integración actual |
 | Normalización al modelo interno | Sí | Implementada mediante transformación al modelo `Game` |
-| Almacenamiento persistente del catálogo | Sí | Previsto mediante MySQL |
+| Almacenamiento persistente del catálogo | No | Descartado por ahora en ADR-0008: catálogo en memoria |
 | Búsqueda contra información almacenada | Sí | Parte del flujo de consulta de DRIFT |
 | Actualización de información de PlayStation | Sí | Parte de la estrategia de integración |
 | Conservación de información previamente almacenada ante falla externa | Sí | Considerada dentro de la estrategia de integración |
@@ -129,7 +129,7 @@ La integración con PlayStation permite obtener información de videojuegos medi
 | Normalizar información | Transformar la respuesta de PlayStation al modelo interno de DRIFT. | Implementado |
 | Integrar resultados en DRIFT | Incorporar la información obtenida al flujo de búsqueda de videojuegos. | Implementado |
 | Actualizar información del catálogo | Obtener nuevamente información desde PlayStation para mantener actualizado el catálogo local. | En desarrollo |
-| Persistir información en MySQL | Almacenar la información normalizada para reducir consultas directas al proveedor externo. | Parte de la arquitectura objetivo |
+| Persistir información en una base de datos | Almacenar la información normalizada para reducir consultas directas al proveedor externo. | Descartado por ahora (ADR-0008); evolución futura |
 | Actualización periódica | Ejecutar automáticamente procesos de actualización del catálogo. | Pendiente |
 
 ## 7. Relación con la estrategia de integración

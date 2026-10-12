@@ -171,3 +171,19 @@ GitHub Actions
 ## 7.9 Resumen
 
 La arquitectura de despliegue separa el frontend y el backend en servicios independientes. El frontend se ejecuta en Vercel y el backend en Azure App Service. GitHub y GitHub Actions proporcionan el repositorio y el proceso de integración y despliegue, mientras que Azure Bicep permite definir la infraestructura como código.
+
+## 7.10 Despliegue en el servidor del laboratorio (octubre de 2026)
+
+Además de Azure y Vercel, el sistema completo está desplegado en el servidor compartido del curso con Dokploy.
+
+| Elemento | Valor |
+|---|---|
+| URL | `https://drift.iscoutb.dev` (frontend en `/`, API en `/api` con *Strip Path*) |
+| Infraestructura como código | `deploy/compose.lab.yaml`, `backend/Dockerfile`, `frontend/Dockerfile` |
+| Contenedores | `api` (FastAPI, 1 proceso) y `web` (Next.js), 192 MB y 0,5 CPU cada uno; sin base de datos ni volúmenes |
+| Despliegue | Automático en cada push a `master` |
+| Health check | `GET /api/health` |
+| Métricas | `GET /api/metrics`: latencia de búsqueda y `drift_source_unavailable_total` |
+| Configuración | `CORS_ALLOWED_ORIGINS`, `USD_TO_COP_RATE`, `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto); sin secretos |
+
+El catálogo y las cachés viven en la memoria del contenedor `api`: se pierden en cada despliegue o reinicio (ADR-0008).

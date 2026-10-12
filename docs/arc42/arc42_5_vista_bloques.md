@@ -237,3 +237,16 @@ Los componentes de esta vista deben mantenerse sincronizados con el repositorio.
 La presencia de un archivo no demuestra por sí sola que su componente participe en el flujo desplegado. Las dependencias, la configuración de ejecución y las pruebas deben utilizarse para confirmar las relaciones representadas.
 
 La vista de bloques documenta, por tanto, la estructura lógica de DRIFT y las responsabilidades de sus componentes, diferenciando las integraciones operativas de las capacidades previstas para futuras versiones.
+
+## Actualización de octubre de 2026: bloques de la degradación controlada
+
+Verificado contra el código ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), [C4 nivel 3](../c4/componentes.md)):
+
+| Bloque | Ubicación | Responsabilidad |
+|---|---|---|
+| `CheapSharkGameRepository` | `backend/app/infrastructure/external/cheapshark/` | Adaptador de tiendas de PC; implementa `GameRepository`. |
+| `ExchangeRateProvider` / `OpenExchangeRateProvider` | `backend/app/domain/ports/` y `backend/app/infrastructure/external/exchange/` | Puerto y adaptador de la tasa USD a COP. |
+| `SingleFlightCache` | `backend/app/infrastructure/external/single_flight_cache.py` | Caché de 60 s sin lock durante la E/S; la usan Steam y CheapShark. |
+| `CombinedGameRepository` | `backend/app/infrastructure/persistence/` | Combina fuentes con plazo de 3 s por fuente secundaria y aviso en `unavailable_sources`. |
+
+No existe ningún bloque de persistencia en base de datos: el catálogo y las cachés son en memoria.

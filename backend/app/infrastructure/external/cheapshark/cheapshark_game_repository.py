@@ -7,6 +7,8 @@ import httpx
 from app.domain.model.game import Game
 from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
 from app.domain.ports.game_repository import GameRepository
+from app.infrastructure.external.single_flight_cache import SingleFlightCache
+from app.infrastructure.game_copy import copy_games
 
 
 class CheapSharkGameRepository(GameRepository):
@@ -25,8 +27,7 @@ class CheapSharkGameRepository(GameRepository):
 
     def __init__(self, exchange_rates: ExchangeRateProvider):
         self._exchange_rates = exchange_rates
-        self._cache = {}
-        self._cache_duration_seconds = 60
+        self._cache = SingleFlightCache(ttl_seconds=60)
         self._stores = {}
         self._stores_loaded_at = None
         self._stores_duration_seconds = 24 * 60 * 60
@@ -38,34 +39,12 @@ class CheapSharkGameRepository(GameRepository):
         if not cache_key:
             return []
 
-        with self._lock:
-            cached_result = self._cache.get(cache_key)
+        games = self._cache.get_or_load(
+            cache_key,
+            lambda: self._search_cheapshark(query.strip()),
+        )
 
-            if cached_result and time.monotonic() - cached_result["created_at"] < self._cache_duration_seconds:
-                return self._copy(cached_result["games"])
-
-            games = self._search_cheapshark(query.strip())
-
-            self._cache[cache_key] = {
-                "created_at": time.monotonic(),
-                "games": games,
-            }
-
-            return self._copy(games)
-
-    @staticmethod
-    def _copy(games: List[Game]) -> List[Game]:
-        # Los repositorios que combinan tiendas modifican `prices`;
-        # se entregan copias para no alterar lo guardado en caché.
-        return [
-            Game(
-                id=game.id,
-                name=game.name,
-                prices=dict(game.prices),
-                image=game.image,
-            )
-            for game in games
-        ]
+        return copy_games(games)
 
     def _search_cheapshark(self, query: str) -> List[Game]:
         response = httpx.get(
@@ -133,8 +112,10 @@ class CheapSharkGameRepository(GameRepository):
             return None
 
     def _get_stores(self) -> dict:
-        if self._stores and time.monotonic() - self._stores_loaded_at < self._stores_duration_seconds:
-            return self._stores
+        # El lock protege solo la lectura y la escritura, no la llamada HTTP.
+        with self._lock:
+            if self._stores and time.monotonic() - self._stores_loaded_at < self._stores_duration_seconds:
+                return self._stores
 
         response = httpx.get(
             f"{self._base_url}/stores",
@@ -148,11 +129,14 @@ class CheapSharkGameRepository(GameRepository):
         if not isinstance(stores, list):
             return {}
 
-        self._stores = {
+        active_stores = {
             str(store["storeID"]): store["storeName"]
             for store in stores
             if store.get("isActive")
         }
-        self._stores_loaded_at = time.monotonic()
 
-        return self._stores
+        with self._lock:
+            self._stores = active_stores
+            self._stores_loaded_at = time.monotonic()
+
+        return active_stores

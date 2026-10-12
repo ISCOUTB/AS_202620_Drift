@@ -61,3 +61,18 @@ La gestión de riesgos y deuda técnica se realizará mediante las siguientes ac
 Esta sección constituye un registro inicial de riesgos y deuda técnica. Las valoraciones y los elementos pendientes de verificación deben ajustarse con base en la implementación real y en las evidencias obtenidas por el equipo.
 
 La sección se considerará actualizada cuando los riesgos estén evaluados, las acciones prioritarias tengan responsables y los elementos cerrados cuenten con evidencia de validación.
+
+## 11.7. Riesgos y deuda confirmados por el experimento E6
+
+Verificados contra el código y las mediciones de [E6](../evidencias/e6-degradacion-bajo-carga.md) (octubre de 2026):
+
+| Riesgo o deuda | Estado | Evidencia o mitigación |
+|---|---|---|
+| Una fuente lenta retenía la búsqueda y las respuestas sin esa fuente no lo avisaban. | Mitigado | Plazo por fuente de 3 s y aviso en `unavailable_sources` ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md)); `backend/tests/test_source_degradation.py`. |
+| Los adaptadores de Steam y CheapShark mantenían un lock durante la llamada HTTP y serializaban las búsquedas con caché fría. | Mitigado | `SingleFlightCache`: el lock protege solo el diccionario. |
+| Si la búsqueda no devuelve ningún juego, no hay resultado donde llevar el aviso de la fuente faltante. | Abierto | La respuesta es una lista de juegos; llevar el aviso fuera de ellos cambia el contrato `GET /games/search`. Queda visible en la métrica `drift_source_unavailable_total` y en el log `source_unavailable`. |
+| Cada llamada `httpx.get` crea un cliente y su contexto TLS. En el equipo de medición cuesta cerca de 0,5 s de CPU por cliente. | Abierto | Medido al preparar E6 y excluido del experimento (ver límites de validez). La corrección es un cliente HTTP compartido por adaptador. |
+| La fuente primaria (Steam) no tiene plazo propio. | Abierto | Depende del timeout de `httpx` y de `ResilientGameRepository`. |
+| No hay circuito de corte: la fuente que vence se vuelve a consultar en la siguiente búsqueda. | Aceptado | Descartado en ADR-0008 por añadir dependencias; revisar si la degradación se vuelve sostenida. |
+| El hilo de una consulta abandonada sigue vivo hasta su timeout HTTP (5 s). | Aceptado | Acotado por ese timeout; con degradación sostenida puede acumular hilos. |
+| Catálogo y cachés en memoria: se pierden al reiniciar y no se comparten entre réplicas. | Aceptado | Decisión 1 de ADR-0008. |

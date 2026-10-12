@@ -436,3 +436,35 @@ y posteriormente:
 
 Finalmente, el catálogo local de PlayStation queda disponible para `CombinedGameRepository` durante las búsquedas.
 
+## Actualización de octubre de 2026: CheapShark, tasa de cambio y degradación controlada
+
+Componentes de infraestructura añadidos o modificados; el dominio, los puertos existentes y los casos de uso no cambiaron ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md)).
+
+```mermaid
+flowchart LR
+    UC["SearchGames<br/>(caso de uso)"] --> PORT["GameRepository<br/>(puerto)"]
+    PORT -.->|"implementado por"| OUTER["CombinedGameRepository<br/>secundaria: PlayStation, plazo 3 s"]
+    OUTER -->|"primaria"| INNER["CombinedGameRepository<br/>secundaria: CheapShark, plazo 3 s"]
+    OUTER -->|"secundaria"| PS["InMemoryPlayStationCatalog"]
+    INNER -->|"primaria"| RES["ResilientGameRepository"]
+    INNER -->|"secundaria"| CS["CheapSharkGameRepository"]
+    RES --> STEAM["SteamGameRepository"]
+    RES -->|"respaldo"| MEM["InMemoryGameRepository"]
+    STEAM --> SFC["SingleFlightCache"]
+    CS --> SFC
+    CS --> FXPORT["ExchangeRateProvider<br/>(puerto)"]
+    PS --> FXPORT
+    FXPORT -.->|"implementado por"| FX["OpenExchangeRateProvider"]
+```
+
+| Capa | Componente | Responsabilidad |
+|---|---|---|
+| Dominio | `ExchangeRateProvider` | Puerto de la tasa USD a COP; lo usan los adaptadores que reciben precios en dólares. |
+| Infraestructura | `CheapSharkGameRepository` | Implementa `GameRepository` con los precios de tiendas de PC de CheapShark, convertidos a COP. |
+| Infraestructura | `OpenExchangeRateProvider` | Implementa `ExchangeRateProvider` con caché de 12 h y tasa de respaldo. |
+| Infraestructura | `SingleFlightCache` | Caché con vencimiento y una sola carga en vuelo por clave; su lock no cubre la llamada HTTP. |
+| Infraestructura | `CombinedGameRepository` | Consulta la fuente secundaria en paralelo, la espera como máximo `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s) y, si falla o vence, añade su nombre a `unavailable_sources`. |
+| Infraestructura | `game_copy.copy_games` | Entrega copias de los juegos en caché o en memoria, para que una búsqueda no altere lo que reciben las demás. |
+| Infraestructura | `SearchMetrics` | Además de la latencia, cuenta las búsquedas degradadas por fuente (`drift_source_unavailable_total`). |
+
+`backend/tests/test_architecture.py` falla si el dominio o la aplicación importan infraestructura.

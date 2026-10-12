@@ -232,7 +232,18 @@ python -m pytest tests -q
 
 La suite actual incluye pruebas del corte vertical de búsqueda, tolerancia a fallos de Steam y estimación de compatibilidad.
 
-Última validación local: **8 pruebas aprobadas**.
+Última validación local: **27 pruebas aprobadas** (sin la de contrato, que requiere la API en ejecución).
+
+### Experimento E6 (degradación de una fuente)
+
+Reproduce la comparación antes/después con un upstream simulado (no usa servicios reales). Requiere k6. Desde la raíz del proyecto:
+
+```bash
+python scripts/e6_corrida.py backend despues-1
+python scripts/resumen_e6.py
+```
+
+Procedimiento completo, versión "antes" y resultados medidos en [docs/evidencias/e6-degradacion-bajo-carga.md](docs/evidencias/e6-degradacion-bajo-carga.md).
 
 ### Compilación del frontend
 
@@ -289,7 +300,7 @@ SonarQube Cloud está configurado mediante `sonar-project.properties` y el secre
 
 | Documento | Contenido |
 |---|---|
-| [Aspectos de calidad](docs/aspectos.md) | Trazabilidad de E1 a E5, implementación y evidencias. |
+| [Aspectos de calidad](docs/aspectos.md) | Trazabilidad de E1 a E6, implementación y evidencias. |
 | [Escenarios de calidad](docs/escenarios.md) | Escenarios medibles para rendimiento, mantenibilidad, usabilidad, compatibilidad y disponibilidad. |
 | [Matriz arquitectónica](docs/matriz.md) | Comparación entre arquitectura en capas, hexagonal y monolito modular. |
 | [C4: contexto](docs/c4/contexto.md) | Diagrama de contexto del sistema. |
@@ -297,7 +308,7 @@ SonarQube Cloud está configurado mediante `sonar-project.properties` y el secre
 | [C4: componentes](docs/c4/componentes.md) | Diagrama de componentes de DRIFT. |
 | [arc42](docs/arc42/) | Documentación de arquitectura basada en arc42. |
 | [Uso de IA](docs/ia.md) | Registro y criterios de uso de herramientas de IA. |
-| [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3 y E4. |
+| [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3, E4 y E6. |
 | [Contextos delimitados y propiedad de los datos](docs/contextos_delimitados_propiedad_datos.md) | Lenguaje ubicuo, mapa de contextos delimitados y propiedad de datos. |
 | [Correcciones](correcciones.md) | Trazabilidad entre el feedback y las correcciones realizadas. |
 

@@ -224,3 +224,12 @@ Por ejemplo, `SearchGames` puede continuar trabajando con `GameRepository` aunqu
 De esta manera, la arquitectura busca reducir el acoplamiento, evitar responsabilidades cruzadas y facilitar la evolución del sistema.
 
  
+
+## Degradación controlada de fuentes (octubre de 2026)
+
+- **Plazo por fuente:** cada fuente secundaria de la búsqueda dispone de `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto). Pasado el plazo, la búsqueda responde con lo que tiene.
+- **Aviso explícito:** la fuente que falla o vence queda en `unavailable_sources` de cada resultado; el frontend lo muestra en la tarjeta del juego.
+- **Caché sin bloqueo:** `SingleFlightCache` evita repetir consultas iguales sin serializar las distintas.
+- **Observabilidad:** log JSON `source_unavailable` (fuente, motivo, espera) y métrica `drift_source_unavailable_total` en `/metrics`.
+
+Decisión en [ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md); medición en [E6](../evidencias/e6-degradacion-bajo-carga.md).

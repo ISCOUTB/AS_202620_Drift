@@ -114,8 +114,10 @@ repository = CombinedGameRepository(
         secondary_repository=CheapSharkGameRepository(
             exchange_rates=exchange_rates,
         ),
+        secondary_name="CheapShark",
     ),
     secondary_repository=playstation_catalog,
+    secondary_name="PlayStation",
 )
 
 
@@ -154,7 +156,8 @@ def health():
 @app.get("/metrics")
 def metrics():
     return {
-        "search_latency": search_metrics.snapshot()
+        "search_latency": search_metrics.snapshot(),
+        "source_degradation": search_metrics.degradation_snapshot(),
     }
 
 
@@ -207,8 +210,15 @@ def search_games_endpoint(
         perf_counter() - started_at
     ) * 1000
 
+    unavailable_sources = sorted({
+        source
+        for game in games
+        for source in game.unavailable_sources
+    })
+
     search_metrics.record_search(
-        duration_ms
+        duration_ms,
+        unavailable_sources,
     )
 
     log_event(
@@ -219,6 +229,7 @@ def search_games_endpoint(
             2,
         ),
         results_count=len(results),
+        unavailable_sources=unavailable_sources,
     )
 
     return results
