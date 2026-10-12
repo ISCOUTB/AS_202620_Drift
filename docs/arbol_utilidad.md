@@ -19,6 +19,7 @@ flowchart LR
     C --> C1["[E1] [Impacto: Alto | Riesgo: Medio]<br/>Consulta de precios dentro del tiempo establecido"]
 
     D --> D1["[E5] [Impacto: Alto | Riesgo: Alto]<br/>Mantener el servicio ante fallos de fuentes externas"]
+    D --> D2["[E6] [Impacto: Alto | Riesgo: Alto]<br/>Responder y avisar cuando una fuente es lenta bajo carga"]
 
     E --> E1["[E3] [Impacto: Medio | Riesgo: Bajo]<br/>Permitir comparar precios de forma sencilla"]
 

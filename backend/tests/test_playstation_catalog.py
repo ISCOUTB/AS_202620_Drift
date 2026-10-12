@@ -135,6 +135,7 @@ def test_playstation_usd_prices_are_converted_and_missing_prices_omitted(monkeyp
         secondary_repository=InMemoryPlayStationCatalog(
             search_source=PlayStationGameCatalogSource(FixedExchangeRate()),
         ),
+        secondary_name="PlayStation",
     )
 
     games = repository.search("Cyberpunk 2077")

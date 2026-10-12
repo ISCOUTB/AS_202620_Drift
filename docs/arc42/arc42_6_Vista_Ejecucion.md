@@ -120,3 +120,34 @@ sequenceDiagram
 8. El resultado (compatible / rendimiento estimado) se devuelve al jugador.
 
 El Servicio de Estimación de Compatibilidad depende únicamente de los puertos de información y persistencia, no de la implementación concreta del proveedor externo, lo que permite sustituir la fuente de datos sin afectar la lógica de comparación (mantenibilidad, ver Sección 5.2.1).
+
+## 6.4 Escenario: una fuente lenta bajo carga (E6)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant API as FastAPI /games/search
+    participant C as CombinedGameRepository
+    participant S as Steam (primaria)
+    participant K as CheapShark (secundaria)
+
+    U->>API: GET /games/search?q=...
+    API->>C: search(query)
+    par en paralelo
+        C->>S: search(query)
+        S-->>C: juegos y precios
+    and
+        C->>K: search(query), en un hilo aparte
+    end
+    Note over C,K: espera a CheapShark como máximo 3 s desde que lanzó la consulta
+    alt responde dentro del plazo
+        K-->>C: precios de tiendas de PC
+        C-->>API: juegos con todas las tiendas
+    else vence el plazo o falla
+        C-->>API: juegos con unavailable_sources = [CheapShark]
+        Note over K: el hilo abandonado termina por su timeout HTTP de 5 s
+    end
+    API-->>U: 200 con la lista de juegos
+```
+
+La búsqueda es síncrona y no usa cola. El mismo mecanismo se aplica a PlayStation en el combinador externo. El endpoint registra el evento `source_unavailable` y cuenta la búsqueda en `drift_source_unavailable_total`. Medición antes y después en [E6](../evidencias/e6-degradacion-bajo-carga.md); decisión en [ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md).

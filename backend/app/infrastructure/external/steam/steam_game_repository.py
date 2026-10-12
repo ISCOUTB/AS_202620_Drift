@@ -1,39 +1,29 @@
-import time
 from concurrent.futures import ThreadPoolExecutor
-from threading import Lock
 from typing import List
 
 import httpx
 
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
+from app.infrastructure.external.single_flight_cache import SingleFlightCache
+from app.infrastructure.game_copy import copy_games
 
 
 class SteamGameRepository(GameRepository):
     def __init__(self):
-        self._cache = {}
-        self._cache_duration_seconds = 60
-        self._cache_lock = Lock()
+        self._cache = SingleFlightCache(ttl_seconds=60)
 
     def search(self, query: str) -> List[Game]:
         cache_key = query.strip().lower()
 
-        # Evita que muchos usuarios simultáneos repitan exactamente
-        # las mismas consultas a Steam.
-        with self._cache_lock:
-            cached_result = self._cache.get(cache_key)
+        # Evita que muchos usuarios simultáneos repitan exactamente las
+        # mismas consultas a Steam, sin que búsquedas distintas se esperen.
+        games = self._cache.get_or_load(
+            cache_key,
+            lambda: self._search_steam(query),
+        )
 
-            if cached_result and time.monotonic() - cached_result["created_at"] < self._cache_duration_seconds:
-                return cached_result["games"]
-
-            games = self._search_steam(query)
-
-            self._cache[cache_key] = {
-                "created_at": time.monotonic(),
-                "games": games,
-            }
-
-            return games
+        return copy_games(games)
 
     def _search_steam(self, query: str) -> List[Game]:
         response = httpx.get(

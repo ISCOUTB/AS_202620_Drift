@@ -1,6 +1,7 @@
 from typing import List
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
+from app.infrastructure.game_copy import copy_games
 
 
 class InMemoryGameRepository(GameRepository):
@@ -49,8 +50,9 @@ class InMemoryGameRepository(GameRepository):
     def search(self, query: str) -> List[Game]:
         query = query.lower().strip()
 
-        return [
+        # Copias: quien combina tiendas modifica precios y avisos.
+        return copy_games([
             game
             for game in self.games
             if query in game.name.lower()
-        ]
+        ])

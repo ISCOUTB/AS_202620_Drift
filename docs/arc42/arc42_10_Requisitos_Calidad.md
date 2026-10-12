@@ -26,3 +26,9 @@ Los siguientes escenarios detallan, en formato fuente–estímulo–artefacto–
 | E3 | Usabilidad | Jugador | Busca identificar la opción de compra más conveniente | Interfaz Web + Servicio de Recomendación | Operación normal | El sistema presenta claramente la opción recomendada | La opción recomendada debe ser identificable en un máximo de 3 interacciones |
 | E4 | Compatibilidad | Jugador | Consulta si un videojuego puede ejecutarse en su PC | Servicio de Estimación de Compatibilidad | Especificaciones del dispositivo disponibles | El sistema compara las especificaciones del usuario con los requisitos del videojuego y devuelve una estimación | ≤ 5 s en el percentil 95 |
 | E5 | Disponibilidad | Fuente externa de precios | Una fuente externa deja de responder o presenta un error | Adaptador de Tiendas Digitales | Una fuente falla mientras las demás continúan disponibles | El sistema continúa mostrando las fuentes disponibles e informa la indisponibilidad de la fuente afectada | Respuesta parcial con aviso en ≤ 5 s |
+
+### Escenario E6 (octubre de 2026)
+
+| ID | Atributo | Escenario | Medida | Estado |
+|---|---|---|---|---|
+| [E6](../escenarios.md#escenario-6) | Disponibilidad y rendimiento | Con 50 usuarios concurrentes y CheapShark lento en cerca del 35 % de las consultas, DRIFT responde con las demás fuentes y avisa cuál faltó. | p95 ≤ 5 s, < 1 % de fallos, 0 respuestas degradadas sin aviso. | Medido antes y después: [evidencia E6](../evidencias/e6-degradacion-bajo-carga.md). |

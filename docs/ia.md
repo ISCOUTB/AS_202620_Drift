@@ -917,3 +917,26 @@ El equipo revisó los archivos, commits, pruebas y resultados disponibles antes 
 **Alternativa descartada:**
 
 Se descartó incluir afirmaciones que no pudieran relacionarse con un archivo, commit, ejecución de CI, prueba o resultado verificable.
+
+---
+
+### Registro 41 — Implementación y medición del escenario E6
+
+**Fecha:** 2026-10-11
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Ejecutar el reto del segundo corte sobre DRIFT: identificar un punto débil del MVP, formular una hipótesis cuantificable, medir antes y después con las mismas condiciones y actualizar la documentación.
+
+**Uso:**
+
+Se utilizó Claude para implementar la degradación controlada de fuentes (`SingleFlightCache`, plazo por fuente y aviso en `unavailable_sources`), escribir el upstream simulado y el script de k6, ejecutar las seis corridas del experimento E6 y actualizar la documentación afectada.
+
+**Validación:**
+
+Las cifras provienen de los archivos generados por k6 en `docs/evidencias/e6-resultados/`. La suite del backend se ejecutó completa (27 pruebas aprobadas). El equipo debe revisar el cambio y las mediciones antes de sustentarlo.
+
+**Alternativa descartada:**
+
+Se descartó medir contra los servicios reales de Steam y CheapShark: su latencia varía entre corridas y no permite repetir las mismas condiciones antes y después. También se descartó presentar la corrección del cliente HTTP por llamada como parte del resultado, porque no se implementó; quedó registrada como deuda en arc42 §11.7.

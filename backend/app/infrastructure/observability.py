@@ -1,7 +1,7 @@
 import json
 import logging
 import math
-from collections import deque
+from collections import Counter, deque
 from datetime import datetime, timezone
 from threading import Lock
 
@@ -41,11 +41,32 @@ def log_event(logger, event, **fields):
 class SearchMetrics:
     def __init__(self, max_samples=100):
         self._durations_ms = deque(maxlen=max_samples)
+        self._total_searches = 0
+        self._degraded_searches = 0
+        self._unavailable_by_source = Counter()
         self._lock = Lock()
 
-    def record_search(self, duration_ms):
+    def record_search(self, duration_ms, unavailable_sources=()):
         with self._lock:
             self._durations_ms.append(duration_ms)
+            self._total_searches += 1
+
+            if unavailable_sources:
+                self._degraded_searches += 1
+                self._unavailable_by_source.update(unavailable_sources)
+
+    def degradation_snapshot(self):
+        """Métrica del escenario E6: búsquedas respondidas sin alguna fuente."""
+
+        with self._lock:
+            return {
+                "metric": "drift_source_unavailable_total",
+                "total_searches": self._total_searches,
+                "degraded_searches": self._degraded_searches,
+                "by_source": dict(self._unavailable_by_source),
+                "window": "since process start",
+                "resets_on_restart": True,
+            }
 
     def snapshot(self):
         with self._lock:

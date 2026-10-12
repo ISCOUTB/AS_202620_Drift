@@ -122,6 +122,7 @@ def test_cheapshark_prices_are_merged_by_steam_id(monkeypatch):
     repository = CombinedGameRepository(
         primary_repository=SteamStub(),
         secondary_repository=CheapSharkGameRepository(_FixedExchangeRate()),
+        secondary_name="CheapShark",
     )
 
     games = repository.search("Portal 2")
@@ -147,9 +148,11 @@ def test_search_survives_cheapshark_failure(monkeypatch):
     repository = CombinedGameRepository(
         primary_repository=InMemoryGameRepository(),
         secondary_repository=CheapSharkGameRepository(_FixedExchangeRate()),
+        secondary_name="CheapShark",
     )
 
     games = repository.search("Minecraft")
 
     assert len(games) == 1
     assert games[0].prices["Steam"] == 119900.0
+    assert games[0].unavailable_sources == ["CheapShark"]

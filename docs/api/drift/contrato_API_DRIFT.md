@@ -127,3 +127,4 @@ Los cambios incompatibles en rutas, parámetros, solicitudes o respuestas deber�
 | Versión | Fecha | Descripción |
 |---|---|---|
 | 1.0.0 | 2026-09-19 | Versión inicial del contrato HTTP de la API de DRIFT. Incluye estado de la API, búsqueda de videojuegos, sincronización del catálogo de PlayStation y estimación de compatibilidad. |
+| 1.1.0 | 2026-10-11 | Cambio compatible: `GET /games/search` añade el campo opcional `image` y `unavailable_sources` puede listar también `CheapShark` y `PlayStation` cuando esas fuentes fallan o superan el plazo de 3 s (ADR-0008). |

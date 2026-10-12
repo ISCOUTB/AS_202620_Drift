@@ -168,5 +168,23 @@ Esta separación facilita reemplazar o agregar nuevas fuentes de información y 
 
 El **C4 nivel 2** presenta los principales contenedores que forman DRIFT y sus relaciones. El **C4 nivel 3** realiza un mayor nivel de detalle sobre el Backend/API, mostrando componentes como `SearchGames`, `Game`, `GameRepository`, `SteamGameRepository` y el adaptador de persistencia.
 
+## Actualización de octubre de 2026: fuentes, persistencia y despliegue
 
+Esta sección alinea la vista con el código y el entorno desplegados ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md)).
 
+```mermaid
+flowchart LR
+    USER["Usuario"] -->|"HTTPS"| WEB["Frontend web<br/>Next.js"]
+    WEB -->|"HTTPS + JSON<br/>GET /games/search"| API["Backend / API<br/>FastAPI, 1 proceso<br/>catálogo y cachés en memoria"]
+    API -->|"HTTPS + JSON, síncrono"| STEAM["Steam Store API<br/>(fuente primaria)"]
+    API -->|"HTTPS + JSON, síncrono<br/>plazo 3 s"| CHEAP["CheapShark API<br/>(tiendas de PC)"]
+    API -->|"HTTPS + JSON, síncrono<br/>plazo 3 s"| PSN["PlayStation Store"]
+    API -->|"HTTPS + JSON, caché 12 h"| FX["open.er-api.com<br/>(tasa USD a COP)"]
+```
+
+| Aspecto | Estado real |
+|---|---|
+| Persistencia | No hay contenedor de base de datos. El catálogo de PlayStation, el catálogo de respaldo y las cachés viven en la memoria del proceso del backend y se pierden al reiniciar. |
+| Modelo de ejecución | Síncrono. Las fuentes se consultan en paralelo con hilos dentro de cada búsqueda; no hay cola ni planificador. |
+| Fuentes de la búsqueda | Steam (primaria, con catálogo local de respaldo), CheapShark y PlayStation (secundarias, con plazo de 3 s y aviso en `unavailable_sources`). |
+| Despliegue | Backend en Azure App Service; frontend en Vercel; frontend y backend en el servidor del laboratorio (`https://drift.iscoutb.dev`, Docker Compose en Dokploy, 2 contenedores de 192 MB). |

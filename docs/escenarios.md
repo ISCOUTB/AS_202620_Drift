@@ -95,6 +95,23 @@
 
 ---
 
+## Escenario 6
+**Atributo:** Disponibilidad y rendimiento
+
+- **Fuente:** Servicio externo CheapShark.
+- **Estímulo:** CheapShark responde con más de 5 s en cerca del 35 % de las consultas (supuesto declarado, tomado de 4 de 11 búsquedas observadas por el equipo en el despliegue; en el experimento son 18 de 50, 36 %) mientras 50 usuarios concurrentes hacen consultas distintas.
+- **Artefacto:** Módulo de consulta e integración de fuentes de precios de DRIFT.
+- **Entorno:** Operación normal, caché fría, un worker de `uvicorn`.
+- **Respuesta:** DRIFT no espera a la fuente lenta más de 3 s, responde con las demás fuentes y lista la fuente que no respondió en `unavailable_sources`.
+- **Medida verificable:** p95 ≤ 5 s; solicitudes fallidas < 1 %; respuestas degradadas sin aviso = 0.
+- **Método de verificación:** `scripts/stub_upstream.py` y `scripts/k6_e6_degradacion.js`, 3 corridas antes y 3 después del cambio, lanzadas con `scripts/e6_corrida.py`. Evidencia en [`evidencias/e6-degradacion-bajo-carga.md`](evidencias/e6-degradacion-bajo-carga.md).
+
+**Escenario completo:**
+
+> Cuando CheapShark tarde más de 5 segundos en cerca del 35 % de las consultas, con 50 usuarios concurrentes haciendo búsquedas distintas y la caché fría, DRIFT deberá responder con las demás fuentes en **≤ 5 segundos en el p95**, con menos del 1 % de solicitudes fallidas y sin ninguna respuesta degradada que omita el aviso de la fuente faltante.
+
+---
+
 
 **Los escenarios de calidad se consideran como parte de la evaluación de la arquitectura seleccionada para DRIFT. La decisión arquitectónica base se encuentra documentada en:**
 
