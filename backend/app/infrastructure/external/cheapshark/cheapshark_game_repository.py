@@ -15,6 +15,7 @@ class CheapSharkGameRepository(GameRepository):
     """Adaptador de CheapShark: precios de tiendas de juegos de PC."""
 
     _base_url = "https://www.cheapshark.com/api/1.0"
+    _redirect_url = "https://www.cheapshark.com/redirect"
 
     # CheapShark rechaza peticiones sin un User-Agent descriptivo.
     _headers = {
@@ -83,26 +84,46 @@ class CheapSharkGameRepository(GameRepository):
             if not store_name or not deal.get("title") or price is None:
                 continue
 
-            # El steamAppID permite unir el juego con el resultado de Steam.
-            game_id = deal.get("steamAppID") or f"cheapshark-{deal.get('gameID')}"
-
-            game = games_by_id.get(game_id)
-
-            if game is None:
-                game = Game(
-                    id=game_id,
-                    name=deal["title"],
-                    prices={},
-                    image=deal.get("thumb"),
-                )
-                games_by_id[game_id] = game
-
-            current_price = game.prices.get(store_name)
-
-            if current_price is None or price < current_price:
-                game.prices[store_name] = price
+            self._add_offer(games_by_id, deal, store_name, price)
 
         return list(games_by_id.values())
+
+    def _add_offer(
+        self,
+        games_by_id: dict,
+        deal: dict,
+        store_name: str,
+        price: float,
+    ) -> None:
+        """Registra la oferta en su juego si es la más barata de esa tienda."""
+
+        # El steamAppID permite unir el juego con el resultado de Steam.
+        game_id = deal.get("steamAppID") or f"cheapshark-{deal.get('gameID')}"
+
+        game = games_by_id.get(game_id)
+
+        if game is None:
+            game = Game(
+                id=game_id,
+                name=deal["title"],
+                prices={},
+                image=deal.get("thumb"),
+            )
+            games_by_id[game_id] = game
+
+        current_price = game.prices.get(store_name)
+
+        if current_price is not None and price >= current_price:
+            return
+
+        game.prices[store_name] = price
+
+        # CheapShark lleva a la oferta en la tienda mediante su enlace de
+        # redirección; el dealID ya viene codificado.
+        if deal.get("dealID"):
+            game.links[store_name] = (
+                f"{self._redirect_url}?dealID={deal['dealID']}"
+            )
 
     @staticmethod
     def _price_in_cop(deal: dict, usd_to_cop: float) -> Optional[float]:

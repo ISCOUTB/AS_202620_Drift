@@ -3,12 +3,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { estimateCompatibility } from "../../application/usecases/estimateCompatibility";
+import {
+  listGraphicsCards,
+  listProcessors,
+} from "../../application/usecases/listHardwareOptions";
 import { searchGames } from "../../application/usecases/searchGames";
 
 import { fastApiCompatibilityRepository } from "../../infrastructure/http/FastApiCompatibilityRepository";
 import { fastApiGameRepository } from "../../infrastructure/http/FastApiGameRepository";
+import {
+  fastApiCpuCatalogRepository,
+  fastApiGpuCatalogRepository,
+} from "../../infrastructure/http/FastApiHardwareCatalogRepository";
+import { browserPcProfileRepository } from "../../infrastructure/storage/BrowserPcProfileRepository";
 
 import styles from "./DriftHome.module.css";
+import CompatibilityPanel from "./CompatibilityPanel";
 import WaveBackdrop from "./WaveBackdrop";
 
 
@@ -116,6 +126,15 @@ const featuredGames = suggestions.slice(0, 4);
 const FEATURED_INTERVAL_MS = 7000;
 const CARD_PRICE_LIMIT = 3;
 
+// Juegos de cada búsqueda que se comprueban solos contra «Mi PC».
+const COMPATIBILITY_CHECK_LIMIT = 8;
+
+const COMPATIBILITY_BADGES = {
+  "Compatible": ["Tu PC: recomendado", "badgeGood"],
+  "Compatible con limitaciones": ["Tu PC: mínimo", "badgeWarn"],
+  "No compatible": ["Tu PC: no alcanza", "badgeBad"],
+};
+
 
 function formatPrice(price) {
   if (typeof price !== "number") {
@@ -206,11 +225,64 @@ function PosterCard({ game, onSearch }) {
 }
 
 
-function ResultCard({ game, isSelected, onSelect }) {
+/** Precio en una tienda; si se conoce su página de compra, es un enlace a ella. */
+function PurchaseOption({ platform, price, link, isBestPrice }) {
+  const className = `${styles.purchaseOption} ${
+    isBestPrice ? styles.bestPurchaseOption : ""
+  } ${link ? styles.purchaseLink : ""}`;
+
+  const content = (
+    <>
+      <span className={styles.purchasePlatform}>
+        {platform}
+
+        {link && (
+          <small className={styles.purchaseHint}>Comprar ↗</small>
+        )}
+      </span>
+
+      <div className={styles.purchasePriceContainer}>
+        <strong className={styles.purchasePrice}>
+          {formatPrice(price)}
+        </strong>
+
+        {isBestPrice && (
+          <span className={styles.bestPriceBadge}>
+            Más barato
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  if (!link) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <a
+      className={className}
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Abrir ${platform} en una pestaña nueva`}
+    >
+      {content}
+    </a>
+  );
+}
+
+
+function ResultCard({ game, isSelected, onSelect, compatibility }) {
   const prices = getSortedPrices(game.prices);
   const bestPrice = prices[0] || null;
   const visiblePrices = prices.slice(0, CARD_PRICE_LIMIT);
   const hiddenPrices = prices.length - visiblePrices.length;
+
+  const badge =
+    compatibility?.state === "done"
+      ? COMPATIBILITY_BADGES[compatibility.data.status]
+      : null;
 
   return (
     <article
@@ -225,6 +297,14 @@ function ResultCard({ game, isSelected, onSelect }) {
         <span className={styles.resultBadge}>
           {game.availability}
         </span>
+
+        {badge && (
+          <span
+            className={`${styles.compatibilityBadge} ${styles[badge[1]]}`}
+          >
+            {badge[0]}
+          </span>
+        )}
       </div>
 
       <div className={styles.resultBody}>
@@ -303,20 +383,20 @@ export default function DriftHome() {
   const [selectedGame, setSelectedGame] =
     useState(null);
 
-  const [ramGb, setRamGb] =
-    useState("");
-
-  const [gpuScore, setGpuScore] =
-    useState("");
-
-  const [compatibility, setCompatibility] =
+  // Equipo del usuario, guardado en su navegador.
+  const [pcProfile, setPcProfile] =
     useState(null);
 
-  const [compatibilityLoading, setCompatibilityLoading] =
-    useState(false);
+  // Tarjetas gráficas que se pueden elegir en «Mi PC».
+  const [gpuOptions, setGpuOptions] =
+    useState([]);
 
-  const [compatibilityError, setCompatibilityError] =
-    useState("");
+  const [cpuOptions, setCpuOptions] =
+    useState([]);
+
+  // Resultado de compatibilidad por id de juego.
+  const [compatibilityByGame, setCompatibilityByGame] =
+    useState({});
 
 
   const [sidebarHidden, setSidebarHidden] =
@@ -362,14 +442,118 @@ export default function DriftHome() {
   }, [selectedGame]);
 
 
+  useEffect(() => {
+    setPcProfile(browserPcProfileRepository.load());
+
+    let cancelled = false;
+
+    // Estas listas nunca rechazan: ante un fallo devuelven la lista incluida.
+    void listGraphicsCards(fastApiGpuCatalogRepository).then((options) => {
+      if (!cancelled) {
+        setGpuOptions(options);
+      }
+    });
+
+    void listProcessors(fastApiCpuCatalogRepository).then((options) => {
+      if (!cancelled) {
+        setCpuOptions(options);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if (!pcProfile) {
+      setCompatibilityByGame({});
+      return undefined;
+    }
+
+    const gamesToCheck = games.slice(0, COMPATIBILITY_CHECK_LIMIT);
+
+    let cancelled = false;
+
+    const store = (gameId, entry) => {
+      if (!cancelled) {
+        setCompatibilityByGame((current) => ({
+          ...current,
+          [gameId]: entry,
+        }));
+      }
+    };
+
+    setCompatibilityByGame(
+      Object.fromEntries(
+        gamesToCheck.map((game) => [game.id, { state: "loading" }]),
+      ),
+    );
+
+    gamesToCheck.forEach((game) => {
+      estimateCompatibility(
+        game.id,
+        pcProfile,
+        fastApiCompatibilityRepository,
+      )
+        .then((data) => store(game.id, { state: "done", data }))
+        .catch((compatibilityError) =>
+          store(game.id, {
+            state: "error",
+            message: compatibilityError.message,
+          }),
+        );
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [games, pcProfile]);
+
+
+  // Un juego elegido fuera de los primeros resultados se comprueba al abrirlo.
+  useEffect(() => {
+    if (
+      !pcProfile ||
+      !selectedGame ||
+      compatibilityByGame[selectedGame.id]
+    ) {
+      return;
+    }
+
+    const gameId = selectedGame.id;
+
+    const store = (entry) => {
+      setCompatibilityByGame((current) => ({
+        ...current,
+        [gameId]: entry,
+      }));
+    };
+
+    store({ state: "loading" });
+
+    estimateCompatibility(
+      gameId,
+      pcProfile,
+      fastApiCompatibilityRepository,
+    )
+      .then((data) => store({ state: "done", data }))
+      .catch((compatibilityError) =>
+        store({
+          state: "error",
+          message: compatibilityError.message,
+        }),
+      );
+  }, [selectedGame, pcProfile, compatibilityByGame]);
+
+
   const runSearch = async (term) => {
     setLoading(true);
     setError("");
     setActiveTab("Resultados");
 
     setSelectedGame(null);
-    setCompatibility(null);
-    setCompatibilityError("");
 
     try {
       const results = await searchGames(
@@ -419,47 +603,17 @@ export default function DriftHome() {
 
   const selectGameForCompatibility = (game) => {
     setSelectedGame(game);
-    setCompatibility(null);
-    setCompatibilityError("");
   };
 
 
   const closeSelectedGame = () => {
     setSelectedGame(null);
-    setCompatibility(null);
-    setCompatibilityError("");
   };
 
 
-  const submitCompatibility = async (event) => {
-    event.preventDefault();
-
-    if (!selectedGame) {
-      return;
-    }
-
-    setCompatibilityLoading(true);
-    setCompatibilityError("");
-    setCompatibility(null);
-
-    try {
-      const result = await estimateCompatibility(
-        selectedGame.id,
-        {
-          ramGb,
-          gpuScore,
-        },
-        fastApiCompatibilityRepository
-      );
-
-      setCompatibility(result);
-    } catch (compatibilityRequestError) {
-      setCompatibilityError(
-        compatibilityRequestError.message
-      );
-    } finally {
-      setCompatibilityLoading(false);
-    }
+  const savePcProfile = (profile) => {
+    browserPcProfileRepository.save(profile);
+    setPcProfile(profile);
   };
 
 
@@ -760,8 +914,8 @@ export default function DriftHome() {
                       <h2>{selectedGame.name}</h2>
 
                       <p className={styles.selectedGameDescription}>
-                        Ordenadas de menor a mayor precio. El más bajo está
-                        resaltado.
+                        Ordenadas de menor a mayor precio. Elige una tienda
+                        para abrir su página de compra en otra pestaña.
                       </p>
                     </div>
 
@@ -781,28 +935,13 @@ export default function DriftHome() {
                         const isBestPrice = index === 0;
 
                         return (
-                          <div
+                          <PurchaseOption
                             key={platform}
-                            className={`${styles.purchaseOption} ${
-                              isBestPrice ? styles.bestPurchaseOption : ""
-                            }`}
-                          >
-                            <span className={styles.purchasePlatform}>
-                              {platform}
-                            </span>
-
-                            <div className={styles.purchasePriceContainer}>
-                              <strong className={styles.purchasePrice}>
-                                {formatPrice(price)}
-                              </strong>
-
-                              {isBestPrice && (
-                                <span className={styles.bestPriceBadge}>
-                                  Más barato
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                            platform={platform}
+                            price={price}
+                            link={selectedGame.links?.[platform]}
+                            isBestPrice={isBestPrice}
+                          />
                         );
                       },
                     )}
@@ -823,78 +962,13 @@ export default function DriftHome() {
 
                   <div className={styles.compatibilityDivider} />
 
-                  <div className={styles.compatibilitySection}>
-                    <h3>¿Tu PC puede ejecutarlo?</h3>
-
-                    <p className={styles.compatibilityDescription}>
-                      GPU: 1 = básica, 2 = media, 3 = alta.
-                    </p>
-
-                    <form
-                      className={styles.compatibilityForm}
-                      onSubmit={submitCompatibility}
-                    >
-                      <label>
-                        <span>RAM disponible (GB)</span>
-
-                        <input
-                          type="number"
-                          min="1"
-                          value={ramGb}
-                          onChange={(event) => setRamGb(event.target.value)}
-                        />
-                      </label>
-
-                      <label>
-                        <span>Nivel de GPU</span>
-
-                        <input
-                          type="number"
-                          min="1"
-                          max="3"
-                          value={gpuScore}
-                          onChange={(event) => setGpuScore(event.target.value)}
-                        />
-                      </label>
-
-                      <button
-                        type="submit"
-                        disabled={compatibilityLoading}
-                      >
-                        {compatibilityLoading
-                          ? "Analizando…"
-                          : "Comprobar compatibilidad"}
-                      </button>
-                    </form>
-
-                    {compatibilityError && (
-                      <p className={styles.compatibilityError}>
-                        {compatibilityError}
-                      </p>
-                    )}
-
-                    {compatibility && (
-                      <div className={styles.compatibilityResult}>
-                        <strong>
-                          Resultado: {compatibility.status}
-                        </strong>
-
-                        {compatibility.minimum_ram_gb && (
-                          <p>
-                            RAM mínima: {compatibility.minimum_ram_gb} GB ·
-                            RAM recomendada: {compatibility.recommended_ram_gb} GB
-                          </p>
-                        )}
-
-                        {compatibility.minimum_gpu_score && (
-                          <p>
-                            GPU mínima: {compatibility.minimum_gpu_score} ·
-                            GPU recomendada: {compatibility.recommended_gpu_score}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <CompatibilityPanel
+                    profile={pcProfile}
+                    compatibility={compatibilityByGame[selectedGame.id]}
+                    gpuOptions={gpuOptions}
+                    cpuOptions={cpuOptions}
+                    onSaveProfile={savePcProfile}
+                  />
                 </section>
               )}
 
@@ -1011,6 +1085,9 @@ export default function DriftHome() {
                           }}
                           isSelected={
                             selectedGame?.id === game.id
+                          }
+                          compatibility={
+                            compatibilityByGame[game.id]
                           }
                           onSelect={
                             selectGameForCompatibility

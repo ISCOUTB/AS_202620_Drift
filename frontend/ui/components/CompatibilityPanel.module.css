@@ -1,0 +1,369 @@
+/* Usa las variables de color definidas en .pageShell (DriftHome.module.css). */
+
+.panel {
+  --good: #5fe0a0;
+  --warn-tone: #ffcf70;
+  --bad: #ff7d8c;
+}
+
+
+.panel h3 {
+  margin: 0;
+  font: 600 1rem var(--display);
+}
+
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+
+.description {
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: .84rem;
+}
+
+
+.profileChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 5px 5px 5px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .05);
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+
+.profileChip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.form {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr) 190px;
+  gap: 12px;
+  align-items: end;
+}
+
+
+.form label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+
+.form label span {
+  color: var(--muted);
+  font-size: .74rem;
+}
+
+
+.form select,
+.form input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: rgba(13, 7, 22, .55);
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s ease;
+}
+
+
+.form select option,
+.form select optgroup {
+  background: #1b1029;
+  color: #f6f2fc;
+}
+
+
+.form select:focus,
+.form input:focus {
+  border-color: var(--accent);
+}
+
+
+.formActions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+
+
+.primaryButton {
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 .84rem var(--display);
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+
+.primaryButton:hover {
+  background: #dfb4ff;
+}
+
+
+.ghostButton {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: 600 .74rem var(--display);
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+
+.formActions .ghostButton {
+  height: 40px;
+  border-radius: 10px;
+}
+
+
+.ghostButton:hover {
+  background: rgba(255, 255, 255, .1);
+}
+
+
+.error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--bad);
+  font-size: .84rem;
+}
+
+
+/* -------------------------------- */
+/* VEREDICTO                        */
+/* -------------------------------- */
+
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--tone);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--tone) 13%, transparent);
+  animation: appear .3s ease both;
+}
+
+
+.verdict strong {
+  display: block;
+  font: 700 1.04rem var(--display);
+}
+
+
+.verdict p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+
+.good {
+  --tone: var(--good);
+}
+
+
+.warn {
+  --tone: var(--warn-tone);
+}
+
+
+.bad {
+  --tone: var(--bad);
+}
+
+
+.neutral {
+  --tone: var(--line-strong);
+  display: block;
+}
+
+
+.verdictDot {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+
+.checks {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+
+.checks li {
+  --tone: var(--line-strong);
+
+  display: grid;
+  grid-template-columns: 150px 190px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--tone);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .04);
+}
+
+
+.checks .level-recommended {
+  --tone: var(--good);
+}
+
+
+.checks .level-minimum {
+  --tone: var(--warn-tone);
+}
+
+
+.checks .level-insufficient {
+  --tone: var(--bad);
+}
+
+
+.checkName {
+  font-weight: 600;
+  font-size: .86rem;
+}
+
+
+.checkLevel {
+  color: var(--tone);
+  font: 600 .78rem var(--display);
+}
+
+
+.checkDetail {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+
+.note {
+  margin: 12px 0 0;
+  color: var(--faint);
+  font-size: .74rem;
+}
+
+
+.requirements {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .03);
+}
+
+
+.requirements summary {
+  padding: 10px 14px;
+  color: var(--accent);
+  font: 600 .78rem var(--display);
+  cursor: pointer;
+}
+
+
+.requirementColumns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px 22px;
+  padding: 2px 14px 14px;
+}
+
+
+.requirementColumns h4 {
+  margin: 0 0 6px;
+  font: 600 .8rem var(--display);
+}
+
+
+.requirementColumns dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+
+.requirementColumns dt {
+  color: var(--faint);
+  font-size: .68rem;
+}
+
+
+.requirementColumns dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+  overflow-wrap: anywhere;
+}
+
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+
+@media (max-width: 1100px) {
+
+  .form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+@media (max-width: 760px) {
+
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checks li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  .verdict {
+    animation: none;
+  }
+}

@@ -190,3 +190,9 @@ class CombinedGameRepository(GameRepository):
                 or 0 < price < current_price
             ):
                 existing_game.prices[store] = price
+
+                # El enlace de compra acompaña al precio que se conserva.
+                if store in game.links:
+                    existing_game.links[store] = game.links[store]
+                else:
+                    existing_game.links.pop(store, None)

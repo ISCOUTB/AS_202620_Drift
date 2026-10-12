@@ -13,6 +13,7 @@
 #   - Sin bind mounts, docker.sock, privileged, container_name ni redes externas.
 #   - Límites en cada servicio: el total del equipo no pasa de 512 MB (aquí 384 MB).
 #   - DRIFT no guarda datos propios: no hay base de datos ni volúmenes.
+#   - Secretos en Dokploy → Environment; aquí solo se referencian con ${VARIABLE}.
 
 services:
   api:
@@ -24,6 +25,11 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://drift.iscoutb.dev}
       # Tasa de respaldo si la API de tasa de cambio no responde.
       USD_TO_COP_RATE: ${USD_TO_COP_RATE:-3250}
+      # Secretos: direcciones privadas de las copias de puntajes de gráficas
+      # y procesadores. Los valores reales van en Dokploy → Environment. Sin
+      # ellos, esos componentes se comparan por niveles aproximados.
+      DRIFT_GPU_BENCHMARKS_URL: ${DRIFT_GPU_BENCHMARKS_URL:-}
+      DRIFT_CPU_BENCHMARKS_URL: ${DRIFT_CPU_BENCHMARKS_URL:-}
     expose:
       - "8000"
     healthcheck:

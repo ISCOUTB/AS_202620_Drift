@@ -1,0 +1,12 @@
+{
+  "source": "Fuente de prueba",
+  "benchmark": "Benchmark de prueba (valores inventados)",
+  "retrieved_at": "2026-10-12",
+  "items": [
+    {
+      "name": "NVIDIA GeForce RTX 3060",
+      "score": 1000,
+      "laptop": false
+    }
+  ]
+}

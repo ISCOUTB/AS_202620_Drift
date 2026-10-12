@@ -19,6 +19,7 @@ def copy_games(games: List[Game]) -> List[Game]:
             prices=dict(game.prices),
             unavailable_sources=list(game.unavailable_sources),
             image=game.image,
+            links=dict(game.links),
         )
         for game in games
     ]

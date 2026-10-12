@@ -53,6 +53,7 @@ def _mock_cheapshark(monkeypatch, calls=None):
                     "gameID": "36",
                     "steamAppID": "620",
                     "salePrice": "5.00",
+                    "dealID": "abc%2F123%3D",
                 },
                 {
                     "title": "Portal 2",
@@ -98,6 +99,11 @@ def test_cheapshark_returns_pc_store_prices_in_cop(monkeypatch):
         "Epic Games Store": 10000.0,
     }
 
+    # Enlace de compra solo para la oferta que trae identificador.
+    assert games[0].links == {
+        "GOG": "https://www.cheapshark.com/redirect?dealID=abc%2F123%3D",
+    }
+
 
 def test_cheapshark_caches_repeated_searches(monkeypatch):
     calls = []
@@ -133,6 +139,7 @@ def test_cheapshark_prices_are_merged_by_steam_id(monkeypatch):
         "GOG": 20000.0,
         "Epic Games Store": 10000.0,
     }
+    assert games[0].links["GOG"].endswith("dealID=abc%2F123%3D")
 
 
 def test_search_survives_cheapshark_failure(monkeypatch):
