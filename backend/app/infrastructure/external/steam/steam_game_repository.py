@@ -67,7 +67,9 @@ class SteamGameRepository(GameRepository):
         # Se limita a cinco resultados: evita pedir decenas de detalles
         # innecesarios a Steam en una sola búsqueda.
         raw_items = data.get("items", [])[:5]
-        items = [item for item in raw_items if self._is_valid_item(item)]
+        items = self._unique_by_id(
+            item for item in raw_items if self._is_valid_item(item)
+        )
 
         if not items:
             # Sin ítems es una búsqueda sin resultados; ítems presentes pero
@@ -91,6 +93,18 @@ class SteamGameRepository(GameRepository):
             and not isinstance(item.get("id"), bool)
             and isinstance(item.get("name"), str)
         )
+
+    @staticmethod
+    def _unique_by_id(items) -> List[dict]:
+        # Si Steam entrega el mismo juego dos veces, se conserva la primera
+        # aparición: evita resultados repetidos y una consulta de detalles
+        # de más (arc42 §11.8, S11-F14).
+        unique = {}
+
+        for item in items:
+            unique.setdefault(item["id"], item)
+
+        return list(unique.values())
 
     def _get_game_details(self, item: dict) -> Game:
         app_id = item["id"]

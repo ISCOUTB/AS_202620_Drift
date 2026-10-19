@@ -357,6 +357,19 @@ def test_adapter_recovers_when_a_detail_call_fails_once(steam_http):
     assert games[0].prices == {"Steam": 26.0}
 
 
+def test_a_game_repeated_in_the_response_is_returned_once(steam_http):
+    steam_http["storesearch"] = Script(portal_search(items=[
+        {"id": 620, "name": "Portal 2"},
+        {"id": 620, "name": "Portal 2"},
+    ]))
+    steam_http["appdetails"] = details = Script(portal_details())
+
+    games = repository().search("portal duplicado")
+
+    assert [game.id for game in games] == ["620"]
+    assert len(details.calls) == 1
+
+
 def test_no_results_is_not_confused_with_a_failed_source(steam_http):
     steam_http["storesearch"] = Script(portal_search(items=[]))
 
