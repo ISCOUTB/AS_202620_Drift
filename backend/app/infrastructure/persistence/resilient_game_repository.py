@@ -4,6 +4,7 @@ import httpx
 
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
+from app.infrastructure.external.resilient_http import ExternalSourceError
 
 
 class ResilientGameRepository(GameRepository):
@@ -18,7 +19,7 @@ class ResilientGameRepository(GameRepository):
     def search(self, query: str) -> List[Game]:
         try:
             return self.primary_repository.search(query)
-        except httpx.HTTPError:
+        except (httpx.HTTPError, ExternalSourceError):
             fallback_games = self.fallback_repository.search(query)
 
             for game in fallback_games:

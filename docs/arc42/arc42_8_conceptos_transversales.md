@@ -233,3 +233,15 @@ De esta manera, la arquitectura busca reducir el acoplamiento, evitar responsabi
 - **Observabilidad:** log JSON `source_unavailable` (fuente, motivo, espera) y métrica `drift_source_unavailable_total` en `/metrics`.
 
 Decisión en [ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md); medición en [E6](../evidencias/e6-degradacion-bajo-carga.md).
+
+## 8.12 Idempotencia, sagas y outbox (evidencia S11)
+
+**`GET /games/search` es una lectura.** Repetirla conserva su significado: devuelve el estado actual de las fuentes para esa consulta. Idempotencia no exige resultados idénticos en el tiempo: precios y descuentos de las tiendas pueden cambiar entre dos llamadas sin que la operación deje de ser idempotente. Efectos que sí produce, verificados en el código: una entrada en la caché en memoria de 60 s (`SingleFlightCache`), contadores en memoria de `SearchMetrics` y líneas de log. Son efectos operativos, no de negocio; no hay escrituras persistentes. Por eso no necesita una clave de idempotencia persistida.
+
+**Única escritura existente.** `POST /games/sync/playstation` ejecuta `SyncPlayStationCatalog`: lee el catálogo de la fuente y reemplaza el catálogo en memoria con `replace`. Repetirlo deja el mismo estado final para los mismos datos de origen; si la lectura falla, el catálogo local no se modifica (el endpoint responde 503 con `local_data_preserved`). No coordina dos almacenes: lee de una fuente y escribe en un solo catálogo en memoria.
+
+**Saga y outbox: no corresponden hoy.** Una saga coordina transacciones que abarcan varios servicios con compensaciones, y el outbox publica eventos de forma fiable junto con una escritura local. DRIFT no tiene ninguna operación de negocio que escriba en más de un almacén ni publica eventos: no hay compras, favoritos, alertas ni notificaciones. Implementarlos sería añadir complejidad sin un problema que resolver.
+
+**Si se añaden escrituras repetibles.** Un cliente que reintente una escritura podría duplicar su efecto (por ejemplo, dos alertas de precio iguales). El mecanismo apropiado sería una clave de idempotencia enviada por el cliente, guardada de forma persistente junto con una restricción única sobre la operación, para que el segundo intento devuelva el resultado del primero. Esto requeriría persistencia, que hoy DRIFT no tiene (ADR-0008). Si esa escritura además debiera notificar a otro sistema, entonces sí se evaluaría un outbox.
+
+Decisión relacionada: [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md). Riesgos: [arc42 §11.8](arc42-11-riesgos-y-deuda-tecnica.md).
