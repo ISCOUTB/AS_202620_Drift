@@ -184,6 +184,6 @@ Además de Azure y Vercel, el sistema completo está desplegado en el servidor c
 | Despliegue | Automático en cada push a `master` |
 | Health check | `GET /api/health` |
 | Métricas | `GET /api/metrics`: latencia de búsqueda y `drift_source_unavailable_total` |
-| Configuración | `CORS_ALLOWED_ORIGINS`, `USD_TO_COP_RATE`, `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto); sin secretos |
+| Configuración | `CORS_ALLOWED_ORIGINS`, `USD_TO_COP_RATE`, `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto), `DRIFT_STEAM_TIMEOUT_SECONDS`, `DRIFT_STEAM_MAX_ATTEMPTS` y variables `DRIFT_STEAM_BACKOFF_*` / `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` (ver [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md)); sin secretos |
 
 El catálogo y las cachés viven en la memoria del contenedor `api`: se pierden en cada despliegue o reinicio (ADR-0008).

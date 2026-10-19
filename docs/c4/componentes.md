@@ -368,7 +368,7 @@ En el backend, `main.py` recibe la solicitud `GET /games/search` y ejecuta `Sear
 
 La implementación utilizada por `SearchGames` es `CombinedGameRepository`. Este repositorio consulta el repositorio principal, compuesto por `ResilientGameRepository`, y también consulta `InMemoryPlayStationCatalog`.
 
-`ResilientGameRepository` utiliza `SteamGameRepository` como fuente principal. Si la consulta a Steam produce un error HTTP, utiliza `InMemoryGameRepository` como catálogo de respaldo.
+`ResilientGameRepository` utiliza `SteamGameRepository` como fuente principal. Si la consulta a Steam falla de forma controlada (timeout, error de conexión, HTTP 429, 5xx, 4xx o respuesta inválida, ya con timeout explícito y un reintento acotado dentro del adaptador), utiliza `InMemoryGameRepository` como catálogo de respaldo y marca `Steam` en `unavailable_sources`. El diagrama no cambia: la resiliencia vive dentro del componente `SteamGameRepository` ([ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md)).
 
 Los resultados provenientes de Steam y del catálogo local de PlayStation son combinados por `CombinedGameRepository`. Cuando un videojuego coincide por nombre, los precios de las diferentes fuentes se integran en el objeto `Game`.
 
