@@ -1,6 +1,6 @@
 # ADR-0009: Decisión de extracción de la integración con Steam
 
-- **Estado:** Propuesto (pendiente de revisión del equipo)
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-18
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0002](0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md), [ADR-0003](0003-reajuste-contextos-dominio.md), [ADR-0006](0006-despliegue-serverless-api-busqueda.md) y [ADR-0008](0008-persistencia-ejecucion-y-degradacion-de-fuentes.md)
@@ -96,7 +96,12 @@ Negativas:
 3. Revisar los registros `external_retry` y `external_request_failed` en el despliegue para estimar la frecuencia real de fallos.
 4. Comprobar que arc42 §11.8, este ADR y el código siguen coherentes.
 
-Estado de la validación al redactar este ADR: las pruebas nuevas fueron escritas pero no se ejecutaron con la pila real (ver informe de entrega).
+Estado de la validación al aceptar este ADR:
+
+- Paso 1, cumplido: con el commit `a7c0ea4` y la fila S11-F14 añadida después, la suite del backend pasa completa (152 pruebas, 41 de ellas en `test_steam_resilience.py`), y las 6 pruebas de contrato pasan contra la API levantada en local. El CI de `a7c0ea4` terminó en verde.
+- Paso 2, pendiente: la latencia del reintento con Steam degradado no se ha medido (S11-F12).
+- Paso 3, pendiente: no hay todavía registros del despliegue revisados.
+- Paso 4, cumplido: arc42 §11.8, §8.12 y este ADR describen el mismo código.
 
 ## Condiciones para revisar la decisión
 
@@ -107,3 +112,15 @@ Revisar esta decisión, y evaluar tanto la extracción como un circuit breaker, 
 - Steam exige escalar o desplegarse con un ciclo distinto al del resto del backend.
 - Aparece un segundo equipo o un requisito de aislamiento de seguridad o de cuotas de la API.
 - DRIFT incorpora escrituras que necesiten persistencia (ver arc42 §8.12).
+
+## Trazabilidad
+
+| Eslabón | Dónde |
+|---|---|
+| Aspecto y requisito | E5, disponibilidad, en [docs/aspectos.md](../aspectos.md) |
+| Modos de fallo | [arc42 §11.8](../arc42/arc42-11-riesgos-y-deuda-tecnica.md), filas S11-F01 a S11-F14 |
+| Idempotencia, saga y outbox | [arc42 §8.12](../arc42/arc42_8_conceptos_transversales.md) |
+| Elementos C4 | Contenedor API en [C4 nivel 2](../c4/contenedores.md); componentes `SteamGameRepository` y `ResilientGameRepository` en [C4 nivel 3](../c4/componentes.md) |
+| Código | `backend/app/infrastructure/external/resilient_http.py`, `backend/app/infrastructure/external/steam/steam_game_repository.py` y `backend/app/infrastructure/persistence/resilient_game_repository.py` |
+| Pruebas | `backend/tests/test_steam_resilience.py` y `backend/tests/test_search_games.py::test_search_uses_fallback_when_steam_is_unavailable` |
+| Implementación | PR #28 (`feat/s11-resiliencia-extraccion`), commit `c9cd338`, fusionado en `a7c0ea4` |
