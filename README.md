@@ -24,14 +24,31 @@ DRIFT adopta una **Arquitectura Hexagonal (Ports and Adapters)**.
 
 - El backend usa **FastAPI**.
 - El frontend usa **Next.js**.
-- La integración externa actual se realiza mediante un adaptador para **Steam**.
-- Los casos de uso dependen de puertos del dominio, no de servicios externos concretos.
-- Ante una falla de Steam, el sistema utiliza un catálogo local de respaldo e informa la fuente no disponible.
+- Los casos de uso dependen de puertos del dominio, no de servicios externos concretos. Cada fuente externa es un adaptador:
 
-Las decisiones principales están documentadas en:
+| Fuente | Para qué se usa | Adaptador |
+|---|---|---|
+| Steam | Fuente principal: búsqueda, precio en pesos, portada y requisitos de PC | `backend/app/infrastructure/external/steam/` |
+| CheapShark | Precios de otras tiendas de PC (GOG, Epic, Humble, Fanatical y más) | `backend/app/infrastructure/external/cheapshark/` |
+| PlayStation Store Colombia | Precio de la versión de consola | `backend/app/infrastructure/external/playstation/` |
+| open.er-api.com | Tasa de cambio de dólares a pesos | `backend/app/infrastructure/external/exchange/` |
 
-- [ADR-0001: Adoptar arquitectura hexagonal](docs/adr/0001-adoptar-arquitectura-hexagonal.md)
-- [ADR-0002: Adoptar Next.js y FastAPI sobre arquitectura hexagonal](docs/adr/0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md)
+- Las fuentes se consultan en paralelo, cada una con un plazo de 3 segundos. Si una no responde a tiempo, la búsqueda sigue con las demás y avisa cuál faltó en `unavailable_sources`.
+- Steam tiene además timeout explícito, un reintento con espera creciente y validación de sus respuestas. Si falla, se usa un catálogo local de respaldo.
+- `backend/tests/test_architecture.py` falla si el dominio o la aplicación importan infraestructura.
+
+Decisiones de arquitectura vigentes:
+
+| ADR | Decisión |
+|---|---|
+| [ADR-0002](docs/adr/0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md) | Next.js y FastAPI sobre arquitectura hexagonal (reemplaza a [ADR-0001](docs/adr/0001-adoptar-arquitectura-hexagonal.md)) |
+| [ADR-0003](docs/adr/0003-reajuste-contextos-dominio.md) | Contextos y responsabilidades del dominio |
+| [ADR-0004](docs/adr/0004-estrategia-de-integracion.md) | Estrategia de integración con fuentes externas (la persistencia y la actualización asíncrona las sustituye ADR-0008) |
+| [ADR-0005](docs/adr/0005-estrategia-despliegue.md) | Estrategia de despliegue |
+| [ADR-0006](docs/adr/0006-despliegue-serverless-api-busqueda.md) | Despliegue serverless para la API de búsqueda |
+| [ADR-0007](docs/adr/0007-evaluacion-incorporacion-componente-generativo.md) | No incorporar un componente generativo |
+| [ADR-0008](docs/adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md) | Persistencia en memoria, ejecución síncrona y degradación controlada de fuentes |
+| [ADR-0009](docs/adr/0009-decision-extraccion-integracion-steam.md) | Mantener la integración con Steam dentro del backend, con resiliencia en el adaptador |
 
 ## Organización del proyecto
 
@@ -199,7 +216,7 @@ Con el proyecto en ejecución:
 1. Abrir `http://localhost:3000` para acceder al frontend.
 2. Verificar que la aplicación permita realizar una búsqueda de videojuegos.
 3. Abrir `http://localhost:8000/docs` para comprobar que la API está disponible.
-4. Si se desea validar automáticamente el backend, abrir otra terminal y ejecutar:
+4. Si se desea validar automáticamente el backend, abrir otra terminal y ejecutar lo siguiente. Con el proyecto en marcha corren también las pruebas de contrato, que necesitan la API en el puerto 8000:
 
 ```bash
 cd backend
@@ -230,9 +247,15 @@ Desde la carpeta `backend`:
 python -m pytest tests -q
 ```
 
-La suite actual incluye pruebas del corte vertical de búsqueda, tolerancia a fallos de Steam y estimación de compatibilidad.
+La suite incluye la búsqueda, la degradación de fuentes, la resiliencia de Steam (no responde, responde tarde, responde dos veces, 429, 5xx y respuestas inválidas), la compatibilidad de PC y la regla de dependencias de la arquitectura. Ninguna de estas pruebas sale a internet.
 
-Última validación local: **27 pruebas aprobadas** (sin la de contrato, que requiere la API en ejecución).
+Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/api/drift/openapi.yaml`](docs/api/drift/openapi.yaml) y necesitan la API encendida en `http://localhost:8000`. Sin ella fallan por conexión, no por un error del código. Para correr solo el resto:
+
+```bash
+python -m pytest tests -q --ignore=tests/test_contract.py
+```
+
+Última validación local (18 de octubre de 2026): **152 pruebas aprobadas**, más las 6 de contrato con la API encendida. Las de contrato tardan varios minutos porque consultan las fuentes reales.
 
 ### Experimento E6 (degradación de una fuente)
 
@@ -289,12 +312,53 @@ El workflow de GitHub Actions se encuentra en [`.github/workflows/ci.yml`](.gith
 
 El pipeline ejecuta:
 
-1. Pruebas automatizadas del backend.
-2. Smoke test entre frontend y API.
-3. Compilación del frontend con Next.js.
-4. Análisis de calidad con SonarQube Cloud.
+1. Pruebas automatizadas del backend, incluidas las de contrato con la API levantada.
+2. Smoke test entre frontend y API, con la compilación del frontend.
+3. Análisis de SonarQube Cloud con el reporte de cobertura del backend.
 
-SonarQube Cloud está configurado mediante `sonar-project.properties` y el secreto de GitHub `SONAR_TOKEN`. El análisis se ejecutará en GitHub Actions cuando el equipo realice un push autorizado.
+El pipeline corre en cada push a `master` y en cada pull request hacia `master`. El análisis espera el veredicto del Quality Gate y el job falla si no pasa, así que un cambio con hallazgos no se integra. La configuración está en [`sonar-project.properties`](sonar-project.properties) y usa el secreto de GitHub `SONAR_TOKEN`.
+
+## Despliegue
+
+| Entorno | Qué publica | Dirección | Cómo se despliega |
+|---|---|---|---|
+| Servidor del laboratorio (Dokploy) | Frontend y backend | https://drift.iscoutb.dev | Docker Compose con [`deploy/compose.lab.yaml`](deploy/compose.lab.yaml), automático en cada push a `master` |
+| Azure App Service | Backend | https://drift-utb-202620-g5fvchdcgpcthkeg.mexicocentral-01.azurewebsites.net | GitHub Actions en cada push a `master` |
+| Vercel | Frontend | https://drift-frontend-as202620.vercel.app | Manual, desde la línea de comandos de Vercel |
+
+Para probar en local la misma composición del laboratorio (requiere Docker):
+
+```bash
+docker compose -p drift --env-file deploy/.env -f deploy/compose.lab.yaml up -d --build
+```
+
+Detalle de la infraestructura en [arc42 §7](docs/arc42/arc42_7_vista_despliegue.md) y en [ADR-0005](docs/adr/0005-estrategia-despliegue.md).
+
+## Configuración
+
+Todas las variables son opcionales: sin ellas el sistema arranca con los valores por defecto. La plantilla está en [`deploy/.env.example`](deploy/.env.example); la copia con valores reales, `deploy/.env`, no se versiona.
+
+| Variable | Por defecto | Para qué sirve |
+|---|---|---|
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | Orígenes que pueden llamar a la API |
+| `NEXT_PUBLIC_DRIFT_API_URL` | `http://localhost:8000` | Dirección de la API que usa el frontend |
+| `USD_TO_COP_RATE` | `3250` | Tasa de respaldo si la API de tasa de cambio no responde |
+| `DRIFT_SOURCE_TIMEOUT_SECONDS` | `3` | Plazo de cada fuente secundaria en la búsqueda (ADR-0008) |
+| `DRIFT_STEAM_TIMEOUT_SECONDS` | `3.0` | Timeout de cada llamada a Steam (ADR-0009) |
+| `DRIFT_STEAM_MAX_ATTEMPTS` | `2` | Intentos totales con Steam: una llamada y un reintento |
+| `DRIFT_STEAM_BACKOFF_BASE_SECONDS` | `0.25` | Espera base antes de reintentar |
+| `DRIFT_STEAM_BACKOFF_MAX_SECONDS` | `2.0` | Espera máxima antes de reintentar |
+| `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` | `2.0` | Máximo que se respeta del `Retry-After` de Steam |
+| `DRIFT_GPU_BENCHMARKS_URL` y `DRIFT_CPU_BENCHMARKS_URL` | vacías | Direcciones privadas de los puntajes de benchmarks. Sin ellas, la compatibilidad compara por niveles. Son secretas y no se escriben en el repositorio |
+
+## Observabilidad
+
+| Ruta | Qué muestra |
+|---|---|
+| `/health` | Estado de la API |
+| `/metrics` | Latencia de búsqueda (promedio y p95 de las últimas 100) y búsquedas con una fuente no disponible, por fuente |
+
+En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.dev/api/metrics. Las métricas viven en memoria y se reinician con cada despliegue. Cada búsqueda deja además una línea de log en JSON.
 
 ## Documentación
 
@@ -314,6 +378,13 @@ SonarQube Cloud está configurado mediante `sonar-project.properties` y el secre
 
 ## Alcance actual
 
-La fuente externa real implementada es Steam. La arquitectura permite integrar futuras plataformas mediante adaptadores que cumplan el contrato `GameRepository`.
+DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC y con PlayStation Store, y abre la página de compra de cada tienda en una pestaña nueva. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
 
-La compatibilidad de PC usa requisitos controlados para fines académicos. La integración con datos técnicos externos queda como evolución futura.
+La compatibilidad de PC usa los requisitos reales de cada juego en Steam y el equipo que el usuario guarda en su navegador. Compara memoria, procesador, tarjeta gráfica y espacio libre; la gráfica y el procesador se comparan por benchmark cuando hay datos y por niveles cuando no.
+
+Limitaciones conocidas:
+
+- **Precios de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia. Los precios de Steam sí son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
+- **Persistencia:** el catálogo, las cachés y las métricas viven en memoria y se pierden al reiniciar (ADR-0008).
+- **Pruebas del frontend:** no hay pruebas automatizadas del frontend.
+- **Riesgos y deuda técnica:** el resto, con los modos de fallo de Steam, está en [arc42 §11](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).
