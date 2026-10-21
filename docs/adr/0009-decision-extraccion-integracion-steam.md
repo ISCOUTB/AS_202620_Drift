@@ -1,6 +1,6 @@
 # ADR-0009: Decisión de extracción de la integración con Steam
 
-- **Estado:** Propuesto (pendiente de revisión del equipo)
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-18
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0002](0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md), [ADR-0003](0003-reajuste-contextos-dominio.md), [ADR-0006](0006-despliegue-serverless-api-busqueda.md) y [ADR-0008](0008-persistencia-ejecucion-y-degradacion-de-fuentes.md)
@@ -96,7 +96,15 @@ Negativas:
 3. Revisar los registros `external_retry` y `external_request_failed` en el despliegue para estimar la frecuencia real de fallos.
 4. Comprobar que arc42 §11.8, este ADR y el código siguen coherentes.
 
-Estado de la validación (octubre de 2026): `python -m pytest tests -q --ignore=tests/test_contract.py` en `backend/` dio 151 pruebas aprobadas y 0 fallidas, incluidas las 40 de `tests/test_steam_resilience.py`. `test_contract.py` no se ejecutó localmente; lo ejecuta el CI. Los puntos 2 y 3 del plan (medición con fuentes degradadas y revisión de registros del despliegue) siguen pendientes.
+Estado de la validación (octubre de 2026):
+
+Pruebas locales: la ejecución registrada de python -m pytest tests -q --ignore=tests/test_contract.py en backend/ obtuvo 151 pruebas aprobadas y 0 fallidas, incluidas las 40 de tests/test_steam_resilience.py. Las pruebas de contrato no se ejecutaron en esa ejecución local; deben verificarse por separado.
+
+Medición con Steam degradado: se incorporan las evidencias y herramientas de la Semana 12 para evaluar el comportamiento bajo degradación. Los resultados deben interpretarse según el procedimiento ejecutado y el entorno utilizado.
+
+Registros del despliegue: sigue pendiente revisar los registros reales del despliegue para estimar la frecuencia de fallos.
+
+Coherencia arquitectónica: revisar conjuntamente arc42 §11.8, arc42 §8, este ADR y la implementación para asegurar que describan el mismo comportamiento.
 
 ## Condiciones para revisar la decisión
 
@@ -107,3 +115,15 @@ Revisar esta decisión, y evaluar tanto la extracción como un circuit breaker, 
 - Steam exige escalar o desplegarse con un ciclo distinto al del resto del backend.
 - Aparece un segundo equipo o un requisito de aislamiento de seguridad o de cuotas de la API.
 - DRIFT incorpora escrituras que necesiten persistencia (ver arc42 §8.12).
+
+## Trazabilidad
+
+| Eslabón | Dónde |
+|---|---|
+| Aspecto y requisito | E5, disponibilidad, en [docs/aspectos.md](../aspectos.md) |
+| Modos de fallo | [arc42 §11.8](../arc42/arc42-11-riesgos-y-deuda-tecnica.md), filas S11-F01 a S11-F14 |
+| Idempotencia, saga y outbox | [arc42 §8.12](../arc42/arc42_8_conceptos_transversales.md) |
+| Elementos C4 | Contenedor API en [C4 nivel 2](../c4/contenedores.md); componentes `SteamGameRepository` y `ResilientGameRepository` en [C4 nivel 3](../c4/componentes.md) |
+| Código | `backend/app/infrastructure/external/resilient_http.py`, `backend/app/infrastructure/external/steam/steam_game_repository.py` y `backend/app/infrastructure/persistence/resilient_game_repository.py` |
+| Pruebas | `backend/tests/test_steam_resilience.py` y `backend/tests/test_search_games.py::test_search_uses_fallback_when_steam_is_unavailable` |
+| Implementación | PR #28 (`feat/s11-resiliencia-extraccion`), commit `c9cd338`, fusionado en `a7c0ea4` |

@@ -80,7 +80,9 @@ class SteamGameRepository(GameRepository):
             raise ExternalSourceError(SOURCE_NAME, "invalid_response")
 
         raw_items = data.get("items", [])[:5]
-        items = [item for item in raw_items if self._is_valid_item(item)]
+        items = self._unique_by_id(
+            item for item in raw_items if self._is_valid_item(item)
+        )
 
         if not items:
             if raw_items:
@@ -106,6 +108,16 @@ class SteamGameRepository(GameRepository):
             and not isinstance(item.get("id"), bool)
             and isinstance(item.get("name"), str)
         )
+
+    @staticmethod
+    def _unique_by_id(items) -> List[dict]:
+        # Conserva la primera aparición de cada juego.
+        unique = {}
+
+        for item in items:
+            unique.setdefault(item["id"], item)
+
+        return list(unique.values())
 
     def _get_game_details(
         self,

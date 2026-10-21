@@ -21,8 +21,9 @@ El equipo aplicó los siguientes criterios:
 La herramienta de IA utilizada como apoyo durante esta etapa fue:
 
 - **ChatGPT (OpenAI):** apoyo conceptual, revisión de documentación, orientación de código, pruebas y configuración.
+- **Claude (Anthropic), mediante Claude Code:** desde octubre de 2026, implementación y revisión de cambios con su validación registrada (registros 41 y 42).
 
-No se registra evidencia de uso de Claude, Gemini u otras herramientas de IA en los cambios documentados en este repositorio.
+No se registra uso de Gemini u otras herramientas de IA en los cambios documentados en este repositorio.
 
 ## 4. Áreas en las que se utilizó IA
 
@@ -940,3 +941,26 @@ Las cifras provienen de los archivos generados por k6 en `docs/evidencias/e6-res
 **Alternativa descartada:**
 
 Se descartó medir contra los servicios reales de Steam y CheapShark: su latencia varía entre corridas y no permite repetir las mismas condiciones antes y después. También se descartó presentar la corrección del cliente HTTP por llamada como parte del resultado, porque no se implementó; quedó registrada como deuda en arc42 §11.7.
+
+---
+
+### Registro 42 — Revisión de la evidencia S11 contra la ficha del curso
+
+**Fecha:** 2026-10-18
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Revisar la entrega S11 (modos de fallo, idempotencia y decisión de extracción) contra la ficha `semana-11-evidencia-s11.md` y corregir lo que falte.
+
+**Uso:**
+
+Se utilizó Claude para contrastar la matriz de la ficha con el repositorio. Encontró tres huecos: la tabla de arc42 §11.8 no tenía una fila para «responde dos veces», la fila E5 de `docs/aspectos.md` no reflejaba la resiliencia de S11, y ADR-0009 seguía como propuesto y afirmaba que las pruebas no se habían ejecutado. Al analizar «responde dos veces» detectó que el adaptador de Steam no descartaba un juego repetido en la misma respuesta: el juego salía duplicado y sus detalles se pedían dos veces.
+
+**Validación:**
+
+Se añadió la prueba `test_a_game_repeated_in_the_response_is_returned_once`, que falla con el adaptador anterior y pasa con el cambio. La suite del backend pasa completa (152 pruebas) y las 6 pruebas de contrato pasan contra la API levantada en local. El equipo revisa ADR-0009 antes de darlo por aceptado en el repositorio.
+
+**Alternativa descartada:**
+
+Se descartó llenar la fila «responde dos veces» con la repetición iniciada por el cliente (S11-F07), porque es otro caso: la ficha pregunta por el otro lado de la integración. También se descartó implementar el circuit breaker para cerrar S11-F09: ADR-0009 lo pospone con criterios de revisión y añadirlo ahora contradiría esa decisión sin evidencia nueva.
