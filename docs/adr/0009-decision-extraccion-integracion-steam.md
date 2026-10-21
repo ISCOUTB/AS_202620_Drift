@@ -96,7 +96,7 @@ Negativas:
 3. Revisar los registros `external_retry` y `external_request_failed` en el despliegue para estimar la frecuencia real de fallos.
 4. Comprobar que arc42 §11.8, este ADR y el código siguen coherentes.
 
-Estado de la validación al redactar este ADR: las pruebas nuevas fueron escritas pero no se ejecutaron con la pila real (ver informe de entrega).
+Estado de la validación (octubre de 2026): `python -m pytest tests -q --ignore=tests/test_contract.py` en `backend/` dio 151 pruebas aprobadas y 0 fallidas, incluidas las 40 de `tests/test_steam_resilience.py`. `test_contract.py` no se ejecutó localmente; lo ejecuta el CI. Los puntos 2 y 3 del plan (medición con fuentes degradadas y revisión de registros del despliegue) siguen pendientes.
 
 ## Condiciones para revisar la decisión
 

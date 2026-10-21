@@ -1,0 +1,398 @@
+{
+  "generated_at": "2026-10-20T19:14:55.887746+00:00",
+  "environment": {
+    "python": "3.12.3",
+    "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+    "httpx": "desconocida"
+  },
+  "nature": "respuestas HTTP simuladas; no es una medición de producción",
+  "criteria": {
+    "plazo_total_s": 5.0,
+    "min_compliance": 0.99,
+    "status": "hipótesis de laboratorio (no hay SLO acordado)"
+  },
+  "parameters": {
+    "samples": 100,
+    "concurrency": 20,
+    "seed": 12,
+    "query": "Minecraft",
+    "cold_path": true
+  },
+  "results": [
+    {
+      "scenario": "normal",
+      "config": "s11",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 0.3487164920000083,
+        "p95": 0.4565469249999978,
+        "p99": 0.47316924000000427,
+        "max": 0.4802472679999994
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 0.17155804300000455,
+        "p95": 0.24214762399999756,
+        "p99": 0.2476826359999933,
+        "max": 0.24991238700000906
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "ok": 200
+      },
+      "retries": 0,
+      "terminal_failures": {},
+      "searches_with_error": 0,
+      "searches_degraded_steam": 0,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    },
+    {
+      "scenario": "normal",
+      "config": "s12",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 0.34856381200000897,
+        "p95": 0.45893316300001175,
+        "p99": 0.473248840999986,
+        "max": 0.48114769599999363
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 0.17154781200000002,
+        "p95": 0.24212217199999486,
+        "p99": 0.2476824830000055,
+        "max": 0.24990101200000936
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "ok": 200
+      },
+      "retries": 0,
+      "terminal_failures": {},
+      "searches_with_error": 0,
+      "searches_degraded_steam": 0,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    },
+    {
+      "scenario": "lento",
+      "config": "s11",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 6.059680107999981,
+        "p95": 10.822737378999989,
+        "p99": 11.582783096000014,
+        "max": 11.697702409000016
+      },
+      "steam_call_seconds": {
+        "n": 247,
+        "p50": 2.7622319269999878,
+        "p95": 3.000247709000007,
+        "p99": 3.0003410959999997,
+        "max": 3.001306735999975
+      },
+      "steam_requests": 247,
+      "steam_outcomes": {
+        "ok": 159,
+        "timeout": 88
+      },
+      "retries": 64,
+      "terminal_failures": {
+        "timeout": 24
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 24,
+      "deadline_compliance": 0.2,
+      "criteria": {
+        "C1_p95": false,
+        "C2_compliance": false,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": false
+    },
+    {
+      "scenario": "lento",
+      "config": "s12",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 4.003047968999994,
+        "p95": 4.007596091000011,
+        "p99": 4.009147709999979,
+        "max": 4.009770325000005
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 1.9888032169999974,
+        "p95": 3.0002110540000047,
+        "p99": 3.000581323999995,
+        "max": 3.001886006999996
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "ok": 62,
+        "timeout": 138
+      },
+      "retries": 38,
+      "terminal_failures": {
+        "timeout": 100
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 100,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    },
+    {
+      "scenario": "intermitente",
+      "config": "s11",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 3.219437421000009,
+        "p95": 6.467420838999999,
+        "p99": 6.684889555000012,
+        "max": 6.805282632000001
+      },
+      "steam_call_seconds": {
+        "n": 264,
+        "p50": 0.1925546420000046,
+        "p95": 3.00023426300001,
+        "p99": 3.0004328630000145,
+        "max": 3.0020397950000017
+      },
+      "steam_requests": 264,
+      "steam_outcomes": {
+        "http_503": 36,
+        "ok": 153,
+        "timeout": 75
+      },
+      "retries": 81,
+      "terminal_failures": {
+        "server_error": 10,
+        "timeout": 20
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 30,
+      "deadline_compliance": 0.8,
+      "criteria": {
+        "C1_p95": false,
+        "C2_compliance": false,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": false
+    },
+    {
+      "scenario": "intermitente",
+      "config": "s12",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 3.1716757140000027,
+        "p95": 4.003176327999995,
+        "p99": 4.0237771959999975,
+        "max": 4.025191436
+      },
+      "steam_call_seconds": {
+        "n": 260,
+        "p50": 0.19122606700000233,
+        "p95": 3.000257532000006,
+        "p99": 3.0007085290000077,
+        "max": 3.058958259999997
+      },
+      "steam_requests": 260,
+      "steam_outcomes": {
+        "http_503": 36,
+        "ok": 150,
+        "timeout": 74
+      },
+      "retries": 77,
+      "terminal_failures": {
+        "server_error": 11,
+        "timeout": 22
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 33,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    },
+    {
+      "scenario": "no_disponible_timeout",
+      "config": "s11",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 6.133174480000008,
+        "p95": 6.237641718999981,
+        "p99": 6.2495068579999895,
+        "max": 6.252639568999996
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 3.0001736449999896,
+        "p95": 3.0004123889999903,
+        "p99": 3.0012360280000223,
+        "max": 3.002047595999983
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "timeout": 200
+      },
+      "retries": 100,
+      "terminal_failures": {
+        "timeout": 100
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 100,
+      "deadline_compliance": 0.0,
+      "criteria": {
+        "C1_p95": false,
+        "C2_compliance": false,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": false
+    },
+    {
+      "scenario": "no_disponible_timeout",
+      "config": "s12",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 4.002176596000027,
+        "p95": 4.005983805000028,
+        "p99": 4.008883592999979,
+        "max": 4.010372103000009
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 0.9983110300000249,
+        "p95": 3.0001635520000036,
+        "p99": 3.0002241729999923,
+        "max": 3.0004283669999836
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "timeout": 200
+      },
+      "retries": 100,
+      "terminal_failures": {
+        "timeout": 100
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 100,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    },
+    {
+      "scenario": "no_disponible_503",
+      "config": "s11",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 0.17497567899999922,
+        "p95": 0.2681299729999864,
+        "p99": 0.28197583899998335,
+        "max": 0.2907797500000129
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 0.02016790300001503,
+        "p95": 0.020720858000004228,
+        "p99": 0.021030244000030507,
+        "max": 0.02132194199998594
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "http_503": 200
+      },
+      "retries": 100,
+      "terminal_failures": {
+        "server_error": 100
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 100,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    },
+    {
+      "scenario": "no_disponible_503",
+      "config": "s12",
+      "samples": 100,
+      "total_seconds": {
+        "n": 100,
+        "p50": 0.18048754800003053,
+        "p95": 0.27038023800002975,
+        "p99": 0.2879742369999576,
+        "max": 0.2895739370000001
+      },
+      "steam_call_seconds": {
+        "n": 200,
+        "p50": 0.020159264000028543,
+        "p95": 0.02072609999999031,
+        "p99": 0.021591042000011385,
+        "max": 0.02229408099998409
+      },
+      "steam_requests": 200,
+      "steam_outcomes": {
+        "http_503": 200
+      },
+      "retries": 100,
+      "terminal_failures": {
+        "server_error": 100
+      },
+      "searches_with_error": 0,
+      "searches_degraded_steam": 100,
+      "deadline_compliance": 1.0,
+      "criteria": {
+        "C1_p95": true,
+        "C2_compliance": true,
+        "C3_no_errors": true,
+        "C4_normal_not_degraded": true
+      },
+      "passes": true
+    }
+  ],
+  "run_note": "Corrida del asistente en un sandbox sin red y sin el paquete httpx real: se usó un reemplazo mínimo de la biblioteca estándar (environment.httpx = desconocida). La lógica de DRIFT es la del repositorio, pero el equipo debe repetirla con httpx 0.28.1 y guardar el resultado oficial."
+}

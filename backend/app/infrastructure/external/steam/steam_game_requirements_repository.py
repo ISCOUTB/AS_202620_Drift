@@ -4,7 +4,7 @@ import re
 import unicodedata
 from typing import Optional
 
-import httpx
+import httpx  # noqa: F401  los tests parchean steam_game_requirements_repository.httpx.get
 
 from app.domain.model.game_requirements import GameRequirements
 from app.domain.ports.game_requirements_repository import (
@@ -12,7 +12,19 @@ from app.domain.ports.game_requirements_repository import (
 )
 from app.domain.services.cpu_classifier import classify_cpu
 from app.domain.services.gpu_classifier import classify_gpu
+from app.infrastructure.external.resilient_http import (
+    ExternalSourceError,
+    RetryPolicy,
+    get_json,
+)
 from app.infrastructure.external.single_flight_cache import SingleFlightCache
+
+SOURCE_NAME = "Steam"
+
+# Los requisitos son un dato de apoyo de una consulta interactiva: sin reintento
+# (una llamada) y con el mismo timeout por llamada que la búsqueda de Steam.
+# Si falla, el componente queda sin comparar; el fallo no se guarda en la caché.
+DEFAULT_POLICY = dict(timeout_seconds=3.0, max_attempts=1)
 
 # Etiquetas con las que Steam nombra cada requisito, en español e inglés.
 _LABELS = {
@@ -98,7 +110,12 @@ class SteamGameRequirementsRepository(GameRequirementsRepository):
 
     _url = "https://store.steampowered.com/api/appdetails"
 
-    def __init__(self):
+    def __init__(self, policy: Optional[RetryPolicy] = None):
+        # Variables DRIFT_STEAM_REQUIREMENTS_*; ver arc42 §8.13.
+        self._policy = policy or RetryPolicy.from_env(
+            "DRIFT_STEAM_REQUIREMENTS",
+            **DEFAULT_POLICY,
+        )
         # Los requisitos publicados casi nunca cambian.
         self._cache = SingleFlightCache(ttl_seconds=24 * 60 * 60)
 
@@ -111,24 +128,30 @@ class SteamGameRequirementsRepository(GameRequirementsRepository):
                 game_id,
                 lambda: self._fetch(game_id),
             )
-        except (httpx.HTTPError, ValueError):
-            # Sin respuesta de Steam no hay requisitos que comparar.
+        except (ExternalSourceError, httpx.HTTPError, ValueError):
+            # Sin respuesta de Steam no hay requisitos que comparar. El fallo
+            # ya quedó registrado por `get_json` y no se guardó en la caché.
             return None
 
     def _fetch(self, game_id: int) -> Optional[GameRequirements]:
-        response = httpx.get(
+        payload = get_json(
             self._url,
-            params={
+            {
                 "appids": game_id,
                 "cc": "co",
                 "l": "spanish",
             },
-            timeout=5.0,
+            source=SOURCE_NAME,
+            policy=self._policy,
         )
 
-        response.raise_for_status()
+        if not isinstance(payload, dict):
+            # `null` o una lista no son «sin requisitos»: son otra forma.
+            if payload is None:
+                return None
 
-        payload = response.json() or {}
+            raise ExternalSourceError(SOURCE_NAME, "invalid_response")
+
         game_data = (payload.get(str(game_id)) or {}).get("data") or {}
         requirements = game_data.get("pc_requirements")
 

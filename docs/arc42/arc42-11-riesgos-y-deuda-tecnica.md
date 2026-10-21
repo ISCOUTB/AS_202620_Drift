@@ -106,3 +106,18 @@ Implementadas (`backend/app/infrastructure/external/resilient_http.py` y `SteamG
 Pendientes: circuit breaker (ADR-0009), plazo total por búsqueda, `Retry-After` en formato fecha, límite global de concurrencia hacia Steam, cliente HTTP compartido, extender el cliente resiliente a CheapShark, PlayStation y requisitos de Steam, y aviso en la respuesta cuando no hay resultados (requiere cambio de contrato).
 
 Observabilidad: solo hay registros JSON. Los reintentos no tienen contador en `/metrics`, por lo que no existen métricas persistentes de reintentos; las existentes se reinician con el proceso.
+
+### Actualización S12: estado de las filas que dependían de esta evidencia
+
+Las filas de S11 no se reescriben; esta tabla indica qué cambió. Las pruebas de S12 están en `backend/tests/test_s12_*.py`; la medición, en [S12](../evidencias/s12-steam-degradado.md).
+
+| ID | Estado en S11 | Estado tras S12 | Evidencia |
+|---|---|---|---|
+| S11-F11 | Respuesta inválida de una fuente secundaria: riesgo de 500, no verificado | **Mitigada.** CheapShark, PlayStation y los requisitos de Steam pasan por `get_json`; una respuesta inválida se eleva como `ExternalSourceError` y `CombinedGameRepository` la traduce a `unavailable_sources`. Una respuesta de otra forma ya no se cachea como «sin ofertas» | `test_cheapshark_unexpected_shape_is_a_failure_and_is_not_cached`, `test_combined_search_reports_a_typed_source_failure_without_failing` |
+| S11-F12 | Latencia acumulada por reintentos: «no medido» | **Medida y mitigada con una hipótesis de laboratorio.** Con Steam sin responder, S11 tarda 6,24 s en el p95 (0 % de las búsquedas cumple 5 s); con un plazo total de 4 s el máximo observado es 4,03 s. Costo: con Steam lento (2,0–3,6 s por llamada), el 100 % de las búsquedas usa el respaldo. Corrida en un sandbox con un reemplazo de `httpx`: pendiente repetirla con las dependencias del proyecto | [S12](../evidencias/s12-steam-degradado.md), `test_s12_plazo_total.py` |
+| S11-F09 | Circuit breaker diferido | **Sin cambios.** La medición muestra que con Steam caído cada búsqueda sigue gastando dos solicitudes (200 para 100 búsquedas), pero acotadas a 4 s. Se mantiene la decisión de ADR-0009; el dato se añade a sus condiciones de revisión | `steam-degradado-sandbox-shim.json` |
+| S11-F13 | Steam cae y el respaldo no tiene el juego: respuesta vacía sin aviso | **Sin cambios.** Requiere un cambio de contrato | — |
+
+Mejoras de S12 no previstas en la tabla de S11, encontradas al construir la matriz de consistencia ([arc42 §8.14](arc42_8_conceptos_transversales.md)): la sincronización de PlayStation ya no vacía el catálogo ante una respuesta sin juegos; la tasa de cambio no se vuelve a consultar de inmediato tras un fallo; CheapShark conserva la lista de tiendas anterior si falla su refresco.
+
+Pendiente tras S12: circuit breaker (ADR-0009), `Retry-After` en formato fecha, límite global de concurrencia hacia Steam, cliente HTTP compartido, aviso en la respuesta cuando no hay resultados, y la tasa de cambio vencida servida sin aviso con la fuente caída. El cliente resiliente ya se extendió a CheapShark, PlayStation, requisitos de Steam y tasa de cambio; los catálogos de hardware conservan su propia política.

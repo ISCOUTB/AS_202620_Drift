@@ -2,11 +2,25 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 from urllib.parse import quote
 
-import httpx
+import httpx  # noqa: F401  los tests parchean playstation_game_catalog_source.httpx.get
 
 from app.domain.model.normalized_game import NormalizedGame
 from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
 from app.domain.ports.game_catalog_source import GameCatalogSource
+from app.infrastructure.external.resilient_http import (
+    RetryPolicy,
+    TimeBudget,
+    get_json,
+)
+
+SOURCE_NAME = "PlayStation"
+
+# El catálogo es un endpoint de la tienda sin contrato publicado: no se
+# conocen sus límites. Un reintento acotado y plazos propios por operación;
+# la búsqueda comparte el plazo de la fuente secundaria (DRIFT_SOURCE_TIMEOUT_SECONDS).
+DEFAULT_SYNC_POLICY = dict(timeout_seconds=10.0, max_attempts=2)
+DEFAULT_SEARCH_POLICY = dict(timeout_seconds=3.0, max_attempts=2)
+DEFAULT_SEARCH_DEADLINE_SECONDS = 3.0
 
 
 class PlayStationGameCatalogSource(GameCatalogSource):
@@ -23,8 +37,23 @@ class PlayStationGameCatalogSource(GameCatalogSource):
         "store/api/chihiro/00_09_000/tumbler/co/es/999/"
     )
 
-    def __init__(self, exchange_rates: ExchangeRateProvider):
+    def __init__(
+        self,
+        exchange_rates: ExchangeRateProvider,
+        sync_policy: Optional[RetryPolicy] = None,
+        search_policy: Optional[RetryPolicy] = None,
+    ):
         self._exchange_rates = exchange_rates
+        # Variables DRIFT_PLAYSTATION_SYNC_* y DRIFT_PLAYSTATION_SEARCH_*.
+        self._sync_policy = sync_policy or RetryPolicy.from_env(
+            "DRIFT_PLAYSTATION_SYNC",
+            **DEFAULT_SYNC_POLICY,
+        )
+        self._search_policy = search_policy or RetryPolicy.from_env(
+            "DRIFT_PLAYSTATION_SEARCH",
+            default_total_deadline_seconds=DEFAULT_SEARCH_DEADLINE_SECONDS,
+            **DEFAULT_SEARCH_POLICY,
+        )
 
     def fetch_catalog(self) -> List[NormalizedGame]:
         """
@@ -33,22 +62,19 @@ class PlayStationGameCatalogSource(GameCatalogSource):
         Se mantiene para el endpoint de sincronización existente.
         """
 
-        response = httpx.get(
+        payload = get_json(
             self._catalog_url,
-            params={
+            {
                 "size": 100,
                 "start": 0,
                 "gameContentType": "games",
             },
+            source=SOURCE_NAME,
+            policy=self._sync_policy,
             headers={
                 "Accept": "application/json",
             },
-            timeout=10.0,
         )
-
-        response.raise_for_status()
-
-        payload = response.json()
 
         captured_at = datetime.now(timezone.utc)
 
@@ -82,17 +108,16 @@ class PlayStationGameCatalogSource(GameCatalogSource):
 
         url = f"{self._search_url}{encoded_query}"
 
-        response = httpx.get(
+        payload = get_json(
             url,
-            params={
+            {
                 "suggested_size": size,
                 "mode": "game",
             },
+            source=SOURCE_NAME,
+            policy=self._search_policy,
+            budget=TimeBudget.from_policy(self._search_policy),
         )
-
-        response.raise_for_status()
-
-        payload = response.json()
 
         captured_at = datetime.now(timezone.utc)
 

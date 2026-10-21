@@ -95,7 +95,7 @@ def test_playstation_usd_prices_are_converted_and_missing_prices_omitted(monkeyp
                 Game(1091500, "Cyberpunk 2077", {"Steam": 199000.0}),
             ]
 
-    def mock_get(url, params=None):
+    def mock_get(url, params=None, timeout=None):
         class MockResponse:
             def raise_for_status(self):
                 pass
