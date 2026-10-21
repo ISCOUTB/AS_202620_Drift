@@ -10,6 +10,7 @@ from typing import List, Optional
 
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
+from app.infrastructure.external.resilient_http import ExternalSourceError
 from app.infrastructure.observability import log_event
 
 
@@ -118,6 +119,17 @@ class CombinedGameRepository(GameRepository):
         except SourceTimeoutError:
             secondary_games = []
             self._mark_unavailable(games, "timeout", launched_at)
+        except ExternalSourceError as error:
+            # Fallo tipado de la fuente (timeout, 429, 5xx, respuesta
+            # inválida…): se mantiene la taxonomía «timeout»/«error» y la
+            # causa concreta queda en el registro.
+            secondary_games = []
+            self._mark_unavailable(
+                games,
+                "timeout" if error.reason == "timeout" else "error",
+                launched_at,
+                cause=error.reason,
+            )
         except httpx.HTTPError:
             secondary_games = []
             self._mark_unavailable(games, "error", launched_at)
@@ -158,6 +170,7 @@ class CombinedGameRepository(GameRepository):
         games: List[Game],
         reason: str,
         launched_at: float,
+        cause: Optional[str] = None,
     ) -> None:
         """Una respuesta sin una tienda no debe parecer una respuesta completa."""
 
@@ -170,6 +183,7 @@ class CombinedGameRepository(GameRepository):
             "source_unavailable",
             source=self.secondary_name,
             reason=reason,
+            cause=cause,
             waited_ms=round((time.monotonic() - launched_at) * 1000, 2),
         )
 

@@ -465,6 +465,7 @@ flowchart LR
 | Infraestructura | `SingleFlightCache` | Caché con vencimiento y una sola carga en vuelo por clave; su lock no cubre la llamada HTTP. |
 | Infraestructura | `CombinedGameRepository` | Consulta la fuente secundaria en paralelo, la espera como máximo `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s) y, si falla o vence, añade su nombre a `unavailable_sources`. |
 | Infraestructura | `game_copy.copy_games` | Entrega copias de los juegos en caché o en memoria, para que una búsqueda no altere lo que reciben las demás. |
+| Infraestructura | `resilient_http.get_json` y `TimeBudget` | Política HTTP común de las fuentes externas (timeout, reintentos, `Retry-After`, errores tipados) y plazo total compartido por las llamadas de una operación (S12; [arc42 §8.15](../arc42/arc42_8_conceptos_transversales.md)). |
 | Infraestructura | `SearchMetrics` | Además de la latencia, cuenta las búsquedas degradadas por fuente (`drift_source_unavailable_total`). |
 
 `backend/tests/test_architecture.py` falla si el dominio o la aplicación importan infraestructura.

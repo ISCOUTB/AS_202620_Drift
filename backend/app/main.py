@@ -17,6 +17,7 @@ from app.application.usecases.list_hardware_catalogue import (
 )
 from app.application.usecases.search_games import SearchGames
 from app.application.usecases.sync_playstation_catalog import (
+    CatalogSyncRejected,
     SyncPlayStationCatalog,
 )
 
@@ -27,6 +28,7 @@ from app.infrastructure.external.cheapshark.cheapshark_game_repository import (
     CheapSharkGameRepository,
 )
 
+from app.infrastructure.external.resilient_http import ExternalSourceError
 from app.infrastructure.external.exchange.open_exchange_rate_provider import (
     OpenExchangeRateProvider,
 )
@@ -290,42 +292,55 @@ def search_games_endpoint(
     return results
 
 
+def _sync_failed(reason: str, http_status):
+    """503 del contrato: la sincronización falló y el catálogo local se conserva."""
+
+    return HTTPException(
+        status_code=503,
+        detail={
+            "source": "playstation",
+            "reason": reason,
+            "http_status": http_status,
+            "local_data_preserved": True,
+            "occurred_at": (
+                datetime.now(
+                    timezone.utc
+                ).isoformat()
+            ),
+        },
+    )
+
+
 @app.post("/games/sync/playstation")
 def sync_playstation_catalog_endpoint():
 
     try:
         return sync_playstation_catalog.execute()
 
-    except httpx.HTTPError as error:
+    except CatalogSyncRejected as error:
+
+        logger.warning(
+            "Sincronización de PlayStation rechazada: %s",
+            error.reason,
+        )
+
+        raise _sync_failed(error.reason, None) from error
+
+    except (httpx.HTTPError, ExternalSourceError) as error:
 
         logger.exception(
             "No fue posible actualizar "
             "el catálogo de PlayStation"
         )
 
-        status_code = (
-            error.response.status_code
-            if isinstance(
-                error,
-                httpx.HTTPStatusError,
-            )
-            else None
-        )
+        if isinstance(error, httpx.HTTPStatusError):
+            status_code = error.response.status_code
+        elif isinstance(error, ExternalSourceError):
+            status_code = error.status_code
+        else:
+            status_code = None
 
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "source": "playstation",
-                "reason": str(error),
-                "http_status": status_code,
-                "local_data_preserved": True,
-                "occurred_at": (
-                    datetime.now(
-                        timezone.utc
-                    ).isoformat()
-                ),
-            },
-        ) from error
+        raise _sync_failed(str(error), status_code) from error
 
 
 @app.post(

@@ -2,30 +2,35 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, List, Optional
 
-import httpx  # noqa: F401  los tests parchean steam_game_repository.httpx.get
+import httpx  # noqa: F401
 
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
 from app.infrastructure.external.resilient_http import (
     ExternalSourceError,
     RetryPolicy,
+    TimeBudget,
     get_json,
 )
 from app.infrastructure.external.single_flight_cache import SingleFlightCache
 from app.infrastructure.game_copy import copy_games
 
 SOURCE_NAME = "Steam"
-
+DEFAULT_TOTAL_DEADLINE_SECONDS = 5.0
 
 class SteamGameRepository(GameRepository):
     def __init__(
         self,
         policy: Optional[RetryPolicy] = None,
         sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.monotonic,
     ):
-        # Variables DRIFT_STEAM_*; ver arc42 §7 y ADR-0009.
-        self._policy = policy or RetryPolicy.from_env("DRIFT_STEAM")
+        self._policy = policy or RetryPolicy.from_env(
+        "DRIFT_STEAM",
+        default_total_deadline_seconds=DEFAULT_TOTAL_DEADLINE_SECONDS,
+        )
         self._sleep = sleep
+        self._clock = clock
         self._cache = SingleFlightCache(ttl_seconds=60)
 
     def search(self, query: str) -> List[Game]:
@@ -40,16 +45,25 @@ class SteamGameRepository(GameRepository):
 
         return copy_games(games)
 
-    def _get_json(self, url: str, params: dict):
+    def _get_json(
+        self,
+        url: str,
+        params: dict,
+        budget: Optional[TimeBudget] = None,
+    ):
         return get_json(
             url,
             params,
             source=SOURCE_NAME,
             policy=self._policy,
             sleep=self._sleep,
+            budget=budget,
         )
 
+
     def _search_steam(self, query: str) -> List[Game]:
+        budget = TimeBudget.from_policy(self._policy, self._clock)
+
         data = self._get_json(
             "https://store.steampowered.com/api/storesearch/",
             {
@@ -57,6 +71,7 @@ class SteamGameRepository(GameRepository):
                 "cc": "co",
                 "l": "spanish",
             },
+            budget=budget,
         )
 
         if not isinstance(data, dict) or not isinstance(
@@ -64,26 +79,26 @@ class SteamGameRepository(GameRepository):
         ):
             raise ExternalSourceError(SOURCE_NAME, "invalid_response")
 
-        # Se limita a cinco resultados: evita pedir decenas de detalles
-        # innecesarios a Steam en una sola búsqueda.
         raw_items = data.get("items", [])[:5]
         items = self._unique_by_id(
             item for item in raw_items if self._is_valid_item(item)
         )
 
         if not items:
-            # Sin ítems es una búsqueda sin resultados; ítems presentes pero
-            # todos malformados es una respuesta inválida, no «sin resultados».
             if raw_items:
                 raise ExternalSourceError(SOURCE_NAME, "invalid_response")
-
             return []
 
-        # Los detalles se consultan en paralelo, no uno después de otro.
         with ThreadPoolExecutor(max_workers=min(5, len(items))) as executor:
-            games = list(executor.map(self._get_game_details, items))
+            games = list(
+                executor.map(
+                    lambda item: self._get_game_details(item, budget),
+                    items,
+                )
+            )
 
         return games
+
 
     @staticmethod
     def _is_valid_item(item) -> bool:
@@ -96,9 +111,7 @@ class SteamGameRepository(GameRepository):
 
     @staticmethod
     def _unique_by_id(items) -> List[dict]:
-        # Si Steam entrega el mismo juego dos veces, se conserva la primera
-        # aparición: evita resultados repetidos y una consulta de detalles
-        # de más (arc42 §11.8, S11-F14).
+        # Conserva la primera aparición de cada juego.
         unique = {}
 
         for item in items:
@@ -106,7 +119,11 @@ class SteamGameRepository(GameRepository):
 
         return list(unique.values())
 
-    def _get_game_details(self, item: dict) -> Game:
+    def _get_game_details(
+        self,
+        item: dict,
+        budget: Optional[TimeBudget] = None,
+    ) -> Game:
         app_id = item["id"]
 
         details_data = self._get_json(
@@ -116,6 +133,7 @@ class SteamGameRepository(GameRepository):
                 "cc": "co",
                 "l": "spanish",
             },
+            budget=budget,
         )
 
         if not isinstance(details_data, dict):

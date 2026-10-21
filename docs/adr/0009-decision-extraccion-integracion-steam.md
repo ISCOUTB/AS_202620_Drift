@@ -96,12 +96,15 @@ Negativas:
 3. Revisar los registros `external_retry` y `external_request_failed` en el despliegue para estimar la frecuencia real de fallos.
 4. Comprobar que arc42 §11.8, este ADR y el código siguen coherentes.
 
-Estado de la validación al aceptar este ADR:
+Estado de la validación (octubre de 2026):
 
-- Paso 1, cumplido: con el commit `a7c0ea4` y la fila S11-F14 añadida después, la suite del backend pasa completa (152 pruebas, 41 de ellas en `test_steam_resilience.py`), y las 6 pruebas de contrato pasan contra la API levantada en local. El CI de `a7c0ea4` terminó en verde.
-- Paso 2, pendiente: la latencia del reintento con Steam degradado no se ha medido (S11-F12).
-- Paso 3, pendiente: no hay todavía registros del despliegue revisados.
-- Paso 4, cumplido: arc42 §11.8, §8.12 y este ADR describen el mismo código.
+Pruebas locales: la ejecución registrada de python -m pytest tests -q --ignore=tests/test_contract.py en backend/ obtuvo 151 pruebas aprobadas y 0 fallidas, incluidas las 40 de tests/test_steam_resilience.py. Las pruebas de contrato no se ejecutaron en esa ejecución local; deben verificarse por separado.
+
+Medición con Steam degradado: se incorporan las evidencias y herramientas de la Semana 12 para evaluar el comportamiento bajo degradación. Los resultados deben interpretarse según el procedimiento ejecutado y el entorno utilizado.
+
+Registros del despliegue: sigue pendiente revisar los registros reales del despliegue para estimar la frecuencia de fallos.
+
+Coherencia arquitectónica: revisar conjuntamente arc42 §11.8, arc42 §8, este ADR y la implementación para asegurar que describan el mismo comportamiento.
 
 ## Condiciones para revisar la decisión
 

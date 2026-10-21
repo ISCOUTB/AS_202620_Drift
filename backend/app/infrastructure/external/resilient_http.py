@@ -43,6 +43,12 @@ class RetryPolicy:
     `timeout_seconds` se pasa a `httpx`, que lo aplica por separado a la
     conexión, la lectura, la escritura y la espera de un cliente del pool;
     no es un plazo total de la llamada.
+
+    `total_deadline_seconds` (S12) es el plazo total de una operación que
+    puede encadenar varias llamadas (por ejemplo, buscar en Steam y luego
+    pedir los detalles de cada juego). Es opcional: con `None` no hay plazo
+    total y el comportamiento es el de S11. Se aplica mediante un
+    `TimeBudget` compartido; ver `get_json`.
     """
 
     timeout_seconds: float = 3.0
@@ -50,6 +56,7 @@ class RetryPolicy:
     backoff_base_seconds: float = 0.25
     backoff_max_seconds: float = 2.0
     max_retry_after_seconds: float = 2.0
+    total_deadline_seconds: Optional[float] = None
 
     def __post_init__(self):
         if self.max_attempts < 1:
@@ -58,11 +65,37 @@ class RetryPolicy:
         if self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds debe ser positivo")
 
-    @classmethod
-    def from_env(cls, prefix: str) -> "RetryPolicy":
-        """Lee `<prefix>_TIMEOUT_SECONDS`, `_MAX_ATTEMPTS`, etc."""
+        if (
+            self.total_deadline_seconds is not None
+            and self.total_deadline_seconds <= 0
+        ):
+            raise ValueError("total_deadline_seconds debe ser positivo")
 
-        defaults = cls()
+    @classmethod
+    def from_env(
+        cls,
+        prefix: str,
+        default_total_deadline_seconds: Optional[float] = None,
+        **overrides: float,
+    ) -> "RetryPolicy":
+        """
+        Lee `<prefix>_TIMEOUT_SECONDS`, `_MAX_ATTEMPTS`, etc.
+
+        `<prefix>_TOTAL_DEADLINE_SECONDS` fija el plazo total; los valores
+        `none`, `off` o vacío lo desactivan. `overrides` cambia los valores
+        por defecto de cada fuente (no el entorno, que siempre prevalece).
+        """
+
+        defaults = cls(**overrides)
+
+        raw_deadline = os.getenv(f"{prefix}_TOTAL_DEADLINE_SECONDS")
+
+        if raw_deadline is None:
+            total_deadline = default_total_deadline_seconds
+        elif raw_deadline.strip().lower() in {"", "none", "off"}:
+            total_deadline = None
+        else:
+            total_deadline = float(raw_deadline)
 
         return cls(
             timeout_seconds=float(
@@ -89,6 +122,7 @@ class RetryPolicy:
                     defaults.max_retry_after_seconds,
                 )
             ),
+            total_deadline_seconds=total_deadline,
         )
 
     def backoff_seconds(
@@ -104,6 +138,45 @@ class RetryPolicy:
         )
 
         return uniform() * ceiling
+
+
+class TimeBudget:
+    """
+    Plazo total compartido por todas las llamadas de una operación.
+
+    Se crea una vez al empezar la operación y se pasa a cada `get_json`.
+    Limita el `timeout` de cada intento a lo que queda del plazo y evita
+    reintentar cuando la espera ya no cabe. Es seguro usarlo desde varios
+    hilos: solo lee el reloj.
+
+    Límite conocido: `httpx` aplica su timeout por operación de red, no por
+    llamada completa, así que el presupuesto acota el timeout nominal de cada
+    intento y no puede cortar una respuesta que llega gota a gota.
+    """
+
+    def __init__(
+        self,
+        seconds: Optional[float],
+        clock: Callable[[], float] = time.monotonic,
+    ):
+        self._clock = clock
+        self._deadline = None if seconds is None else clock() + seconds
+
+    @classmethod
+    def from_policy(
+        cls,
+        policy: "RetryPolicy",
+        clock: Callable[[], float] = time.monotonic,
+    ) -> "TimeBudget":
+        return cls(policy.total_deadline_seconds, clock)
+
+    def remaining(self) -> Optional[float]:
+        """Segundos que quedan, o None si no hay plazo total."""
+
+        if self._deadline is None:
+            return None
+
+        return max(0.0, self._deadline - self._clock())
 
 
 def _retry_after_seconds(response: httpx.Response) -> Optional[float]:
@@ -124,12 +197,14 @@ def _retry_after_seconds(response: httpx.Response) -> Optional[float]:
 
 def get_json(
     url: str,
-    params: dict,
+    params: Optional[dict],
     *,
     source: str,
     policy: RetryPolicy,
     sleep: Callable[[float], None] = time.sleep,
     uniform: Callable[[], float] = random.random,
+    headers: Optional[dict] = None,
+    budget: Optional[TimeBudget] = None,
 ) -> Any:
     """
     GET con timeout explícito y reintentos solo ante fallos transitorios.
@@ -138,20 +213,44 @@ def get_json(
     Permanentes (sin reintento): el resto de 4xx y un cuerpo que no es JSON.
     El GET es una lectura sin efectos, por lo que repetirlo es seguro.
 
+    Con `budget` (S12), el timeout de cada intento se reduce a lo que queda
+    del plazo total y no se reintenta si la espera previa lo agotaría; un
+    plazo ya agotado antes de empezar se eleva como `timeout`.
+
+    `params` y `headers` solo se envían a `httpx` cuando no son None.
+
     Cada fallo final se eleva como `ExternalSourceError`. Los registros no
     incluyen la URL ni los parámetros: la búsqueda del usuario no se registra.
     """
 
     started_at = time.monotonic()
+    call_kwargs = {}
+
+    if params is not None:
+        call_kwargs["params"] = params
+
+    if headers is not None:
+        call_kwargs["headers"] = headers
 
     for attempt in range(1, policy.max_attempts + 1):
         retry_after = None
+        attempt_timeout = policy.timeout_seconds
+
+        remaining = budget.remaining() if budget is not None else None
+
+        if remaining is not None:
+            if remaining <= 0:
+                expired = ExternalSourceError(source, "timeout")
+                _log_failure(source, expired, attempt - 1, policy, started_at)
+                raise expired
+
+            attempt_timeout = min(attempt_timeout, remaining)
 
         try:
             response = httpx.get(
                 url,
-                params=params,
-                timeout=policy.timeout_seconds,
+                timeout=attempt_timeout,
+                **call_kwargs,
             )
             response.raise_for_status()
             return _decode_json(response, source)
@@ -195,6 +294,14 @@ def get_json(
                 policy,
                 uniform,
             )
+
+            # Esperar y reintentar ya no cabe en el plazo total: se falla
+            # ahora con el último error en lugar de excederlo.
+            if delay is not None and budget is not None:
+                left = budget.remaining()
+
+                if left is not None and delay >= left:
+                    delay = None
 
         if delay is None:
             _log_failure(source, failure, attempt, policy, started_at)
