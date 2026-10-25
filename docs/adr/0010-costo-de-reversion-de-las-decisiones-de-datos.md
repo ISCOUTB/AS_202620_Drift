@@ -1,6 +1,6 @@
 # ADR-0010: Costo de reversión de las decisiones de datos
 
-- **Estado:** Aprobado
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-20
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Complementa a:** [ADR-0008](0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), Decisión 1 (persistencia y modelo de ejecución). **No lo sustituye ni lo modifica:** la decisión de mantener los datos en memoria sigue vigente; este ADR añade lo que ADR-0008 no analiza, que es cuánto cuesta revertirla y cómo se compara con otras decisiones.
