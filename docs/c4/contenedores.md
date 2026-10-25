@@ -4,11 +4,12 @@
 
 ## Vista vigente (actualizada el 20 de octubre de 2026)
 
-Esta es la vista del nivel 2 que describe el sistema actual y la que debe usarse. Está alineada con el código y el entorno desplegados ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), [ADR-0010](../adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) y [arc42 §8.13](../arc42/arc42_8_conceptos_transversales.md)). **No hay base de datos, cola ni microservicios:** todo lo que se guarda vive en la memoria del proceso del backend.
+Esta es la vista del nivel 2 que describe el sistema actual y la que debe usarse. Está alineada con el código y el entorno desplegados ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), [ADR-0010](../adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) y [arc42 §8.13](../arc42/arc42_8_conceptos_transversales.md)). **No hay base de datos, cola ni microservicios:** lo que guarda el servidor vive en la memoria del proceso del backend, y el único dato del usuario, el perfil de su PC, se guarda en el navegador.
 
 ```mermaid
 flowchart LR
     USER["Usuario"] -->|"HTTPS"| WEB["Frontend web<br/>Next.js"]
+    WEB -->|"lee y escribe el perfil del PC<br/>clave drift.pcProfile"| LOCAL[("Almacén del navegador<br/>localStorage<br/>perfil del PC del usuario")]
     WEB -->|"HTTPS + JSON<br/>GET /games/search"| API["Backend / API<br/>FastAPI, 1 proceso<br/>catálogo y cachés en memoria"]
     API -->|"HTTPS + JSON, síncrono<br/>plazo total 4 s, 1 reintento"| STEAM["Steam Store API<br/>(fuente primaria)"]
     API -->|"HTTPS + JSON, síncrono<br/>plazo 3 s"| CHEAP["CheapShark API<br/>(tiendas de PC)"]
@@ -19,6 +20,8 @@ flowchart LR
 | Aspecto | Estado real |
 |---|---|
 | Persistencia | No hay contenedor de base de datos. El catálogo de PlayStation, el catálogo de respaldo y las cachés viven en la memoria del proceso del backend y se pierden al reiniciar. |
+| Almacén del navegador | `localStorage` del navegador de cada usuario, clave `drift.pcProfile`: guarda el perfil del PC (memoria, procesador, tarjeta gráfica y espacio libre) para la estimación de compatibilidad. Es el único dato del usuario que se conserva, y nunca llega al servidor como dato guardado: se envía en cada consulta de compatibilidad. Si el formato guardado no es válido, el frontend lo descarta y vuelve a pedir el equipo (`frontend/infrastructure/storage/BrowserPcProfileRepository.js`, ADR-0010). |
+| Brokers y colas | No hay. La comunicación es síncrona por HTTPS (ADR-0008). |
 | Modelo de ejecución | Síncrono. Las fuentes se consultan en paralelo con hilos dentro de cada búsqueda; no hay cola ni planificador. |
 | Fuentes de la búsqueda | Steam (primaria, con catálogo local de respaldo), CheapShark y PlayStation (secundarias, con plazo de 3 s y aviso en `unavailable_sources`). |
 | Despliegue | Backend en Azure App Service; frontend en Vercel; frontend y backend en el servidor del laboratorio (`https://drift.iscoutb.dev`, Docker Compose en Dokploy, 2 contenedores de 192 MB). |
