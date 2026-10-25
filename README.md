@@ -49,6 +49,7 @@ Decisiones de arquitectura vigentes:
 | [ADR-0007](docs/adr/0007-evaluacion-incorporacion-componente-generativo.md) | No incorporar un componente generativo |
 | [ADR-0008](docs/adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md) | Persistencia en memoria, ejecución síncrona y degradación controlada de fuentes |
 | [ADR-0009](docs/adr/0009-decision-extraccion-integracion-steam.md) | Mantener la integración con Steam dentro del backend, con resiliencia en el adaptador |
+| [ADR-0010](docs/adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) | Costo de reversión de las decisiones de datos; mantener el modelo público del juego como decisión de alto costo de cambio |
 
 ## Organización del proyecto
 
