@@ -65,9 +65,9 @@ Antes de concluir se revisó qué datos guarda o recibe el sistema, no solo lo q
 
 | # | Pendiente | Dueño | Estado |
 |---|---|---|---|
-| P1 | Publicar el aviso de privacidad (§7) en el pie de página del frontend, con un canal de contacto del equipo | JerryDBM | Pendiente |
+| P1 | Publicar el aviso de privacidad (§7) en el pie de página del frontend, con un canal de contacto del equipo | JerryDBM | **Hecha:** enlace «Privacidad» en el pie (`DriftHome.js`); el contacto son los *issues* del repositorio |
 | P2 | Decidir si se desactiva el registro de acceso de uvicorn (`--no-access-log`) para no guardar la URL con la consulta. Los registros estructurados de DRIFT ya cubren la operación; las plataformas seguirán registrando la IP. | JerryDBM | Pendiente |
 
-## 7. Texto propuesto para el aviso de privacidad
+## 7. Texto del aviso de privacidad (publicado en el pie de página)
 
-> **Privacidad.** DRIFT no pide registro ni usa cookies. Para funcionar y protegerse contra el abuso, el servicio y sus proveedores de alojamiento (Microsoft Azure, Vercel y el servidor de la Universidad Tecnológica de Bolívar) registran tu dirección IP y las búsquedas que haces, solo para operar y diagnosticar el servicio. El perfil de tu PC se guarda únicamente en tu navegador. Al usar el sitio aceptas este tratamiento, conforme a la Ley 1581 de 2012. Para consultas sobre tus datos escribe a: _(correo del equipo)_.
+> **Privacidad.** DRIFT no pide registro ni usa cookies. Para funcionar y protegerse contra el abuso, el servicio y sus proveedores de alojamiento (Microsoft Azure, Vercel y el servidor de la Universidad Tecnológica de Bolívar) registran tu dirección IP y las búsquedas que haces, solo para operar y diagnosticar el servicio. El perfil de tu PC se guarda únicamente en tu navegador. Al usar el sitio aceptas este tratamiento, conforme a la Ley 1581 de 2012. Consultas sobre tus datos: abre un caso en el repositorio del proyecto (https://github.com/ISCOUTB/AS_202620_Drift/issues).

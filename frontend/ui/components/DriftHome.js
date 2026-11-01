@@ -1124,6 +1124,32 @@ export default function DriftHome() {
               <span>HUMBLE</span>
             </footer>
 
+            {/* Aviso de privacidad (docs/seguridad/privacidad.md, Ley 1581 de 2012). */}
+            <details className={styles.privacyNotice}>
+              <summary>Privacidad</summary>
+              <p>
+                DRIFT no pide registro ni usa cookies. Para funcionar y
+                protegerse contra el abuso, el servicio y sus proveedores de
+                alojamiento (Microsoft Azure, Vercel y el servidor de la
+                Universidad Tecnológica de Bolívar) registran tu dirección IP
+                y las búsquedas que haces, solo para operar y diagnosticar el
+                servicio. El perfil de tu PC se guarda únicamente en tu
+                navegador. Al usar el sitio aceptas este tratamiento,
+                conforme a la Ley 1581 de 2012.
+              </p>
+              <p>
+                Consultas sobre tus datos:{" "}
+                <a
+                  href="https://github.com/ISCOUTB/AS_202620_Drift/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  abre un caso en el repositorio del proyecto
+                </a>
+                .
+              </p>
+            </details>
+
           </div>
         </div>
       </div>

@@ -68,3 +68,36 @@ Aunque varias funciones no se usan, se actualizó igual: Image Optimization qued
 - **PR de Dependabot:** no se integran sin que el CI pase. Cada uno se trata como un hallazgo: se actualiza o se deja una razón en el PR.
 
  
+
+## 5. Revisión de los primeros PR de Dependabot (#37 a #48)
+
+Al activarse `dependabot.yml` (PR #36), Dependabot abrió 12 PR. Ninguno corrige una vulnerabilidad: `pip-audit` y `npm audit` ya estaban limpios. Se revisó cada uno antes de decidir.
+
+**Dos hallazgos sobre el propio proceso:**
+
+- **Todos los PR fallaban en SonarQube Cloud** (`sonar-scanner` con código de salida 3). Los workflows que dispara Dependabot no reciben los secretos de Actions, así que no tienen `SONAR_TOKEN`. No era un problema del cambio. Por eso las actualizaciones se integran desde una rama del equipo, donde el pipeline completo sí se ejecuta.
+- **Los PR de `pip` solo editaban `requirements.txt`.** El `Dockerfile` instala desde `requirements.lock` (con hashes) y el CI instala versiones escritas en el workflow, así que esos PR en verde no probaban la versión nueva. En el PR de integración el lock se regeneró con `pip-compile --generate-hashes`, y los workflows se alinearon a la misma versión de uvicorn.
+
+| PR | Actualización | Revisión | Decisión |
+|---|---|---|---|
+| #41 | `actions/checkout` 4.2.2 → 7.0.1 | v5: Node 24 (runner ≥ 2.327.1); v6: credenciales en un archivo aparte; v7: bloquea checkout de forks en `pull_request_target`. Nada lo usa DRIFT. Quita el aviso «Node.js 20 is deprecated». | **Integrado** |
+| #38 | `actions/setup-python` 5.6.0 → 7.1.0 | v6: Node 24; v7: elimina la entrada `pip-install`, que los workflows no usan | **Integrado** |
+| #39 | `sonarqube-scan-action` 8.2.2 → 8.4.0 | Versión menor | **Integrado** |
+| #37 | `azure/login` 2.3.0 → 3.1.0 | v3 solo cambia a Node 24; OIDC sin cambios. Se valida en el primer despliegue tras el merge. | **Integrado** |
+| #40 | `azure/webapps-deploy` 3.0.6 → 3.0.8 | Parche | **Integrado** |
+| #46 | `react-dom` 19.2.8 → 19.3.1 | **Rompe solo:** pide `react ^19.3.1` y `npm ci` falla (check «Frontend conectado a la API» en rojo). | **Integrado junto con #48** |
+| #48 | `react` 19.2.8 → 19.3.1 | Por separado deja `react` y `react-dom` en versiones distintas | **Integrado junto con #46** |
+| #42 | `anyio` 4.15.0 → 4.15.1 | Parche; está en el lock | **Integrado** (txt y lock) |
+| #44 | `uvicorn` 0.52.4 → 0.54.0 | 0.53 y 0.54 añaden HTTP/2 experimental y opcional; los parámetros del `Dockerfile` siguen funcionando (verificado) | **Integrado** (txt, lock y workflows) |
+| #45 | `charset-normalizer` 3.5.1 → 3.5.2 | Parche; solo lo usa `requests` (scripts), no está en el lock | **Integrado** (txt) |
+| #47 | `urllib3` 2.7.0 → 2.8.0 | Menor; igual que el anterior | **Integrado** (txt) |
+| #43 | `pydantic-core` 2.46.5 → 2.50.1 | **Incompatible:** `pydantic` 2.13.5 exige exactamente `pydantic-core==2.46.5` | **Rechazado.** Se actualizará junto con `pydantic`. |
+
+**Verificación del PR de integración:** 207 pruebas del backend, 163 casos de contrato (schemathesis), instalación con `--require-hashes`, `pip-audit` y `npm audit` sin hallazgos, y el frontend compila.
+
+**Cambios en `dependabot.yml` para lo que viene:**
+
+- PR agrupados (uno para el backend, uno para `react`/`react-dom` y uno para las acciones).
+- `pydantic-core` ignorado por separado.
+- Una nota de que el lock se regenera a mano.
+- Pendiente del equipo: agregar `SONAR_TOKEN` en *Settings → Secrets and variables → Dependabot* para que sus PR pasen SonarQube.

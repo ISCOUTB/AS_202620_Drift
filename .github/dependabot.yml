@@ -1,18 +1,35 @@
 version: 2
 updates:
+  # Backend. Dependabot solo edita requirements.txt: requirements.lock (con hashes,
+  # el que usa el Dockerfile) se regenera a mano con pip-compile. Ver
+  # docs/evidencias/s13-analisis-dependencias.md, §5.
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      backend:
+        patterns: ["*"]
+    ignore:
+      # Va fijado de forma exacta por pydantic: se actualiza junto con pydantic.
+      - dependency-name: "pydantic-core"
+      - dependency-name: "pydantic_core"
 
+  # Frontend. react y react-dom deben ir siempre en la misma versión.
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns: ["react", "react-dom"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      acciones:
+        patterns: ["*"]

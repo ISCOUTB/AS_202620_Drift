@@ -1,8 +1,8 @@
 annotated-doc==0.0.5
 annotated-types==0.8.0
-anyio==4.15.0
+anyio==4.15.1
 certifi==2026.10.18
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
 click==8.5.0
 fastapi==0.141.1
 h11==0.16.0
@@ -15,7 +15,7 @@ requests==2.34.2
 starlette==1.6.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
-urllib3==2.7.0
-uvicorn==0.52.4
+urllib3==2.8.0
+uvicorn==0.54.0
 schemathesis==4.27.5
 gunicorn==23.0.0
