@@ -341,3 +341,83 @@ Los detalles HTTP permanecen en los adaptadores: `get_json` (en `resilient_http.
 | Catálogos de hardware | 5 s (copia remota opcional) | 1 | — | — | — | Catálogo vacío | — | Sin cambios en S12: ya tenía timeout, tolerancia a fallos y reintento a los 5 min |
 
 Ausencia legítima y fallo se distinguen: Steam sin coincidencias, CheapShark con lista vacía y requisitos que Steam no publica son resultados válidos; un timeout, un 5xx, un 429 o una respuesta de otra forma son fallos y quedan registrados (`external_retry`, `external_request_failed`, con motivo, intentos y milisegundos transcurridos, sin la consulta del usuario). Los registros de latencia por llamada están en el campo `elapsed_ms` de los fallos; las llamadas exitosas no se registran individualmente.
+
+## 8.16 Arquitectura de seguridad (evidencia S13)
+
+La seguridad de DRIFT se modeló con STRIDE sobre la vista de contenedores del C4. El detalle de cada amenaza (probabilidad, impacto, dueño y estado) está en el [modelo de amenazas](../seguridad/modelo-amenazas.md); los datos personales, en [privacidad](../seguridad/privacidad.md). Esta sección describe los controles que resultaron y dónde viven.
+
+### Límites de confianza
+
+```mermaid
+flowchart LR
+    subgraph DISP["Dispositivo del usuario (no confiable)"]
+        USER["Usuario"]
+        LS[("localStorage<br/>drift.pcProfile")]
+    end
+
+    subgraph PROXY["Proxy de la plataforma<br/>Azure App Service · Traefik (Dokploy) · Vercel"]
+        TLS["HTTPS<br/>agrega X-Forwarded-For"]
+    end
+
+    subgraph API["Backend / API (FastAPI) — zona propia"]
+        RL["Limitador de tasa<br/>ADR-0012"]
+        CORS["CORS acotado"]
+        ADM["Token administrativo<br/>ADR-0011"]
+        UC["Casos de uso y dominio<br/>(sin cambios)"]
+    end
+
+    subgraph EXT["Fuentes externas (no confiables)"]
+        STEAM["Steam"]
+        CS["CheapShark"]
+        PSN["PlayStation Store"]
+        FX["open.er-api.com"]
+    end
+
+    subgraph CICD["Cadena de suministro"]
+        GH["GitHub Actions<br/>pip-audit · npm audit · Sonar"]
+        DB["Dependabot"]
+    end
+
+    USER --> LS
+    USER -->|"HTTPS"| TLS --> CORS --> RL --> UC
+    TLS -->|"sync, /metrics"| ADM --> UC
+    UC -->|"HTTPS, certifi actualizado,<br/>plazos y validación de respuestas"| STEAM & CS & PSN & FX
+    GH -->|"despliegue con OIDC"| API
+    DB -.-> GH
+```
+
+### Controles por límite
+
+| Límite | Amenaza que cubre | Control | Dónde |
+|---|---|---|---|
+| Usuario → API | A3: abuso que se amplifica hacia las fuentes externas | Límite de 60 peticiones/min por IP en búsqueda y compatibilidad; 429 con `Retry-After` | `infrastructure/api/security.py`, ADR-0012 |
+| Usuario → API | A2 y A5: operaciones administrativas abiertas | `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`; 401 sin token; 403 si el servidor no tiene token (falla cerrado) | `require_admin_token`, ADR-0011 |
+| Usuario → API | A9: CORS demasiado amplio | Orígenes por configuración, sin credenciales, solo `GET`/`POST` y `Content-Type` | `main.py`, ADR-0012 |
+| Usuario → API | A7: perfil manipulado | Validación estricta del cuerpo (`StrictInt`, longitud máxima de los nombres) | `CompatibilityRequest` |
+| Proxy → API | IP del cliente falsificada | El limitador usa la **última** IP de `X-Forwarded-For` (la agrega el proxy) y le quita el puerto de Azure | `client_ip`, `DRIFT_TRUST_FORWARDED_FOR` |
+| API → fuentes externas | A11: suplantación por TLS | `certifi` ≥ 2026.10.18 | PR #34, #35 |
+| API → fuentes externas | Respuestas inválidas o lentas | Plazos, reintentos acotados y validación de forma | §8.15, ADR-0009 |
+| Fuentes externas → frontend | A4: enlaces manipulados | `rel="noopener noreferrer"`; React bloquea URLs `javascript:`. Riesgo residual aceptado (§11.9) | `DriftHome.js` |
+| Cadena de suministro | A1: dependencias vulnerables | `pip-audit` y `npm audit` bloquean el pipeline; Dependabot semanal; versiones exactas | Job `dependency-audit`, [análisis S13](../evidencias/s13-analisis-dependencias.md) |
+| Cadena de suministro | A8: secretos de CI y acciones comprometidas | Acciones fijadas por SHA, OIDC hacia Azure, `permissions: contents: read` | `.github/workflows/` |
+
+### Secretos
+
+| Secreto | Dónde vive | Nunca en |
+|---|---|---|
+| `DRIFT_ADMIN_TOKEN` | Dokploy → Environment; configuración de App Service (parámetro `@secure()` del Bicep) | El repositorio, `.env.example`, el chat ni los registros |
+| `DRIFT_GPU_BENCHMARKS_URL`, `DRIFT_CPU_BENCHMARKS_URL` | Dokploy y Azure | El repositorio (A6, aceptada) |
+| `SONAR_TOKEN` | Secretos de GitHub Actions | Los workflows en texto plano |
+| Identidad de despliegue en Azure | OIDC federado (`azure/login`), sin contraseña guardada | — |
+
+### Registro de eventos de seguridad
+
+Los eventos se escriben en el log JSON estructurado (`observability.py`), sin la consulta del usuario:
+
+- `rate_limited`: ruta y segundos para reintentar.
+- `admin_catalog_sync_requested`: fuente e IP de origen.
+- `admin_catalog_sync_completed`: juegos cargados.
+
+### Lo que esta arquitectura no cubre
+
+No hay usuarios autenticados ni roles: el token administrativo es un único secreto del equipo. No hay WAF ni protección contra ataques volumétricos de red, que son responsabilidad de cada plataforma. El limitador y las cachés viven en un proceso (ADR-0008). Estos límites se declaran como riesgos aceptados en [§11.9](arc42-11-riesgos-y-deuda-tecnica.md).

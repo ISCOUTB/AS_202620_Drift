@@ -3,6 +3,7 @@
 - **Commit de referencia:** `7d045f9` (1 de noviembre de 2026); estados actualizados con las mitigaciones de ADR-0011 y ADR-0012
 - **Base del modelo:** vista vigente de contenedores del [C4](../c4/contenedores.md), actualizada el 20 de octubre de 2026
 - **Método:** STRIDE aplicado a cada elemento del C4 y a cada flujo entre elementos
+- **Documentos relacionados:** [privacidad](privacidad.md), [arc42 §8.16 — arquitectura de seguridad](../arc42/arc42_8_conceptos_transversales.md) y [arc42 §11.9 — amenazas aceptadas](../arc42/arc42-11-riesgos-y-deuda-tecnica.md)
 
 ## 1. Elementos del C4 analizados y límites de confianza
 
