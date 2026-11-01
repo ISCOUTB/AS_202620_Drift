@@ -350,6 +350,9 @@ Todas las variables son opcionales: sin ellas el sistema arranca con los valores
 | `DRIFT_STEAM_BACKOFF_BASE_SECONDS` | `0.25` | Espera base antes de reintentar |
 | `DRIFT_STEAM_BACKOFF_MAX_SECONDS` | `2.0` | Espera máxima antes de reintentar |
 | `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` | `2.0` | Máximo que se respeta del `Retry-After` de Steam |
+| `DRIFT_ADMIN_TOKEN` | vacía | **Secreta.** Token para `POST /games/sync/playstation` y `/metrics` (`Authorization: Bearer …`). Vacía = esas operaciones quedan deshabilitadas (ADR-0011) |
+| `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en búsqueda y compatibilidad; `0` lo desactiva (ADR-0012) |
+| `DRIFT_TRUST_FORWARDED_FOR` | `false` | Usa la última IP de `X-Forwarded-For` para el límite; solo detrás de un proxy de confianza (Azure, Traefik) |
 | `DRIFT_GPU_BENCHMARKS_URL` y `DRIFT_CPU_BENCHMARKS_URL` | vacías | Direcciones privadas de los puntajes de benchmarks. Sin ellas, la compatibilidad compara por niveles. Son secretas y no se escriben en el repositorio |
 
 ## Observabilidad
@@ -357,7 +360,7 @@ Todas las variables son opcionales: sin ellas el sistema arranca con los valores
 | Ruta | Qué muestra |
 |---|---|
 | `/health` | Estado de la API |
-| `/metrics` | Latencia de búsqueda (promedio y p95 de las últimas 100) y búsquedas con una fuente no disponible, por fuente |
+| `/metrics` | Requiere `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`. Latencia de búsqueda (promedio y p95 de las últimas 100) y búsquedas con una fuente no disponible, por fuente |
 
 En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.dev/api/metrics. Las métricas viven en memoria y se reinician con cada despliegue. Cada búsqueda deja además una línea de log en JSON.
 

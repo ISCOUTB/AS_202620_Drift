@@ -13,6 +13,8 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 | [ADR-0004](../adr/0004-estrategia-de-integracion.md) | Estrategia híbrida de integración con MySQL y actualización asíncrona | Superseded por ADR-0008 | Persistencia y modelo de ejecución |
 | [ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md) | Catálogo en memoria, ejecución síncrona y degradación controlada de fuentes (plazo por fuente y aviso en `unavailable_sources`) | Aceptado | Secciones 5, 6, 7 y 11 y escenario E6; sustituye a ADR-0004 |
 | [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md) | Mantener la integración con Steam dentro del backend; resiliencia del adaptador y circuit breaker diferido | Aceptado | Secciones 5, 7, 8 y 11; evidencia S11 |
+| [ADR-0011](../adr/0011-autenticacion-operaciones-administrativas.md) | Token de servicio para la sincronización del catálogo y `/metrics`; registro de las operaciones administrativas | Aceptado | Secciones 8 y 11; modelo de amenazas A2, A5 y A10 |
+| [ADR-0012](../adr/0012-limitacion-de-tasa-en-la-api.md) | Límite de tasa por cliente en búsqueda y compatibilidad; CORS acotado | Aceptado | Secciones 8 y 11; modelo de amenazas A3 y A9 |
 
 ## 9.2 Resumen
 

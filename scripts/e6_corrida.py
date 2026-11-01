@@ -56,7 +56,13 @@ def main():
 
     RESULTS.mkdir(parents=True, exist_ok=True)
 
-    environment = dict(os.environ, E6_STUB_URL=f"http://127.0.0.1:{STUB_PORT}")
+    # El experimento mide degradación con 50 usuarios virtuales desde una sola
+    # IP: el límite de tasa (ADR-0012) se desactiva para no medir 429.
+    environment = dict(
+        os.environ,
+        E6_STUB_URL=f"http://127.0.0.1:{STUB_PORT}",
+        DRIFT_RATE_LIMIT_PER_MINUTE="0",
+    )
 
     stub = subprocess.Popen(
         [sys.executable, str(ROOT / "scripts" / "stub_upstream.py")],

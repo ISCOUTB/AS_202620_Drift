@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from time import perf_counter
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 
@@ -26,6 +27,13 @@ from app.domain.services.gpu_classifier import classify_gpu, level_from_score
 
 from app.infrastructure.external.cheapshark.cheapshark_game_repository import (
     CheapSharkGameRepository,
+)
+
+from app.infrastructure.api.security import (
+    SlidingWindowRateLimiter,
+    client_ip,
+    rate_limit_from_env,
+    require_admin_token,
 )
 
 from app.infrastructure.external.resilient_http import ExternalSourceError
@@ -101,12 +109,49 @@ allowed_origins = [
 ]
 
 
+# A3 (ADR-0012): límite por cliente en las rutas que llaman a fuentes externas.
+rate_limiter = SlidingWindowRateLimiter(limit=rate_limit_from_env())
+
+
+def _calls_external_sources(request: Request) -> bool:
+    path = request.url.path.rstrip("/")
+
+    return (request.method == "GET" and path.endswith("/games/search")) or (
+        request.method == "POST" and path.endswith("/compatibility")
+    )
+
+
+@app.middleware("http")
+async def limit_rate(request: Request, call_next):
+    if _calls_external_sources(request):
+        allowed, retry_after = rate_limiter.check(client_ip(request))
+
+        if not allowed:
+            log_event(
+                logger,
+                "rate_limited",
+                path=request.url.path,
+                retry_after_seconds=retry_after,
+            )
+
+            return JSONResponse(
+                status_code=429,
+                content={"detail": {"reason": "rate_limited", "retry_after_seconds": retry_after}},
+                headers={"Retry-After": str(retry_after)},
+            )
+
+    return await call_next(request)
+
+
+# A9: DRIFT no usa cookies ni credenciales del navegador; solo GET y POST con JSON.
+# Se agrega después del límite de tasa para que también las respuestas 429
+# lleven las cabeceras CORS y el navegador pueda leerlas.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
@@ -199,7 +244,7 @@ def health():
     }
 
 
-@app.get("/metrics")
+@app.get("/metrics", dependencies=[Depends(require_admin_token)])
 def metrics():
     return {
         "search_latency": search_metrics.snapshot(),
@@ -311,11 +356,29 @@ def _sync_failed(reason: str, http_status):
     )
 
 
-@app.post("/games/sync/playstation")
-def sync_playstation_catalog_endpoint():
+@app.post(
+    "/games/sync/playstation",
+    dependencies=[Depends(require_admin_token)],
+)
+def sync_playstation_catalog_endpoint(request: Request):
+
+    # A10: queda registro de cada sincronización autorizada y de su origen.
+    log_event(
+        logger,
+        "admin_catalog_sync_requested",
+        source="playstation",
+        client_ip=client_ip(request),
+    )
 
     try:
-        return sync_playstation_catalog.execute()
+        result = sync_playstation_catalog.execute()
+        log_event(
+            logger,
+            "admin_catalog_sync_completed",
+            source="playstation",
+            games_loaded=result.get("games_loaded") if isinstance(result, dict) else None,
+        )
+        return result
 
     except CatalogSyncRejected as error:
 
