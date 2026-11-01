@@ -42,7 +42,7 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CFC582F4DC534E1682A9FB6C4E2D1C8C }}
 
       - name: Deploy backend to Azure Web App
-        uses: azure/webapps-deploy@657f0700ea5214d56a0400d8ac5e8023c963d25d # v3.0.6
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
         with:
           app-name: "drift-utb-202620"
           slot-name: "Production"
