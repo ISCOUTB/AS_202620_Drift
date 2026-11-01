@@ -1333,6 +1333,36 @@
 }
 
 
+.privacyNotice {
+  padding: 0 4px 18px;
+  color: var(--faint);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.privacyNotice summary {
+  cursor: pointer;
+  width: fit-content;
+  font: 600 .7rem var(--display);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.privacyNotice summary:hover,
+.privacyNotice summary:focus-visible {
+  color: var(--muted);
+}
+
+.privacyNotice p {
+  max-width: 72ch;
+  margin: 10px 0 0;
+}
+
+.privacyNotice a {
+  color: var(--accent);
+}
+
+
 /* -------------------------------- */
 /* TABLET                            */
 /* -------------------------------- */
