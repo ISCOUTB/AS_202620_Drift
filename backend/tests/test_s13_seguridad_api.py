@@ -89,13 +89,11 @@ def test_authorized_sync_is_logged_with_its_origin(monkeypatch, caplog):
         "execute",
         lambda: {"status": "ok", "games_loaded": 2},
     )
-    main.logger.propagate = True
+        # caplog solo ve los registros que se propagan al logger raíz.
+    monkeypatch.setattr(main.logger, "propagate", True)
 
-    try:
-        with caplog.at_level(logging.INFO, logger="drift"):
-            client.post("/games/sync/playstation", headers=ADMIN_HEADERS)
-    finally:
-        main.logger.propagate = False
+    with caplog.at_level(logging.INFO, logger="drift"):
+        client.post("/games/sync/playstation", headers=ADMIN_HEADERS)
 
     events = {record.getMessage(): record for record in caplog.records}
 
