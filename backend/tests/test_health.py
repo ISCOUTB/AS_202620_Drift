@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from tests.admin_auth import ADMIN_HEADERS
+
 from app.main import app
 from app.infrastructure.external.steam import steam_game_repository
 
@@ -63,7 +65,7 @@ def test_search_games_vertical_slice(monkeypatch):
     assert data[0]["id"] == "620"
     assert data[0]["name"] == "Portal 2"
     assert data[0]["prices"]["Steam"] == 26.00
-    metrics_response = client.get("/metrics")
+    metrics_response = client.get("/metrics", headers=ADMIN_HEADERS)
 
     assert metrics_response.status_code == 200
 

@@ -2,6 +2,8 @@ import httpx
 
 from fastapi.testclient import TestClient
 
+from tests.admin_auth import ADMIN_HEADERS
+
 from app.infrastructure.external.playstation import playstation_game_catalog_source
 from app.main import app, playstation_catalog
 
@@ -43,7 +45,7 @@ def test_sync_playstation_catalog_caches_the_single_provider_response(monkeypatc
 
     monkeypatch.setattr(playstation_game_catalog_source.httpx, "get", mock_get)
 
-    response = client.post("/games/sync/playstation")
+    response = client.post("/games/sync/playstation", headers=ADMIN_HEADERS)
 
     assert response.status_code == 200
     assert response.json()["source"] == "playstation"
@@ -62,7 +64,7 @@ def test_failed_playstation_sync_preserves_local_catalog(monkeypatch):
 
     monkeypatch.setattr(playstation_game_catalog_source.httpx, "get", failing_get)
 
-    response = client.post("/games/sync/playstation")
+    response = client.post("/games/sync/playstation", headers=ADMIN_HEADERS)
 
     assert response.status_code == 503
     assert response.json()["detail"]["source"] == "playstation"

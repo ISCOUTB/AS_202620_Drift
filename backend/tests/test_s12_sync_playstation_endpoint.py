@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 import httpx
 from fastapi.testclient import TestClient
 
+from tests.admin_auth import ADMIN_HEADERS
+
 from app.domain.model.normalized_game import NormalizedGame
 from app.infrastructure.external.playstation import playstation_game_catalog_source
 from app.main import app, playstation_catalog
@@ -51,7 +53,7 @@ def test_a_response_without_usable_games_does_not_wipe_the_local_catalog(
 
     monkeypatch.setattr(playstation_game_catalog_source.httpx, "get", get)
 
-    response = client.post("/games/sync/playstation")
+    response = client.post("/games/sync/playstation", headers=ADMIN_HEADERS)
 
     assert response.status_code == 503
     detail = response.json()["detail"]
@@ -77,7 +79,7 @@ def test_a_source_error_reports_its_http_status_and_keeps_the_local_catalog(
 
     monkeypatch.setattr(playstation_game_catalog_source.httpx, "get", get)
 
-    response = client.post("/games/sync/playstation")
+    response = client.post("/games/sync/playstation", headers=ADMIN_HEADERS)
 
     assert response.status_code == 503
     detail = response.json()["detail"]

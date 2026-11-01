@@ -4,6 +4,8 @@ import time
 import httpx
 from fastapi.testclient import TestClient
 
+from tests.admin_auth import ADMIN_HEADERS
+
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
 from app.infrastructure.external.single_flight_cache import SingleFlightCache
@@ -202,11 +204,11 @@ def test_metrics_expose_degraded_searches_by_source(monkeypatch):
 
     client = TestClient(app)
 
-    before = client.get("/metrics").json()["source_degradation"]
+    before = client.get("/metrics", headers=ADMIN_HEADERS).json()["source_degradation"]
 
     assert client.get("/games/search?q=Minecraft").status_code == 200
 
-    after = client.get("/metrics").json()["source_degradation"]
+    after = client.get("/metrics", headers=ADMIN_HEADERS).json()["source_degradation"]
 
     assert after["metric"] == "drift_source_unavailable_total"
     assert after["degraded_searches"] == before["degraded_searches"] + 1

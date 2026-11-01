@@ -30,6 +30,12 @@ services:
       # ellos, esos componentes se comparan por niveles aproximados.
       DRIFT_GPU_BENCHMARKS_URL: ${DRIFT_GPU_BENCHMARKS_URL:-}
       DRIFT_CPU_BENCHMARKS_URL: ${DRIFT_CPU_BENCHMARKS_URL:-}
+      # Seguridad (ADR-0011 y ADR-0012). DRIFT_ADMIN_TOKEN es secreto: va en
+      # Dokploy → Environment. Sin él, la sincronización y /metrics quedan deshabilitadas.
+      DRIFT_ADMIN_TOKEN: ${DRIFT_ADMIN_TOKEN:-}
+      DRIFT_RATE_LIMIT_PER_MINUTE: ${DRIFT_RATE_LIMIT_PER_MINUTE:-60}
+      # Traefik agrega la IP real del cliente al final de X-Forwarded-For.
+      DRIFT_TRUST_FORWARDED_FOR: "true"
     expose:
       - "8000"
     healthcheck:
