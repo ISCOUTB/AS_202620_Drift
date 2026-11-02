@@ -50,6 +50,8 @@ Decisiones de arquitectura vigentes:
 | [ADR-0008](docs/adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md) | Persistencia en memoria, ejecución síncrona y degradación controlada de fuentes |
 | [ADR-0009](docs/adr/0009-decision-extraccion-integracion-steam.md) | Mantener la integración con Steam dentro del backend, con resiliencia en el adaptador |
 | [ADR-0010](docs/adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) | Costo de reversión de las decisiones de datos; mantener el modelo público del juego como decisión de alto costo de cambio |
+| [ADR-0011](docs/adr/0011-autenticacion-operaciones-administrativas.md) | Token de servicio para la sincronización del catálogo y `/metrics`; registro de las operaciones administrativas |
+| [ADR-0012](docs/adr/0012-limitacion-de-tasa-en-la-api.md) | Límite de tasa por cliente en búsqueda y compatibilidad; CORS acotado |
 
 ## Organización del proyecto
 
@@ -103,6 +105,9 @@ DRIFT/
 │   ├── arc42/
 │   ├── c4/
 │   ├── evidencias/
+│   ├── seguridad/
+│   │   ├── modelo-amenazas.md
+│   │   └── privacidad.md
 │   ├── api/
 │   │   ├── drift/
 │   │   │   ├── contrato_api_DRIFT.md
@@ -130,8 +135,10 @@ DRIFT/
 │   └── k6_baseline.js
 │
 ├── .github/
+│   ├── dependabot.yml
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml
+│       └── master_drift-utb-202620.yml
 │
 ├── sonar-project.properties
 ├── correcciones.md
@@ -248,7 +255,7 @@ Desde la carpeta `backend`:
 python -m pytest tests -q
 ```
 
-La suite incluye la búsqueda, la degradación de fuentes, la resiliencia de Steam (no responde, responde tarde, responde dos veces, 429, 5xx y respuestas inválidas), la compatibilidad de PC y la regla de dependencias de la arquitectura. Ninguna de estas pruebas sale a internet.
+La suite incluye la búsqueda, la degradación de fuentes, la resiliencia de Steam (no responde, responde tarde, responde dos veces, 429, 5xx y respuestas inválidas), la compatibilidad de PC, los controles de seguridad de la API (token administrativo, límite de tasa, CORS y registro, en `test_s13_seguridad_api.py`) y la regla de dependencias de la arquitectura. Ninguna de estas pruebas sale a internet.
 
 Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/api/drift/openapi.yaml`](docs/api/drift/openapi.yaml) y necesitan la API encendida en `http://localhost:8000`. Sin ella fallan por conexión, no por un error del código. Para correr solo el resto:
 
@@ -256,7 +263,7 @@ Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/ap
 python -m pytest tests -q --ignore=tests/test_contract.py
 ```
 
-Última validación local (18 de octubre de 2026): **152 pruebas aprobadas**, más las 6 de contrato con la API encendida. Las de contrato tardan varios minutos porque consultan las fuentes reales.
+Última validación local (1 de noviembre de 2026, Python 3.12): **201 pruebas aprobadas**, más las 6 de contrato con la API encendida (207 en total). Las de contrato tardan varios minutos porque consultan las fuentes reales.
 
 ### Experimento E6 (degradación de una fuente)
 
@@ -316,8 +323,20 @@ El pipeline ejecuta:
 1. Pruebas automatizadas del backend, incluidas las de contrato con la API levantada.
 2. Smoke test entre frontend y API, con la compilación del frontend.
 3. Análisis de SonarQube Cloud con el reporte de cobertura del backend.
+4. Análisis de dependencias: `pip-audit` sobre `backend/requirements.lock` y `npm audit` sobre las dependencias de producción del frontend. Falla ante cualquier vulnerabilidad conocida del backend y ante las altas o críticas del frontend.
 
 El pipeline corre en cada push a `master` y en cada pull request hacia `master`. El análisis espera el veredicto del Quality Gate y el job falla si no pasa, así que un cambio con hallazgos no se integra. La configuración está en [`sonar-project.properties`](sonar-project.properties) y usa el secreto de GitHub `SONAR_TOKEN`.
+
+Los jobs de Python instalan desde `backend/requirements.txt`, igual que el despliegue en Azure, así que el CI prueba las mismas versiones que se despliegan. La imagen Docker instala `backend/requirements.lock`, con hashes verificados.
+
+[Dependabot](.github/dependabot.yml) revisa cada semana las dependencias del backend, del frontend y de las acciones de GitHub, y abre un PR por grupo. Dependabot solo edita `requirements.txt`: antes de integrar uno de sus PR hay que regenerar `requirements.lock` con `pip-compile --generate-hashes` (instrucciones en la cabecera del archivo). La revisión de cada PR queda registrada en el [análisis de dependencias](docs/evidencias/s13-analisis-dependencias.md). Sus PR fallan en SonarQube mientras `SONAR_TOKEN` no esté también en los secretos de Dependabot.
+
+## Seguridad y privacidad
+
+- **Modelo de amenazas:** STRIDE sobre los contenedores del C4, con 11 amenazas priorizadas por probabilidad e impacto, cada una con su dueño y su estado ([modelo de amenazas](docs/seguridad/modelo-amenazas.md)).
+- **Controles de la API:** token de servicio para las operaciones administrativas (ADR-0011), límite de tasa por cliente y CORS acotado (ADR-0012). Arquitectura de seguridad en [arc42 §8.16](docs/arc42/arc42_8_conceptos_transversales.md); amenazas aceptadas en [arc42 §11.9](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).
+- **Privacidad:** DRIFT no tiene cuentas ni cookies. Trata la IP del visitante y, en los registros de acceso, sus búsquedas. El perfil del PC se queda en el navegador. Detalle y base del tratamiento (Ley 1581 de 2012) en [privacidad](docs/seguridad/privacidad.md); el aviso está en el pie de la página.
+- **Secretos:** ninguno se versiona. `DRIFT_ADMIN_TOKEN` y las URL de benchmarks viven en Dokploy y Azure; `SONAR_TOKEN`, en los secretos de GitHub.
 
 ## Despliegue
 
@@ -376,7 +395,9 @@ En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.d
 | [C4: componentes](docs/c4/componentes.md) | Diagrama de componentes de DRIFT. |
 | [arc42](docs/arc42/) | Documentación de arquitectura basada en arc42. |
 | [Uso de IA](docs/ia.md) | Registro y criterios de uso de herramientas de IA. |
-| [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3, E4 y E6. |
+| [Evidencias](docs/evidencias/) | Resultados de pruebas E1, E3, E4 y E6, y el análisis de dependencias de S13. |
+| [Modelo de amenazas](docs/seguridad/modelo-amenazas.md) | STRIDE sobre el C4, con prioridad, mitigación, dueño y estado. |
+| [Privacidad](docs/seguridad/privacidad.md) | Datos personales que trata DRIFT y con qué base. |
 | [Contextos delimitados y propiedad de los datos](docs/contextos_delimitados_propiedad_datos.md) | Lenguaje ubicuo, mapa de contextos delimitados y propiedad de datos. |
 | [Correcciones](correcciones.md) | Trazabilidad entre el feedback y las correcciones realizadas. |
 
@@ -391,4 +412,5 @@ Limitaciones conocidas:
 - **Precios de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia. Los precios de Steam sí son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
 - **Persistencia:** el catálogo, las cachés y las métricas viven en memoria y se pierden al reiniciar (ADR-0008).
 - **Pruebas del frontend:** no hay pruebas automatizadas del frontend.
+- **Seguridad:** no hay usuarios ni roles; el token administrativo es un único secreto del equipo, y el límite de tasa cuenta por proceso. El backend serverless de Vercel no tiene límite de tasa (arc42 §11.9).
 - **Riesgos y deuda técnica:** el resto, con los modos de fallo de Steam, está en [arc42 §11](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).
