@@ -101,3 +101,25 @@ Al activarse `dependabot.yml` (PR #36), Dependabot abrió 12 PR. Ninguno corrige
 - `pydantic-core` ignorado por separado.
 - Una nota de que el lock se regenera a mano.
 - Pendiente del equipo: agregar `SONAR_TOKEN` en *Settings → Secrets and variables → Dependabot* para que sus PR pasen SonarQube.
+
+## 6. Segunda ronda de Dependabot (#52 y #53, 1 de noviembre de 2026)
+
+Con los grupos de `dependabot.yml` llegaron 2 PR en vez de 8.
+
+| PR | Actualización | Revisión | Decisión |
+|---|---|---|---|
+| #53 | `actions/setup-node` 4.4.0 → 7.1.0 | v5: Node 24 y caché automática solo si `package.json` declara `packageManager` (el de DRIFT no lo declara); v6: elimina `always-auth`, que no se usa; v7: migración interna a ESM y sin el `NODE_AUTH_TOKEN` ficticio (DRIFT no publica paquetes). Quita el último aviso de Node 20. | **Integrado** |
+| #52 | Grupo backend: `certifi` 2026.10.23, `fastapi` 0.162.0, `idna` 3.20, `pydantic` 2.14.1, `starlette` 1.10.0, `schemathesis` 4.32.7, `gunicorn` 26.2.0 | **No se podía instalar:** `pydantic` 2.14.1 exige `pydantic-core==2.50.1`, y la regla `ignore` de `pydantic-core` que se añadió en §5 lo dejó en 2.46.5 (`ResolutionImpossible`). Con la versión correcta de `pydantic-core` todo funciona. `fastapi` 0.162 añade la dependencia `opentelemetry-api`. | **Integrado con correcciones:** `pydantic_core` 2.50.1, `opentelemetry-api` 1.45.2 fijado, lock regenerado con hashes |
+
+**Errores de proceso corregidos en esta ronda:**
+
+1. **La regla `ignore` de `pydantic-core` era un error:** separaba dos paquetes que deben moverse juntos. Se quitó; el grupo único del backend los actualiza en el mismo PR.
+2. **El CI instalaba versiones escritas a mano en los workflows**, distintas de `requirements.txt`. Un PR de Dependabot podía salir en verde sin haber probado la versión nueva. Ahora los tres jobs de Python y el workflow de Azure instalan con `pip install -r backend/requirements.txt`, así que el CI prueba exactamente lo que se despliega en Azure.
+
+**Verificación** (Python 3.12, la versión del CI y de Azure):
+
+- 207 pruebas del backend y 176 casos de contrato (schemathesis 4.32.7) en verde.
+- Instalación con `--require-hashes` del lock y `pip-audit` sin hallazgos.
+- gunicorn 26.2.0 arranca la API con el mismo comando de `startup.sh` y `/health` responde.
+
+**Observación sin acción:** `uvicorn.workers.UvicornWorker`, que usa `startup.sh` en Azure, está marcado como obsoleto a favor del paquete `uvicorn-worker`. Hoy funciona; se registra para cambiarlo cuando uvicorn lo retire.
