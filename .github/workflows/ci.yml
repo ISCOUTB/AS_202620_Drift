@@ -25,7 +25,7 @@ jobs:
 
       - name: Instalar dependencias
         run: |
-          python -m pip install --only-binary :all: fastapi==0.141.1 httpx==0.28.1 pytest==9.0.1 uvicorn==0.54.0 schemathesis==4.27.5
+          python -m pip install --only-binary :all: -r backend/requirements.txt
 
       - name: Iniciar API para pruebas de contrato
         working-directory: backend
@@ -68,7 +68,7 @@ jobs:
           python-version: "3.12"
 
       - name: Configurar Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: npm
@@ -76,7 +76,7 @@ jobs:
 
       - name: Instalar dependencias
         run: |
-          python -m pip install --only-binary :all: fastapi==0.141.1 httpx==0.28.1 pytest==9.0.1 uvicorn==0.54.0 schemathesis==4.27.5
+          python -m pip install --only-binary :all: -r backend/requirements.txt
       
       - name: Iniciar API y comprobar salud
         run: |
@@ -136,7 +136,7 @@ jobs:
 
       - name: Instalar dependencias para cobertura
         run: |
-          python -m pip install --only-binary :all: fastapi==0.141.1 httpx==0.28.1 pytest==9.0.1 pytest-cov==7.1.0 coverage==7.16.2
+          python -m pip install --only-binary :all: -r backend/requirements.txt pytest-cov==7.1.0 coverage==7.16.2
 
       # El contrato ya se ejecuta en el job de pruebas del backend.
       - name: Ejecutar pruebas y generar cobertura del backend
@@ -173,7 +173,7 @@ jobs:
           pip-audit -r backend/requirements.lock --require-hashes --strict
 
       - name: Configurar Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
 

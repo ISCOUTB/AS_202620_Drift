@@ -8,13 +8,11 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    # Un solo grupo: así pydantic y pydantic-core (que pydantic fija de forma
+    # exacta) siempre llegan juntos en el mismo PR.
     groups:
       backend:
         patterns: ["*"]
-    ignore:
-      # Va fijado de forma exacta por pydantic: se actualiza junto con pydantic.
-      - dependency-name: "pydantic-core"
-      - dependency-name: "pydantic_core"
 
   # Frontend. react y react-dom deben ir siempre en la misma versión.
   - package-ecosystem: "npm"
