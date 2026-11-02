@@ -21,7 +21,7 @@ El equipo aplicó los siguientes criterios:
 La herramienta de IA utilizada como apoyo durante esta etapa fue:
 
 - **ChatGPT (OpenAI):** apoyo conceptual, revisión de documentación, orientación de código, pruebas y configuración.
-- **Claude (Anthropic), mediante Claude Code:** desde octubre de 2026, implementación y revisión de cambios con su validación registrada (registros 41 y 42).
+- **Claude (Anthropic), mediante Claude Code:** desde octubre de 2026, implementación y revisión de cambios con su validación registrada (registros 41 a 46).
 
 No se registra uso de Gemini u otras herramientas de IA en los cambios documentados en este repositorio.
 
@@ -964,3 +964,100 @@ Se añadió la prueba `test_a_game_repeated_in_the_response_is_returned_once`, q
 **Alternativa descartada:**
 
 Se descartó llenar la fila «responde dos veces» con la repetición iniciada por el cliente (S11-F07), porque es otro caso: la ficha pregunta por el otro lado de la integración. También se descartó implementar el circuit breaker para cerrar S11-F09: ADR-0009 lo pospone con criterios de revisión y añadirlo ahora contradiría esa decisión sin evidencia nueva.
+
+---
+
+### Registro 43 — Análisis de dependencias y corrección de vulnerabilidades (S13)
+
+**Fecha:** 2026-10-31 y 2026-11-01
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Revisar el repositorio contra la matriz de la semana 13 (modelo de amenazas, análisis de dependencias y privacidad) y listar lo que falta; después, guiar paso a paso las correcciones.
+
+**Uso:**
+
+Se utilizó Claude para revisar el repositorio en el commit `d9a1816` y ejecutar `npm audit` y `pip-audit`. Encontró una vulnerabilidad crítica en `next` 16.3.2, dos altas en `sharp` y `source-map-js`, y PYSEC-2026-4320 en `certifi` (backend y Vercel). También agregó el job `dependency-audit` y `dependabot.yml`. Claude preparó y probó cada cambio en una copia del repositorio; el equipo los aplicó y abrió los PR #33 a #36.
+
+**Validación:**
+
+Antes y después de cada corrección se guardó la salida de `npm audit` y `pip-audit` en `docs/evidencias/s13-resultados/`. El frontend compila, las pruebas del backend pasan y el job `dependency-audit` quedó en verde en el run #280. Cada hallazgo y su decisión están en `docs/evidencias/s13-analisis-dependencias.md`.
+
+**Alternativa descartada:**
+
+Se descartó `npm audit fix --force`, porque cambia versiones mayores sin necesidad: la corrección se hizo actualizando `next` a una versión exacta. También se descartó cambiar solo el número de versión de `certifi` en `requirements.lock`: el archivo exige hashes, así que se calcularon los de la versión nueva.
+
+---
+
+### Registro 44 — Modelo de amenazas STRIDE y mitigaciones de la API (S13)
+
+**Fecha:** 2026-11-01
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Construir la tabla de amenazas sobre el C4 del equipo, con probabilidad, impacto, mitigación, dueño y estado, y cerrar en el código las amenazas pendientes respetando la arquitectura hexagonal.
+
+**Uso:**
+
+Se utilizó Claude para redactar `docs/seguridad/modelo-amenazas.md` a partir de lo encontrado en el código. Encontró, por ejemplo, que `POST /games/sync/playstation` y `/metrics` eran públicos, que no había límite de tasa y que CORS permitía credenciales sin usarlas. También implementó las mitigaciones A2, A3, A5, A9 y A10 en `backend/app/infrastructure/api/security.py`, actualizó el contrato OpenAPI a 1.5.0 y escribió ADR-0011 y ADR-0012 (PR #49).
+
+**Validación:**
+
+16 pruebas nuevas en `test_s13_seguridad_api.py`; la suite completa pasa (207 pruebas con las de contrato) y schemathesis valida 163 casos contra el contrato. `test_architecture.py` confirma que el dominio y la aplicación no cambiaron. Durante la validación se corrigieron dos errores del propio cambio: la API respondía 403 en lugar de 401 cuando faltaba la cabecera, y el limitador contaba métodos como `TRACE`. SonarCloud marcó dos usos de estado global en una prueba, que se corrigieron con `monkeypatch`.
+
+**Alternativa descartada:**
+
+Se descartaron `slowapi` (otra dependencia para lo mismo), el límite en Traefik (no cubre Azure) y la autenticación con usuarios y roles (DRIFT no tiene usuarios ni base de datos). Las razones están en ADR-0011 y ADR-0012.
+
+---
+
+### Registro 45 — Privacidad, arquitectura de seguridad y amenazas aceptadas (S13)
+
+**Fecha:** 2026-11-01
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Documentar qué datos personales trata DRIFT y con qué base, la arquitectura de seguridad en arc42 §8 y las amenazas aceptadas en §11.
+
+**Uso:**
+
+Se utilizó Claude para redactar `docs/seguridad/privacidad.md`, arc42 §8.16 y §11.9 (PR #50), y el aviso de privacidad del pie de página (PR #51). Antes de concluir revisó el modelo de datos y la ejecución, y encontró que la IP y la URL con la consulta quedan en el registro de acceso de uvicorn. También encontró que `--forwarded-allow-ips "*"` hace que ese registro guarde una IP que el cliente puede falsificar; se registró como riesgo aceptado S13-R3.
+
+**Validación:**
+
+El diagrama Mermaid de §8.16 se generó para comprobar que se dibuja, los enlaces internos se verificaron y el aviso se revisó en una captura del frontend compilado. La base legal es la interpretación del equipo para un proyecto académico, no una opinión jurídica.
+
+**Alternativa descartada:**
+
+Se descartó afirmar que DRIFT no trata datos personales: el registro de acceso y el limitador sí guardan la IP. También se descartó publicar un correo personal como contacto del aviso: se usan los *issues* del repositorio.
+
+---
+
+### Registro 46 — Revisión de los PR de Dependabot (S13)
+
+**Fecha:** 2026-11-01
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Revisar los PR que abrió Dependabot y decidir qué se integra.
+
+**Uso:**
+
+Se utilizó Claude para revisar los PR #37 a #48, #52, #53 y #55. Leyó las notas de versión de las actualizaciones mayores, reprodujo los fallos y probó cada combinación con Python 3.12. Las actualizaciones aceptadas se integraron en los PR #51 y #54, con `requirements.lock` regenerado con hashes; `pydantic-core` 2.50.1 se rechazó en la primera ronda.
+
+**Validación:**
+
+Se reprodujo que `react-dom` 19.3.1 sin `react` 19.3.1 rompe `npm ci`, y que `pydantic` 2.14.1 exige `pydantic-core==2.50.1`. Con las versiones integradas pasan las 207 pruebas y los casos de contrato, la instalación con hashes y `pip-audit`; gunicorn 26 arranca con el comando de `startup.sh`. El despliegue a Azure posterior a cada merge terminó en verde.
+
+**Error corregido:**
+
+En la primera ronda, Claude añadió a `dependabot.yml` una regla para ignorar `pydantic-core`. En la segunda ronda esa regla hizo que Dependabot subiera `pydantic` sin su `pydantic-core` (PR #52, imposible de instalar). Se quitó la regla y se agruparon todas las dependencias del backend. También se encontró que el CI instalaba versiones escritas a mano en los workflows y no probaba lo que proponía Dependabot; desde el PR #54 instala desde `requirements.txt`.
+
+**Alternativa descartada:**
+
+Se descartó integrar los PR de Dependabot tal como llegaban: no actualizaban `requirements.lock`, que es lo que instala la imagen Docker, y fallaban en SonarQube porque Dependabot no recibe `SONAR_TOKEN`.
+
