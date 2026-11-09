@@ -1,0 +1,16 @@
+{
+  "corrida": "corrida-4",
+  "fecha_utc": "2026-11-09T03:38:49+00:00",
+  "entorno": "local: backend y upstream simulado en 127.0.0.1 (no desplegado)",
+  "commit": "be72a2f",
+  "sistema": "Linux-6.18.44-fc-v310-x86_64-with-glibc2.39",
+  "cpus": 2,
+  "python": "3.13.18",
+  "httpx": "0.28.1",
+  "k6": [
+    "k6 v1.3.0 (commit/5870e99ae8, go1.25.1, linux/amd64)"
+  ],
+  "uvicorn_workers": 1,
+  "limite_de_tasa": "desactivado (DRIFT_RATE_LIMIT_PER_MINUTE=0)",
+  "fuentes": "simuladas por scripts/stub_upstream.py con STUB_SIN_DEGRADACION=1"
+}
