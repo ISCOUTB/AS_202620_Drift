@@ -1,0 +1,17 @@
+{
+  "escenario": "E1",
+  "umbral_p95_ms": 3000,
+  "base_url": "http://127.0.0.1:8200",
+  "usuarios_virtuales": 50,
+  "iteraciones_por_usuario": 4,
+  "solicitudes": 200,
+  "fallidas": 0,
+  "checks_superados": 400,
+  "checks_fallidos": 0,
+  "p50_ms": 399.1419645,
+  "p90_ms": 586.0344002999999,
+  "p95_ms": 638.8110898999989,
+  "max_ms": 809.01265,
+  "cumple_p95": true,
+  "duracion_corrida_ms": 1928.693136
+}

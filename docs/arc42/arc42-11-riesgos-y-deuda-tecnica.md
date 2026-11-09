@@ -139,3 +139,30 @@ Resultado del [modelo de amenazas](../seguridad/modelo-amenazas.md). Una amenaza
 | S13-R4 | Las plataformas (Azure, Vercel, Traefik) registran la IP y la URL con la consulta | Baja | Es propio del alojamiento y no se puede desactivar del todo desde DRIFT. Se declara en [privacidad](../seguridad/privacidad.md); los pendientes P1 y P2 de ese documento lo reducen. | Cambia la normativa aplicable o se publica el sitio fuera del ámbito académico | JerryDBM |
 
 **Riesgos que no se aceptan:** las amenazas de prioridad Alta (A1, A2 y A3) se mitigaron antes de cerrar la actividad. Su estado está en la tabla del modelo de amenazas.
+
+## 11.10 Revisión entre pares y medición de E1 (evidencia S14)
+
+### Lo que señaló la revisión entre pares
+
+Se registra **todo** lo que señalaron los pares, se vaya a corregir o no. Estados:
+
+- **Corregido:** el cambio está en el repositorio y la columna de evidencia lo enlaza.
+- **Asumido:** el equipo conoce el problema y decide no corregirlo por ahora. Se escribe el motivo y la condición que obligaría a revisarlo.
+- **Pendiente:** se va a corregir, pero todavía no está hecho.
+
+| ID | Señalamiento de los pares | Dónde aplica | Estado | Evidencia o motivo |
+|---|---|---|---|---|
+| P-01 | _(completar con el texto del señalamiento)_ | | | |
+| P-02 | _(completar)_ | | | |
+| P-03 | _(completar)_ | | | |
+
+### Riesgos y límites que dejó la medición de E1
+
+Medición: [S14 — E1](../evidencias/s14-medicion-e1.md). Resultado: p95 mediano de 0,63 s frente a ≤ 3 s, en 5 corridas, local y con fuentes simuladas.
+
+| ID | Riesgo o límite | Estado | Motivo o acción |
+|---|---|---|---|
+| S14-R1 | E1 no está medido sobre el entorno desplegado. La medición S14 es local y la línea base de septiembre no declaraba su entorno | Pendiente | Repetir `scripts/k6_s14_e1.js` con la `BASE_URL` del despliegue. Desde el entorno de medición no había acceso de red |
+| S14-R2 | La medición excluye el costo TLS de crear un cliente `httpx` por llamada (§11.7) | Asumido | Se excluye a propósito para no tocar servicios reales. Se revisa al implementar el cliente HTTP compartido |
+| S14-R3 | Con el límite de tasa por defecto (60 por minuto por IP, ADR-0012), 50 usuarios detrás de una misma IP (por ejemplo, una red universitaria) reciben 429 antes de que la búsqueda sea lenta | Asumido | Es el comportamiento elegido en ADR-0012 contra el abuso. Se revisa si aparecen 429 legítimos en los registros |
+| S14-R4 | E1 solo se cumple en operación normal. Con una fuente lenta, el p95 sube a 3,61 s (E6) o a 4 s (plazo total de S12) | Asumido | E1 declara «operación normal». La degradación la cubren E5 y E6 con su propio umbral de 5 s |

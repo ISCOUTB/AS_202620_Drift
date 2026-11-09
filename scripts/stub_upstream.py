@@ -9,6 +9,7 @@ así que el conjunto es idéntico en todas las corridas (18 de 50, 36 %).
 
 Uso (desde la raíz del repositorio):
     python scripts/stub_upstream.py            # escucha en 127.0.0.1:9100
+    STUB_SIN_DEGRADACION=1 python scripts/stub_upstream.py   # sin fuente lenta (S14)
 """
 
 import asyncio
@@ -27,6 +28,11 @@ EXCHANGE_DELAY_SECONDS = 0.10
 
 # Residuos (número de consulta módulo 20) que CheapShark responde lento.
 SLOW_RESIDUES = {1, 4, 7, 10, 13, 16, 19}
+
+# S14 mide E1 en operación normal: con STUB_SIN_DEGRADACION=1 ninguna consulta
+# es lenta. Sin la variable, el comportamiento de E6 no cambia.
+if os.getenv("STUB_SIN_DEGRADACION") == "1":
+    SLOW_RESIDUES = set()
 
 GAMES_PER_QUERY = 3
 

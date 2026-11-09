@@ -32,3 +32,7 @@ Los siguientes escenarios detallan, en formato fuente–estímulo–artefacto–
 | ID | Atributo | Escenario | Medida | Estado |
 |---|---|---|---|---|
 | [E6](../escenarios.md#escenario-6) | Disponibilidad y rendimiento | Con 50 usuarios concurrentes y CheapShark lento en cerca del 35 % de las consultas, DRIFT responde con las demás fuentes y avisa cuál faltó. | p95 ≤ 5 s, < 1 % de fallos, 0 respuestas degradadas sin aviso. | Medido antes y después: [evidencia E6](../evidencias/e6-degradacion-bajo-carga.md). |
+
+### Medición de E1 (noviembre de 2026)
+
+El umbral de E1 (≤ 3 s en el p95, hasta 50 usuarios concurrentes, operación normal) no cambió. La medición de S14 se juzgó contra ese valor: p95 mediano de 0,63 s en 5 corridas, en local y con fuentes simuladas. **Cumple bajo condiciones.** Ver [evidencia S14](../evidencias/s14-medicion-e1.md) y los límites en [§11.10](arc42-11-riesgos-y-deuda-tecnica.md#1110-revisión-entre-pares-y-medición-de-e1-evidencia-s14).
