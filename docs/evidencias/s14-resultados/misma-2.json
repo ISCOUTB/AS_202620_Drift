@@ -1,0 +1,22 @@
+{
+  "modo": "misma",
+  "base_url": "https://drift.iscoutb.dev/api",
+  "fin_utc": "2026-11-09T00:43:46.111Z",
+  "solicitudes": 50,
+  "estado_200": 50,
+  "estado_429": 0,
+  "estado_otro": 0,
+  "respuestas_vacias": 0,
+  "sin_steam": 0,
+  "sin_cheapshark": 0,
+  "sin_playstation": 0,
+  "min_ms": 1824.8034,
+  "p50_ms": 1954.9942,
+  "p90_ms": 2025.09786,
+  "p95_ms": 2057.91158,
+  "max_ms": 2076.2503,
+  "red_health_p50_ms": 99.8013,
+  "duracion_corrida_ms": 3264.4453,
+  "umbral_p95_ms": 3000,
+  "cumple_umbral": true
+}

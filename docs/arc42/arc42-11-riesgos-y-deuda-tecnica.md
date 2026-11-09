@@ -144,7 +144,9 @@ Resultado del [modelo de amenazas](../seguridad/modelo-amenazas.md). Una amenaza
 
 ### Lo que señaló la revisión entre pares
 
-Se registra **todo** lo que señalaron los pares, se vaya a corregir o no. Estados:
+**Estado: pendiente de incorporar.** Los señalamientos de los pares todavía no están en el repositorio: no aparecen en sus issues ni en sus pull requests. No se registra ninguno hasta tener el texto real, para no atribuir a los pares algo que no dijeron.
+
+Cuando el equipo los aporte, se anotarán **todos** en esta tabla, se vayan a corregir o no, con uno de estos estados:
 
 - **Corregido:** el cambio está en el repositorio y la columna de evidencia lo enlaza.
 - **Asumido:** el equipo conoce el problema y decide no corregirlo por ahora. Se escribe el motivo y la condición que obligaría a revisarlo.
@@ -152,17 +154,25 @@ Se registra **todo** lo que señalaron los pares, se vaya a corregir o no. Estad
 
 | ID | Señalamiento de los pares | Dónde aplica | Estado | Evidencia o motivo |
 |---|---|---|---|---|
-| P-01 | _(completar con el texto del señalamiento)_ | | | |
-| P-02 | _(completar)_ | | | |
-| P-03 | _(completar)_ | | | |
+| — | Ninguno incorporado todavía | — | — | Falta el texto de los señalamientos recibidos |
 
-### Riesgos y límites que dejó la medición de E1
+### Riesgos y deuda que dejó la medición de E1
 
-Medición: [S14 — E1](../evidencias/s14-medicion-e1.md). Resultado: p95 mediano de 0,63 s frente a ≤ 3 s, en 5 corridas, local y con fuentes simuladas.
+- **Medición vigente:** [en el despliegue](../evidencias/s14-e1-medicion.md). Con búsquedas distintas, p95 mediano de 9,05 s frente a ≤ 3 s: no cumple.
+- **Complemento:** [en local, con fuentes simuladas](../evidencias/s14-medicion-e1.md). P95 mediano de 0,63 s: no describe el sistema desplegado.
 
-| ID | Riesgo o límite | Estado | Motivo o acción |
-|---|---|---|---|
-| S14-R1 | E1 no está medido sobre el entorno desplegado. La medición S14 es local y la línea base de septiembre no declaraba su entorno | Pendiente | Repetir `scripts/k6_s14_e1.js` con la `BASE_URL` del despliegue. Desde el entorno de medición no había acceso de red |
-| S14-R2 | La medición excluye el costo TLS de crear un cliente `httpx` por llamada (§11.7) | Asumido | Se excluye a propósito para no tocar servicios reales. Se revisa al implementar el cliente HTTP compartido |
-| S14-R3 | Con el límite de tasa por defecto (60 por minuto por IP, ADR-0012), 50 usuarios detrás de una misma IP (por ejemplo, una red universitaria) reciben 429 antes de que la búsqueda sea lenta | Asumido | Es el comportamiento elegido en ADR-0012 contra el abuso. Se revisa si aparecen 429 legítimos en los registros |
-| S14-R4 | E1 solo se cumple en operación normal. Con una fuente lenta, el p95 sube a 3,61 s (E6) o a 4 s (plazo total de S12) | Asumido | E1 declara «operación normal». La degradación la cubren E5 y E6 con su propio umbral de 5 s |
+| ID | Riesgo o deuda | Estado | Evidencia | Siguiente paso o motivo |
+|---|---|---|---|---|
+| S14-R1 | Con 50 usuarios y búsquedas distintas, E1 no cumple: p95 de 9,05 s frente a 3 s, en 3 de 3 corridas. | Pendiente | [Medición S14](../evidencias/s14-e1-medicion.md) | Revisar los registros y `/metrics` del despliegue para confirmar la causa. Luego evaluar el cliente HTTP compartido (§11.7) y volver a medir. |
+| S14-R2 | Bajo esa carga, cerca del 30 % de las búsquedas responde sin CheapShark. El aviso funciona, pero el usuario ve menos precios. | Pendiente | Mismas corridas: 14 a 15 de 50 | Confirmar si vence el plazo de 3 s por la carga o por la fuente. |
+| S14-R3 | Con los mismos títulos, de 1 a 6 de 50 respuestas llegan vacías y sin aviso. Puede ser un fallo oculto de una fuente. | Pendiente | Mismas corridas. Relacionado con S11-F13 | Cruzar con `source_unavailable` y `external_request_failed`. Corregirlo requiere cambiar el contrato. |
+| S14-R4 | La corrida `misma-3` tuvo una solicitud fallida y un p95 de 5,86 s, sin causa identificada. | Pendiente | `s14-resultados/misma-3.json` | Revisar si se repite al volver a medir. |
+| S14-R5 | La medición local excluye el costo TLS de crear un cliente `httpx` por llamada (§11.7) y el límite de 0,5 CPU del despliegue. | Asumido | [Medición local](../evidencias/s14-medicion-e1.md) | Se excluye el TLS a propósito para no tocar servicios reales. Se revisa al implementar el cliente HTTP compartido. |
+| S14-R6 | Con el límite por defecto (60 por minuto por IP, ADR-0012), los usuarios detrás de una misma IP reciben 429 si entre todos superan 60 búsquedas por minuto. Con 50 búsquedas por corrida no se superó: hubo 0 respuestas 429. | Asumido | [Medición S14](../evidencias/s14-e1-medicion.md) | Es el comportamiento elegido en ADR-0012 contra el abuso. Se revisa si aparecen 429 legítimos en los registros. |
+| S14-R7 | Con una fuente lenta, E1 tampoco se cumple: el p95 fue de 3,61 s en E6 (local, con fuentes simuladas) y de 4,01 s en S12 con Steam sin responder. | Asumido | [E6](../evidencias/e6-degradacion-bajo-carga.md) y [S12](../evidencias/s12-steam-degradado.md) | E1 declara «operación normal». La degradación la cubren E5 y E6 con su propio umbral de 5 s. |
+| S14-D1 | El plazo total de Steam era de 5 s en el código y de 4 s en `deploy/.env.example`, §8.13 a §8.15 y la evidencia S12. | Corregido | [ADR-0013](../adr/0013-plazo-total-en-la-busqueda-de-steam.md) y `steam_game_repository.py` | El código pasó a 4 s. Falta aceptar el ADR, desplegar y medir: la medición en el despliegue se hizo con el código anterior. |
+| S14-D2 | No se puede saber qué commit está desplegado: la API no lo expone. | Pendiente | Entorno de la [medición S14](../evidencias/s14-e1-medicion.md) | Evaluar exponer la versión en `/health`. |
+
+El umbral de E1 no se cambió para hacerlo cumplir.
+
+**Cambio de numeración:** los riesgos S14-R2, S14-R3 y S14-R4 del PR #60 son ahora S14-R5, S14-R6 y S14-R7. Su S14-R1 («E1 no está medido sobre el entorno desplegado») quedó cerrado con la medición vigente.

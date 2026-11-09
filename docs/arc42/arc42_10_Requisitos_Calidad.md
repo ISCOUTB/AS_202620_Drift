@@ -35,4 +35,6 @@ Los siguientes escenarios detallan, en formato fuente–estímulo–artefacto–
 
 ### Medición de E1 (noviembre de 2026)
 
-El umbral de E1 (≤ 3 s en el p95, hasta 50 usuarios concurrentes, operación normal) no cambió. La medición de S14 se juzgó contra ese valor: p95 mediano de 0,63 s en 5 corridas, en local y con fuentes simuladas. **Cumple bajo condiciones.** Ver [evidencia S14](../evidencias/s14-medicion-e1.md) y los límites en [§11.10](arc42-11-riesgos-y-deuda-tecnica.md#1110-revisión-entre-pares-y-medición-de-e1-evidencia-s14).
+El umbral de E1 (≤ 3 s en el p95, hasta 50 usuarios concurrentes, operación normal) no cambió. La medición de S14 se juzgó contra ese valor. **En el despliegue no cumple:** con búsquedas distintas, el p95 mediano fue de 9,05 s en 3 corridas. Con la misma búsqueda fue de 2,40 s y cumplió en 2 de 3. Ver [evidencia S14](../evidencias/s14-e1-medicion.md) y [§11.10](arc42-11-riesgos-y-deuda-tecnica.md#1110-revisión-entre-pares-y-medición-de-e1-evidencia-s14).
+
+Una [medición local con fuentes simuladas](../evidencias/s14-medicion-e1.md) dio un p95 mediano de 0,63 s en 5 corridas. Muestra el costo propio de la búsqueda, sin fuentes reales ni TLS por cliente, y no describe el sistema desplegado.

@@ -1061,3 +1061,35 @@ En la primera ronda, Claude añadió a `dependabot.yml` una regla para ignorar `
 
 Se descartó integrar los PR de Dependabot tal como llegaban: no actualizaban `requirements.lock`, que es lo que instala la imagen Docker, y fallaban en SonarQube porque Dependabot no recibe `SONAR_TOKEN`.
 
+---
+
+### Registro 47 — Medición del escenario E1 en el despliegue (S14)
+
+**Fecha:** 2026-11-08
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Revisar lo que pide la ficha de la semana 14, lo que ya existe y lo que falta, y hacerlo en la copia local sin modificar los ADR existentes.
+>
+> Revisar la medición que entró con el PR #60, unirla con la del despliegue, corregir lo encontrado y aplicar el plazo de 4 s.
+
+**Uso:**
+
+Se utilizó Claude para contrastar la ficha con el repositorio, escribir `scripts/k6_s14_e1_busqueda.js` y `scripts/s14_e1_corridas.py`, ejecutar la medición contra `https://drift.iscoutb.dev` y redactar la evidencia, arc42 §11.10, ADR-0013 y las filas E1, E2 y E3 de `aspectos.md`. Al preparar el ADR encontró que el plazo total de Steam era de 5 s en el código y de 4 s en los documentos. Después revisó la medición local del PR #60, la unió con la del despliegue en arc42 §10 y §11.10 y en `aspectos.md`, corrigió afirmaciones de esa evidencia y aplicó los 4 s que eligió el equipo.
+
+**Validación:**
+
+Las cifras de `s14-e1-medicion.md` salen de los JSON de `docs/evidencias/s14-resultados/`, generados por k6 en 6 corridas. El valor del plazo se comprobó en el código y en su historial de git. No se confirmó el commit desplegado ni la causa de la demora: esta última queda como hipótesis. La medición local del PR #60 se repitió 3 veces en otro equipo, con p95 de 0,70 a 0,72 s, y sus cifras se contrastaron con sus JSON. La suite del backend se volvió a correr después de cambiar el plazo.
+
+**Alternativa descartada:**
+
+- Se rechazó reutilizar la medición E6: es local, con fuentes simuladas y anterior a los cambios de S12 y S13.
+- Se rechazó medir solo con la misma consulta, porque la caché compartida oculta el peor caso. Con esa condición el resultado habría parecido favorable.
+- Se rechazó quitar la corrida `misma-3` por anómala, porque mejoraría el resultado sin una causa comprobada.
+- Se redujeron las repeticiones de 5 a 3 por modo y se dejaron 5 minutos entre corridas, para no arriesgar un bloqueo de Steam al servidor compartido. El costo es tener menos muestras.
+- Se rechazó cambiar el plazo de Steam sin que el equipo eligiera el valor. Claude recomendó 4 s y el equipo lo confirmó. Se descartó mantener 5 s porque nunca se midió.
+- Se rechazó dejar «cumple bajo condiciones» como resultado vigente de E1, porque la medición local no describe el despliegue. También se rechazó borrarla, porque sus cifras se reproducen y orientan el diagnóstico.
+- No se escribió el registro de IA de la medición local en nombre de otra persona: solo quien la hizo sabe qué aceptó y qué rechazó.
+- No se redactaron señalamientos de la revisión entre pares: no están en los issues ni en los pull requests del repositorio, y la IA no debe inventarlos. §11.10 los declara pendientes en lugar de dejar una plantilla sin llenar.
+
