@@ -52,6 +52,7 @@ Decisiones de arquitectura vigentes:
 | [ADR-0010](docs/adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) | Costo de reversión de las decisiones de datos; mantener el modelo público del juego como decisión de alto costo de cambio |
 | [ADR-0011](docs/adr/0011-autenticacion-operaciones-administrativas.md) | Token de servicio para la sincronización del catálogo y `/metrics`; registro de las operaciones administrativas |
 | [ADR-0012](docs/adr/0012-limitacion-de-tasa-en-la-api.md) | Límite de tasa por cliente en búsqueda y compatibilidad; CORS acotado |
+| [ADR-0013](docs/adr/0013-plazo-total-en-la-busqueda-de-steam.md) | Plazo total por búsqueda en Steam; correcciones a ADR-0009 y ADR-0010 (propuesto) |
 
 ## Organización del proyecto
 

@@ -16,7 +16,7 @@ from app.infrastructure.external.single_flight_cache import SingleFlightCache
 from app.infrastructure.game_copy import copy_games
 
 SOURCE_NAME = "Steam"
-DEFAULT_TOTAL_DEADLINE_SECONDS = 5.0
+DEFAULT_TOTAL_DEADLINE_SECONDS = 4.0
 
 class SteamGameRepository(GameRepository):
     def __init__(
