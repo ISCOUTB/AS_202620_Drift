@@ -254,12 +254,11 @@
   background: var(--glass-strong);
   color: var(--text);
   text-decoration: none;
-  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  transition: border-color .25s ease, box-shadow .25s ease;
 }
 
 .posterTile:hover,
 .posterTile:focus-visible {
-  transform: translateY(-4px);
   border-color: var(--accent);
   box-shadow: 0 16px 34px rgba(0, 0, 0, .4);
 }
@@ -317,12 +316,11 @@
   color: var(--text);
   text-decoration: none;
   border: 1px solid var(--line);
-  transition: border-color .2s ease, transform .2s ease;
+  transition: border-color .2s ease;
 }
 
 .favoriteCard:hover {
   border-color: var(--accent);
-  transform: translateY(-3px);
 }
 
 .favoriteArt {
@@ -381,8 +379,8 @@
 .discount {
   padding: 3px 6px;
   border-radius: 6px;
-  background: #4c6b22;
-  color: #beee11;
+  background: #33491a;
+  color: #c8f53a;
   font: 800 .78rem var(--display);
 }
 
@@ -733,12 +731,11 @@
   color: var(--accent-ink);
   font: 700 .84rem var(--display);
   text-decoration: none;
-  transition: background .2s ease, transform .2s ease;
+  transition: background .2s ease;
 }
 
 .compareButton:hover {
   background: #dfb4ff;
-  transform: translateY(-1px);
 }
 
 .notice {
@@ -874,6 +871,29 @@
 
   .gameRowStore {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .posterTile,
+  .favoriteCard,
+  .compareButton {
+    transition-property: transform, border-color, box-shadow, background;
+    transition-duration: .22s;
+    transition-timing-function: ease;
+  }
+
+  .posterTile:hover,
+  .posterTile:focus-visible {
+    transform: translateY(-4px);
+  }
+
+  .favoriteCard:hover {
+    transform: translateY(-3px);
+  }
+
+  .compareButton:hover {
+    transform: translateY(-1px);
   }
 }
 

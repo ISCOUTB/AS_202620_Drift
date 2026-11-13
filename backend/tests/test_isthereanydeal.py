@@ -219,8 +219,10 @@ def test_no_results_needs_a_single_call(itad_http):
 def test_an_unexpected_answer_is_a_failure_not_an_empty_result(itad_http, payload):
     itad_http["/games/search/v1"] = _response(payload)
 
+    games = ItadGameRepository(client(), FixedRate())
+
     with pytest.raises(ExternalSourceError) as error:
-        ItadGameRepository(client(), FixedRate()).search("elden ring")
+        games.search("elden ring")
 
     assert error.value.reason == "invalid_response"
 
@@ -542,8 +544,10 @@ def test_history_is_cached_and_survives_a_later_failure(itad_http):
 def test_history_failure_without_a_previous_answer_is_reported(itad_http):
     itad_http["/games/history/v2"] = httpx.ConnectError("fuente caída")
 
+    histories = history_repository()
+
     with pytest.raises(ExternalSourceError):
-        history_repository().get(f"itad-{ELDEN}")
+        histories.get(f"itad-{ELDEN}")
 
 
 def test_use_case_explains_why_there_is_no_history(itad_http):

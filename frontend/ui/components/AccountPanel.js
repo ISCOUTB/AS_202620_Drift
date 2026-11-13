@@ -24,7 +24,7 @@ export function AccountButton({ account, loginUrl, isOpen, onToggle }) {
         <span className={styles.googleMark} aria-hidden="true">
           G
         </span>
-        Iniciar sesión con Google
+        <span>Iniciar sesión con Google</span>
       </a>
     );
   }
@@ -302,7 +302,9 @@ export default function AccountPanel({
 
         {confirmingDelete ? (
           <span className={styles.confirm}>
-            Se borran tu cuenta, tus dispositivos y tus favoritos. No se puede deshacer.
+            <span>
+              Se borran tu cuenta, tus dispositivos y tus favoritos. No se puede deshacer.
+            </span>
             <button
               type="button"
               className={styles.dangerButton}

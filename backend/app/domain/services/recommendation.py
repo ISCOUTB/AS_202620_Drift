@@ -128,20 +128,47 @@ def recommend(
     devices = list(devices or ())
 
     if not devices:
-        ordered = _by_price(by_platform.values())
+        return _without_devices(by_platform)
 
-        if not ordered:
-            return Recommendation(uses_devices=False)
+    options, excluded = _device_options(devices, by_platform)
+    ordered = _by_price(options)
 
-        return Recommendation(
-            uses_devices=False,
-            best=ordered[0],
-            reason=ONLY_OPTION if len(ordered) == 1 else CHEAPEST,
-            price_difference=(
-                ordered[1].price - ordered[0].price if len(ordered) > 1 else 0
-            ),
-            alternatives=ordered[1:],
-        )
+    if not ordered:
+        return Recommendation(uses_devices=True, excluded=excluded)
+
+    best, reason, difference = _choose(ordered)
+
+    return Recommendation(
+        uses_devices=True,
+        best=best,
+        reason=reason,
+        price_difference=difference,
+        alternatives=[option for option in ordered if option is not best],
+        excluded=excluded,
+    )
+
+
+def _without_devices(by_platform: Dict[str, Option]) -> Recommendation:
+    """Sin dispositivos: la tienda más barata de cada plataforma, por precio."""
+
+    ordered = _by_price(by_platform.values())
+
+    if not ordered:
+        return Recommendation(uses_devices=False)
+
+    return Recommendation(
+        uses_devices=False,
+        best=ordered[0],
+        reason=ONLY_OPTION if len(ordered) == 1 else CHEAPEST,
+        price_difference=(
+            ordered[1].price - ordered[0].price if len(ordered) > 1 else 0
+        ),
+        alternatives=ordered[1:],
+    )
+
+
+def _device_options(devices: List[DeviceVerdict], by_platform: Dict[str, Option]):
+    """Una opción por dispositivo que puede jugar; los demás, con su motivo."""
 
     options: List[Option] = []
     excluded: List[Excluded] = []
@@ -149,12 +176,10 @@ def recommend(
 
     for device in devices:
         # Dos consolas iguales son la misma opción de compra.
-        if device.kind != "pc":
-            if device.kind in consoles_seen:
-                continue
+        if device.kind != "pc" and device.kind in consoles_seen:
+            continue
 
-            consoles_seen.add(device.kind)
-
+        consoles_seen.add(device.kind)
         offer = by_platform.get(device.platform)
 
         if offer is None:
@@ -173,15 +198,13 @@ def recommend(
                 )
             )
 
-    ordered = _by_price(options)
+    return options, excluded
 
-    if not ordered:
-        return Recommendation(uses_devices=True, excluded=excluded)
+
+def _choose(ordered: List[Option]):
+    """(mejor opción, motivo, diferencia de precio) entre opciones ya ordenadas."""
 
     cheapest = ordered[0]
-    best = cheapest
-    reason = ONLY_OPTION if len(ordered) == 1 else CHEAPEST
-
     better = [
         option
         for option in ordered[1:]
@@ -190,23 +213,9 @@ def recommend(
     ]
 
     if better:
-        best = better[0]
-        reason = BETTER_EXPERIENCE
+        return better[0], BETTER_EXPERIENCE, better[0].price - cheapest.price
 
-    alternatives = [option for option in ordered if option is not best]
+    if len(ordered) == 1:
+        return cheapest, ONLY_OPTION, 0
 
-    if reason == BETTER_EXPERIENCE:
-        difference = best.price - cheapest.price
-    elif alternatives:
-        difference = alternatives[0].price - best.price
-    else:
-        difference = 0
-
-    return Recommendation(
-        uses_devices=True,
-        best=best,
-        reason=reason,
-        price_difference=difference,
-        alternatives=alternatives,
-        excluded=excluded,
-    )
+    return cheapest, CHEAPEST, ordered[1].price - cheapest.price

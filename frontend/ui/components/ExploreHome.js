@@ -193,7 +193,7 @@ function FavoritesShelf({ favorites }) {
 function Shelf({ title, subtitle, query }) {
   const items = useSection(query);
 
-  if (items && items.length === 0) {
+  if (items?.length === 0) {
     return null;
   }
 
@@ -225,10 +225,10 @@ export default function ExploreHome() {
 
           {spotlight.length > 0 && <Spotlight games={spotlight} />}
 
-          {topSellers !== null && topSellers.length === 0 && (
-            <p className={styles.notice} role="status">
+          {topSellers?.length === 0 && (
+            <output className={styles.notice}>
               No pudimos cargar el catálogo de Steam en este momento. Inténtalo de nuevo en un rato.
-            </p>
+            </output>
           )}
 
           {account.authenticated && favorites.length > 0 && <FavoritesShelf favorites={favorites} />}

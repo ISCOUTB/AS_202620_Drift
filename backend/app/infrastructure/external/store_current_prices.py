@@ -199,36 +199,38 @@ class StoreCurrentPriceSource(CurrentPriceSource):
                     offers[game_id][store] = price
 
     def _itad_ids(self, game_ids, budget) -> Dict[str, str]:
-        found: Dict[str, str] = {}
-        keys: Dict[str, str] = {}
+        """Identificador de IsThereAnyDeal de cada juego que se puede consultar."""
 
-        for game_id in game_ids:
-            if game_id.startswith(ID_PREFIX):
-                itad_id = game_id[len(ID_PREFIX):]
-
-                if _ITAD_ID.match(itad_id):
-                    found[game_id] = itad_id
-            elif game_id.isdecimal():
-                keys[f"app/{game_id}"] = game_id
+        found = _known_itad_ids(game_ids)
+        keys = {
+            f"app/{game_id}": game_id
+            for game_id in game_ids
+            if not game_id.startswith(ID_PREFIX) and game_id.isdecimal()
+        }
 
         if keys:
-            answer = self._itad.post(
-                f"/lookup/id/shop/{STEAM_SHOP_ID}/v1",
-                list(keys),
-                None,
-                budget,
-            )
-
-            if not isinstance(answer, dict):
-                raise ExternalSourceError(ITAD_SOURCE, "invalid_response")
-
-            for key, game_id in keys.items():
-                itad_id = answer.get(key)
-
-                if isinstance(itad_id, str) and _ITAD_ID.match(itad_id):
-                    found[game_id] = itad_id
+            found.update(self._steam_to_itad(keys, budget))
 
         return found
+
+    def _steam_to_itad(self, keys: Dict[str, str], budget) -> Dict[str, str]:
+        """Pregunta a IsThereAnyDeal qué juego suyo es cada juego de Steam."""
+
+        answer = self._itad.post(
+            f"/lookup/id/shop/{STEAM_SHOP_ID}/v1",
+            list(keys),
+            None,
+            budget,
+        )
+
+        if not isinstance(answer, dict):
+            raise ExternalSourceError(ITAD_SOURCE, "invalid_response")
+
+        return {
+            game_id: answer[key]
+            for key, game_id in keys.items()
+            if isinstance(answer.get(key), str) and _ITAD_ID.match(answer[key])
+        }
 
     def _forget_oldest(self) -> None:
         if len(self._cache) <= MAX_REMEMBERED:
@@ -238,6 +240,16 @@ class StoreCurrentPriceSource(CurrentPriceSource):
             self._cache.items(), key=lambda item: item[1][0]
         )[: len(self._cache) - MAX_REMEMBERED]:
             del self._cache[game_id]
+
+
+def _known_itad_ids(game_ids) -> Dict[str, str]:
+    """Los juegos que ya traen su identificador de IsThereAnyDeal."""
+
+    return {
+        game_id: game_id[len(ID_PREFIX):]
+        for game_id in game_ids
+        if game_id.startswith(ID_PREFIX) and _ITAD_ID.match(game_id[len(ID_PREFIX):])
+    }
 
 
 def _can_check(game_id: str) -> bool:

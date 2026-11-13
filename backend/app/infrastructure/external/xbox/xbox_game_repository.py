@@ -24,7 +24,7 @@ SOURCE_NAME = "Xbox"
 # contrato publicado ni soporte oficial: pueden cambiar sin aviso, y por
 # eso toda respuesta se valida antes de usarla. Un reintento y un plazo
 # total igual al de las demás fuentes secundarias.
-DEFAULT_POLICY = dict(timeout_seconds=3.0, max_attempts=2)
+DEFAULT_POLICY = {"timeout_seconds": 3.0, "max_attempts": 2}
 DEFAULT_TOTAL_DEADLINE_SECONDS = 3.0
 
 # Identificador público con el que la tienda web llama a su buscador.

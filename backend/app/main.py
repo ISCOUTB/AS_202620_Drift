@@ -221,24 +221,26 @@ allowed_origins = [
 rate_limiter = SlidingWindowRateLimiter(limit=rate_limit_from_env())
 
 
+# Rutas que salen a fuentes externas y por eso tienen límite de tasa.
+LIMITED_GET_PATHS = (
+    "/games/search",
+    "/games/explore",
+    "/price-history",
+    # Cada inicio de sesión hace una llamada a Google.
+    "/auth/google/callback",
+    # Revisar los favoritos consulta Steam e IsThereAnyDeal.
+    "/favorites/alerts",
+)
+LIMITED_POST_PATHS = ("/compatibility", "/recommendation")
+
+
 def _calls_external_sources(request: Request) -> bool:
     path = request.url.path.rstrip("/")
 
-    return (
-        request.method == "GET"
-        and (
-            path.endswith("/games/search")
-            or path.endswith("/games/explore")
-            or path.endswith("/price-history")
-            # Cada inicio de sesión hace una llamada a Google.
-            or path.endswith("/auth/google/callback")
-            # Revisar los favoritos consulta Steam e IsThereAnyDeal.
-            or path.endswith("/favorites/alerts")
-        )
-    ) or (
-        request.method == "POST"
-        and (path.endswith("/compatibility") or path.endswith("/recommendation"))
-    )
+    if request.method == "GET":
+        return path.endswith(LIMITED_GET_PATHS)
+
+    return request.method == "POST" and path.endswith(LIMITED_POST_PATHS)
 
 
 @app.middleware("http")
@@ -554,6 +556,7 @@ def metrics():
 @app.post(
     "/hardware/benchmarks/sync",
     dependencies=[Depends(require_admin_token)],
+    responses={503: {"description": "La copia está vacía o la base de datos no respondió."}},
 )
 def sync_hardware_benchmarks_endpoint(request: Request):
     """Vuelve a cargar los puntajes desde su copia privada (ADR-0018)."""
@@ -650,7 +653,10 @@ def _explore_game_json(game):
     }
 
 
-@app.get("/games/explore")
+@app.get(
+    "/games/explore",
+    responses={503: {"description": "Steam no respondió."}},
+)
 def explore_games_endpoint(
     genre: Optional[
         Literal[
@@ -814,6 +820,7 @@ def _sync_failed(reason: str, http_status):
 @app.post(
     "/games/sync/playstation",
     dependencies=[Depends(require_admin_token)],
+    responses={503: {"description": "No se pudo actualizar el catálogo; se conserva el local."}},
 )
 def sync_playstation_catalog_endpoint(request: Request):
 
@@ -873,7 +880,10 @@ def _price_point(point):
     }
 
 
-@app.get("/games/{game_id}/price-history")
+@app.get(
+    "/games/{game_id}/price-history",
+    responses={503: {"description": "IsThereAnyDeal no respondió y no hay copia anterior."}},
+)
 def price_history_endpoint(
     game_id: str = Path(..., pattern=r"^[A-Za-z0-9_-]{1,80}$"),
 ):
@@ -976,7 +986,10 @@ def _option_json(option):
     }
 
 
-@app.post("/games/{game_id}/recommendation")
+@app.post(
+    "/games/{game_id}/recommendation",
+    responses={422: {"description": "Un dispositivo no es válido."}},
+)
 def recommend_purchase_endpoint(
     request: RecommendationRequest,
     game_id: str = Path(..., pattern=r"^[A-Za-z0-9_-]{1,80}$"),

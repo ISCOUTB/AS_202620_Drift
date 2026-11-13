@@ -31,11 +31,14 @@ function formatAxisPrice(price) {
 /** Primer día de cada mes dentro del periodo, sin amontonar etiquetas. */
 function monthTicks(start, end) {
   const ticks = [];
-  const cursor = new Date(start.getFullYear(), start.getMonth() + 1, 1);
 
-  while (cursor <= end) {
-    ticks.push(new Date(cursor));
-    cursor.setMonth(cursor.getMonth() + 1);
+  // Cada vuelta crea la fecha del mes siguiente: el bucle siempre avanza.
+  for (
+    let tick = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+    tick <= end;
+    tick = new Date(tick.getFullYear(), tick.getMonth() + 1, 1)
+  ) {
+    ticks.push(tick);
   }
 
   const step = Math.ceil(ticks.length / 6);

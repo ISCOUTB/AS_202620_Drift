@@ -29,7 +29,7 @@ QUOTA_WINDOW_SECONDS = 300.0
 # Si aun así la fuente responde 429, no se la vuelve a llamar por un rato.
 DEFAULT_PAUSE_SECONDS = 60.0
 
-DEFAULT_POLICY = dict(timeout_seconds=3.0, max_attempts=2)
+DEFAULT_POLICY = {"timeout_seconds": 3.0, "max_attempts": 2}
 DEFAULT_TOTAL_DEADLINE_SECONDS = 3.0
 
 

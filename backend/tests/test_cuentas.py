@@ -378,28 +378,36 @@ def test_google_identity_is_read_from_a_valid_token(google):
 def test_google_token_that_does_not_match_is_rejected(google, changes):
     google["response"] = _token_response(id_token(**changes))
 
+    identity = provider()
+
     with pytest.raises(IdentityRejected):
-        provider().identify("codigo", "nonce-esperado")
+        identity.identify("codigo", "nonce-esperado")
 
 
 @pytest.mark.parametrize("token", ["no-es-un-token", "a.b.c", None])
 def test_google_malformed_or_rejected_answer_is_rejected(google, token):
     google["response"] = _token_response(token, 200 if token else 400)
 
+    identity = provider()
+
     with pytest.raises(IdentityRejected):
-        provider().identify("codigo", "nonce-esperado")
+        identity.identify("codigo", "nonce-esperado")
 
 
 def test_google_outage_is_reported_as_unavailable(google):
     google["response"] = httpx.ConnectError("sin conexión")
 
+    identity = provider()
+
     with pytest.raises(IdentityProviderUnavailable):
-        provider().identify("codigo", "nonce-esperado")
+        identity.identify("codigo", "nonce-esperado")
 
     google["response"] = _token_response(None, 503)
 
+    identity = provider()
+
     with pytest.raises(IdentityProviderUnavailable):
-        provider().identify("codigo", "nonce-esperado")
+        identity.identify("codigo", "nonce-esperado")
 
 
 # --- La API --------------------------------------------------------------------

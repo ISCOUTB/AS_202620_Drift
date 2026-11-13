@@ -69,10 +69,18 @@ export function tagName(slug) {
   return TAGS[slug]?.name ?? slug;
 }
 
+/** Un parámetro de la dirección que puede venir una vez, varias o ninguna. */
+function asList(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  return value ? [value] : [];
+}
+
 /** Filtros leídos de la dirección; lo desconocido se descarta. */
 export function filtersFromParams(params = {}) {
-  const raw = params.etiqueta;
-  const tags = (Array.isArray(raw) ? raw : raw ? [raw] : [])
+  const tags = asList(params.etiqueta)
     .filter((slug) => TAGS[slug])
     .slice(0, MAX_SELECTED_TAGS);
 

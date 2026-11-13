@@ -287,8 +287,10 @@ def test_an_unexpected_search_answer_is_a_failure_not_an_empty_result(
 ):
     xbox_http["autosuggest"] = _response(payload)
 
+    xbox = repository()
+
     with pytest.raises(ExternalSourceError) as error:
-        repository().search("elden ring")
+        xbox.search("elden ring")
 
     assert error.value.reason == "invalid_response"
 
@@ -297,8 +299,10 @@ def test_an_unexpected_catalog_answer_is_a_failure(xbox_http):
     xbox_http["autosuggest"] = _response(suggestions(suggestion("9AAA", "Juego")))
     xbox_http["products"] = _response({"Products": None})
 
+    xbox = repository()
+
     with pytest.raises(ExternalSourceError) as error:
-        repository().search("juego")
+        xbox.search("juego")
 
     assert error.value.reason == "invalid_response"
 

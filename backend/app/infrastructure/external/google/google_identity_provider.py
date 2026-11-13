@@ -143,7 +143,7 @@ def _claims(id_token) -> dict:
     try:
         decoded = base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
         claims = json.loads(decoded)
-    except (ValueError, UnicodeDecodeError) as error:
+    except ValueError as error:  # incluye UnicodeDecodeError
         raise IdentityRejected("invalid_token") from error
 
     if not isinstance(claims, dict):

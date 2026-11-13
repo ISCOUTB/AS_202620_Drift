@@ -479,6 +479,214 @@ function ResultCard({ game, isSelected, onSelect, compatibility }) {
 }
 
 
+/** Cabecera: menú lateral, logo, buscador y cuenta. */
+function TopBar({
+  sidebarHidden,
+  onToggleSidebar,
+  onHome,
+  query,
+  onQueryChange,
+  onSubmit,
+  loading,
+  account,
+  accountOpen,
+  onToggleAccount,
+}) {
+  return (
+    <header className={styles.topBar}>
+      <div className={styles.brand}>
+        <button
+          type="button"
+          className={styles.menuButton}
+          aria-label={sidebarHidden ? "Mostrar panel lateral" : "Ocultar panel lateral"}
+          aria-expanded={!sidebarHidden}
+          onClick={onToggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <a
+          className={styles.logo}
+          href="#inicio"
+          aria-label="DRIFT, ir al inicio"
+          onClick={onHome}
+        >
+          <span>DR</span>
+          <span>IFT</span>
+        </a>
+      </div>
+
+      <form className={styles.searchForm} onSubmit={onSubmit}>
+        <span className={styles.searchIcon} aria-hidden="true" />
+
+        <input
+          id="game-search"
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Busca un videojuego"
+          aria-label="Buscar videojuego"
+        />
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Buscando…" : "Buscar"}
+        </button>
+      </form>
+
+      {account.loginAvailable ? (
+        <AccountButton
+          account={account}
+          loginUrl={fastApiAccountRepository.loginUrl()}
+          isOpen={accountOpen}
+          onToggle={onToggleAccount}
+        />
+      ) : (
+        <div className={styles.profileChip}>
+          <span className={styles.profileMoon} aria-hidden="true" />
+
+          <span className={styles.profileName}>Jugador</span>
+
+          <span className={styles.profileAvatar}>JD</span>
+        </div>
+      )}
+    </header>
+  );
+}
+
+
+/** Panel lateral: juegos listos para comparar y tiendas conectadas. */
+function QuickSidebar({ games, onPick }) {
+  return (
+    <aside className={styles.sidebar}>
+      <section className={styles.panel}>
+        <h2 className={styles.panelTitle}>Listos para comparar</h2>
+
+        <ul className={styles.quickList}>
+          {games.map((game) => (
+            <li key={game.id}>
+              <button type="button" onClick={() => onPick(game.name)}>
+                <span
+                  className={styles.quickThumb}
+                  style={{ backgroundImage: getPosterBackground(game) }}
+                />
+
+                <span className={styles.quickText}>
+                  <strong>{game.name}</strong>
+
+                  <small>{game.genre}</small>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className={styles.panel}>
+        <h2 className={styles.panelTitle}>Tiendas conectadas</h2>
+
+        <ul className={styles.storeList}>
+          {connectedStores.map((store) => (
+            <li key={store.name}>
+              <span className={styles.storeDot} />
+
+              <span className={styles.quickText}>
+                <strong>{store.name}</strong>
+
+                <small>{store.detail}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </aside>
+  );
+}
+
+
+/** Navegación principal del inicio; «Explorar» abre su propia página. */
+function MainNav({
+  activeTab,
+  resultsCount,
+  showStores,
+  showFavorites,
+  authenticated,
+  favoritesCount,
+  alertCount,
+  onHome,
+  onResults,
+  onStores,
+  onFavorites,
+}) {
+  const activeIf = (condition) => (condition ? styles.navActive : "");
+  const count = (value) => (value ? `(${value})` : "");
+
+  return (
+    <nav className={styles.nav} aria-label="Navegación principal">
+      <button type="button" onClick={onHome} className={activeIf(activeTab === "Sugeridos")}>
+        Inicio
+      </button>
+
+      <button type="button" onClick={onResults} className={activeIf(activeTab === "Resultados")}>
+        Resultados {count(resultsCount)}
+      </button>
+
+      <Link href="/explorar">Explorar</Link>
+
+      <button type="button" onClick={onStores} className={activeIf(showStores)}>
+        Tiendas
+      </button>
+
+      {authenticated && (
+        <button type="button" onClick={onFavorites} className={activeIf(showFavorites)}>
+          Favoritos {count(favoritesCount)}
+          {alertCount > 0 && (
+            <span
+              className={styles.alertDot}
+              aria-label={`${alertCount} con alerta de precio`}
+            >
+              {alertCount}
+            </span>
+          )}
+        </button>
+      )}
+    </nav>
+  );
+}
+
+
+/** Aviso de favoritos que llegaron a su precio o bajaron. */
+function AlertBanner({ visible, count, onOpen, onClose }) {
+  if (!visible || count <= 0) {
+    return null;
+  }
+
+  return (
+    <output className={styles.alertBanner}>
+      <span>
+        🔔{" "}
+        {count === 1
+          ? "Uno de tus favoritos llegó a tu precio o bajó."
+          : `${count} de tus favoritos llegaron a tu precio o bajaron.`}
+      </span>
+
+      <button type="button" onClick={onOpen}>
+        Ver favoritos
+      </button>
+
+      <button
+        type="button"
+        className={styles.alertBannerClose}
+        aria-label="Cerrar el aviso"
+        onClick={onClose}
+      >
+        ×
+      </button>
+    </output>
+  );
+}
+
+
 export default function DriftHome() {
   const [query, setQuery] = useState("");
 
@@ -579,7 +787,7 @@ export default function DriftHome() {
   const selectedPanelRef = useRef(null);
   const catalogRef = useRef(null);
 
-  // Más vendidos del momento por categoría («Todo» incluida); llegan de la API.
+  // Más vendidos del momento, por categoría y en general; llegan de la API.
   const [featuredByCategory, setFeaturedByCategory] =
     useState({});
 
@@ -666,8 +874,8 @@ export default function DriftHome() {
     try {
       setDevices(await listDevices(fastApiAccountRepository));
       setDevicesError("");
-    } catch (devicesFailure) {
-      setDevicesError(devicesFailure.message);
+    } catch (error_) {
+      setDevicesError(error_.message);
     }
   };
 
@@ -676,8 +884,8 @@ export default function DriftHome() {
     try {
       setFavorites(await listFavorites(fastApiAccountRepository));
       setFavoritesError("");
-    } catch (favoritesFailure) {
-      setFavoritesError(favoritesFailure.message);
+    } catch (error_) {
+      setFavoritesError(error_.message);
     }
   };
 
@@ -1096,8 +1304,8 @@ export default function DriftHome() {
       }
 
       await refreshFavorites();
-    } catch (favoriteFailure) {
-      setFavoritesError(favoriteFailure.message);
+    } catch (error_) {
+      setFavoritesError(error_.message);
     } finally {
       setFavoriteBusy(false);
     }
@@ -1110,8 +1318,8 @@ export default function DriftHome() {
     try {
       await removeFavorite(favorite.gameId, fastApiAccountRepository);
       await refreshFavorites();
-    } catch (favoriteFailure) {
-      setFavoritesError(favoriteFailure.message);
+    } catch (error_) {
+      setFavoritesError(error_.message);
     } finally {
       setFavoriteBusy(false);
     }
@@ -1208,6 +1416,7 @@ export default function DriftHome() {
   const showSuggestions = activeTab === "Sugeridos";
   const showStores = activeTab === "Tiendas";
   const showFavorites = activeTab === "Favoritos" && account.authenticated;
+  const alertCount = favoriteAlerts?.count ?? 0;
 
   const selectedFavorite = findFavorite(favorites, selectedGame);
   const selectedPriceChange = priceChangeSince(selectedFavorite, selectedGame);
@@ -1223,83 +1432,18 @@ export default function DriftHome() {
 
       <div className={styles.app}>
 
-        <header className={styles.topBar}>
-          <div className={styles.brand}>
-            <button
-              type="button"
-              className={styles.menuButton}
-              aria-label={
-                sidebarHidden
-                  ? "Mostrar panel lateral"
-                  : "Ocultar panel lateral"
-              }
-              aria-expanded={!sidebarHidden}
-              onClick={() =>
-                setSidebarHidden((hidden) => !hidden)
-              }
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-
-            <a
-              className={styles.logo}
-              href="#inicio"
-              aria-label="DRIFT, ir al inicio"
-              onClick={goHome}
-            >
-              <span>DR</span>
-              <span>IFT</span>
-            </a>
-          </div>
-
-          <form
-            className={styles.searchForm}
-            onSubmit={submitSearch}
-          >
-            <span
-              className={styles.searchIcon}
-              aria-hidden="true"
-            />
-
-            <input
-              id="game-search"
-              value={query}
-              onChange={(event) =>
-                setQuery(event.target.value)
-              }
-              placeholder="Busca un videojuego"
-              aria-label="Buscar videojuego"
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-            >
-              {loading
-                ? "Buscando…"
-                : "Buscar"}
-            </button>
-          </form>
-
-          {account.loginAvailable ? (
-            <AccountButton
-              account={account}
-              loginUrl={fastApiAccountRepository.loginUrl()}
-              isOpen={accountOpen}
-              onToggle={() => setAccountOpen((open) => !open)}
-            />
-          ) : (
-            <div className={styles.profileChip}>
-              <span className={styles.profileMoon} aria-hidden="true" />
-
-              <span className={styles.profileName}>Jugador</span>
-
-              <span className={styles.profileAvatar}>JD</span>
-            </div>
-          )}
-        </header>
+        <TopBar
+          sidebarHidden={sidebarHidden}
+          onToggleSidebar={() => setSidebarHidden((hidden) => !hidden)}
+          onHome={goHome}
+          query={query}
+          onQueryChange={setQuery}
+          onSubmit={submitSearch}
+          loading={loading}
+          account={account}
+          accountOpen={accountOpen}
+          onToggleAccount={() => setAccountOpen((open) => !open)}
+        />
 
 
         <div
@@ -1309,129 +1453,31 @@ export default function DriftHome() {
         >
 
           {!sidebarHidden && (
-            <aside className={styles.sidebar}>
-              <section className={styles.panel}>
-                <h2 className={styles.panelTitle}>
-                  Listos para comparar
-                </h2>
-
-                <ul className={styles.quickList}>
-                  {popularGames.slice(0, QUICK_LIST_GAMES).map((game) => (
-                    <li key={game.id}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          searchSuggestion(game.name)
-                        }
-                      >
-                        <span
-                          className={styles.quickThumb}
-                          style={{
-                            backgroundImage: getPosterBackground(game),
-                          }}
-                        />
-
-                        <span className={styles.quickText}>
-                          <strong>{game.name}</strong>
-
-                          <small>{game.genre}</small>
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section className={styles.panel}>
-                <h2 className={styles.panelTitle}>
-                  Tiendas conectadas
-                </h2>
-
-                <ul className={styles.storeList}>
-                  {connectedStores.map((store) => (
-                    <li key={store.name}>
-                      <span className={styles.storeDot} />
-
-                      <span className={styles.quickText}>
-                        <strong>{store.name}</strong>
-
-                        <small>{store.detail}</small>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </aside>
+            <QuickSidebar
+              games={popularGames.slice(0, QUICK_LIST_GAMES)}
+              onPick={searchSuggestion}
+            />
           )}
 
 
           <div className={styles.content}>
 
-            <nav
-              className={styles.nav}
-              aria-label="Navegación principal"
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("Sugeridos");
-                  setError("");
-                }}
-                className={
-                  activeTab === "Sugeridos"
-                    ? styles.navActive
-                    : ""
-                }
-              >
-                Inicio
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveTab("Resultados")
-                }
-                className={
-                  activeTab === "Resultados"
-                    ? styles.navActive
-                    : ""
-                }
-              >
-                Resultados{" "}
-                {games.length
-                  ? `(${games.length})`
-                  : ""}
-              </button>
-
-              <Link href="/explorar">Explorar</Link>
-
-              <button
-                type="button"
-                onClick={openStores}
-                className={showStores ? styles.navActive : ""}
-              >
-                Tiendas
-              </button>
-
-              {account.authenticated && (
-                <button
-                  type="button"
-                  onClick={openFavorites}
-                  className={showFavorites ? styles.navActive : ""}
-                >
-                  Favoritos{" "}
-                  {favorites.length ? `(${favorites.length})` : ""}
-                  {favoriteAlerts?.count > 0 && (
-                    <span
-                      className={styles.alertDot}
-                      aria-label={`${favoriteAlerts.count} con alerta de precio`}
-                    >
-                      {favoriteAlerts.count}
-                    </span>
-                  )}
-                </button>
-              )}
-            </nav>
+            <MainNav
+              activeTab={activeTab}
+              resultsCount={games.length}
+              showStores={showStores}
+              showFavorites={showFavorites}
+              authenticated={account.authenticated}
+              favoritesCount={favorites.length}
+              alertCount={alertCount}
+              onHome={() => {
+                setActiveTab("Sugeridos");
+                setError("");
+              }}
+              onResults={() => setActiveTab("Resultados")}
+              onStores={openStores}
+              onFavorites={openFavorites}
+            />
 
 
             {loginNotice && (
@@ -1440,32 +1486,12 @@ export default function DriftHome() {
               </p>
             )}
 
-            {account.authenticated &&
-              favoriteAlerts?.count > 0 &&
-              !alertsDismissed &&
-              !showFavorites && (
-                <div className={styles.alertBanner} role="status">
-                  <span>
-                    🔔{" "}
-                    {favoriteAlerts.count === 1
-                      ? "Uno de tus favoritos llegó a tu precio o bajó."
-                      : `${favoriteAlerts.count} de tus favoritos llegaron a tu precio o bajaron.`}
-                  </span>
-
-                  <button type="button" onClick={openFavorites}>
-                    Ver favoritos
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.alertBannerClose}
-                    aria-label="Cerrar el aviso"
-                    onClick={() => setAlertsDismissed(true)}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
+            <AlertBanner
+              visible={account.authenticated && !alertsDismissed && !showFavorites}
+              count={alertCount}
+              onOpen={openFavorites}
+              onClose={() => setAlertsDismissed(true)}
+            />
 
             {account.authenticated && accountOpen && (
               <AccountPanel
@@ -1835,9 +1861,8 @@ export default function DriftHome() {
                       Resultados ({visibleGames.length})
                     </h2>
 
-                    <div
+                    <fieldset
                       className={styles.platformFilter}
-                      role="group"
                       aria-label="Filtrar por plataforma"
                     >
                       <span className={styles.platformFilterLabel}>
@@ -1875,7 +1900,7 @@ export default function DriftHome() {
                           </button>
                         );
                       })}
-                    </div>
+                    </fieldset>
                   </div>
 
                   {visibleGames.length === 0 && (

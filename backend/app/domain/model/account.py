@@ -114,6 +114,33 @@ class Device:
             raise InvalidDevice("Una consola no lleva componentes de PC.")
 
 
+MAX_STORE_LENGTH = 60
+MAX_AMOUNT = 1_000_000_000
+
+
+def _valid_amount(value, allow_zero: bool) -> bool:
+    """Un precio en pesos: número (no booleano), hasta mil millones."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+
+    lowest_ok = value >= 0 if allow_zero else value > 0
+
+    return lowest_ok and value <= MAX_AMOUNT
+
+
+def _valid_text(value, max_length: int) -> bool:
+    return isinstance(value, str) and bool(value.strip()) and len(value) <= max_length
+
+
+def _valid_image(value) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) <= MAX_IMAGE_LENGTH
+        and bool(_IMAGE_URL.match(value))
+    )
+
+
 def _positive(value, label: str, maximum: Optional[int] = None) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise InvalidDevice(f"Ingresa un valor válido para {label}.")
@@ -148,41 +175,22 @@ class Favorite:
         if not isinstance(self.game_id, str) or not _GAME_ID.match(self.game_id):
             raise InvalidFavorite("El juego no es válido.")
 
-        if self.target_price is not None and (
-            isinstance(self.target_price, bool)
-            or not isinstance(self.target_price, (int, float))
-            or not 0 < self.target_price <= 1_000_000_000
+        if self.target_price is not None and not _valid_amount(
+            self.target_price, allow_zero=False
         ):
             raise InvalidFavorite("Ingresa un precio objetivo mayor que cero.")
 
-        if (
-            not isinstance(self.name, str)
-            or not self.name.strip()
-            or len(self.name) > MAX_GAME_NAME_LENGTH
-        ):
+        if not _valid_text(self.name, MAX_GAME_NAME_LENGTH):
             raise InvalidFavorite("El nombre del juego no es válido.")
 
-        if self.image is not None and (
-            not isinstance(self.image, str)
-            or len(self.image) > MAX_IMAGE_LENGTH
-            or not _IMAGE_URL.match(self.image)
-        ):
+        if self.image is not None and not _valid_image(self.image):
             raise InvalidFavorite("La imagen del juego no es válida.")
 
         if (self.price is None) != (self.store is None):
             raise InvalidFavorite("El precio necesita su tienda.")
 
-        if self.price is not None:
-            if (
-                isinstance(self.price, bool)
-                or not isinstance(self.price, (int, float))
-                or not 0 <= self.price <= 1_000_000_000
-            ):
-                raise InvalidFavorite("El precio no es válido.")
+        if self.price is not None and not _valid_amount(self.price, allow_zero=True):
+            raise InvalidFavorite("El precio no es válido.")
 
-            if (
-                not isinstance(self.store, str)
-                or not self.store.strip()
-                or len(self.store) > 60
-            ):
-                raise InvalidFavorite("La tienda no es válida.")
+        if self.store is not None and not _valid_text(self.store, MAX_STORE_LENGTH):
+            raise InvalidFavorite("La tienda no es válida.")

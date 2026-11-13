@@ -8,7 +8,7 @@ import secrets
 import uuid
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, cast
 
 from app.domain.model.account import (
     MAX_DEVICES_PER_USER,
@@ -264,7 +264,7 @@ class Favorites:
         if existing is None:
             raise FavoriteNotFound()
 
-        favorite = replace(existing, target_price=target_price)
+        favorite = cast(Favorite, replace(existing, target_price=target_price))
         self._accounts.save_favorite(favorite)
 
         return favorite

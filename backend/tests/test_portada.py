@@ -148,8 +148,10 @@ def test_use_case_rejects_an_unknown_category():
         def list(self, category):
             return []
 
+    featured = ListFeaturedGames(Empty())
+
     with pytest.raises(ValueError):
-        ListFeaturedGames(Empty()).execute("Terror")
+        featured.execute("Terror")
 
     assert ListFeaturedGames(Empty()).execute("Aventura") == []
     assert ListFeaturedGames(Empty()).execute(None) == []

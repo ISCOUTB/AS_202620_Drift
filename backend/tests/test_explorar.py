@@ -250,8 +250,10 @@ def test_use_case_rejects_unknown_filters(query):
         def explore(self, query):
             raise AssertionError("no debía consultar")
 
+    explore = ExploreGames(Never())
+
     with pytest.raises(ValueError):
-        ExploreGames(Never()).execute(query)
+        explore.execute(query)
 
 
 def test_use_case_drops_repeated_tags():

@@ -4,7 +4,7 @@ from collections import OrderedDict
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from threading import Lock
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 from app.domain.model.price_history import PriceChange, PriceHistory
 from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
@@ -300,7 +300,7 @@ class ItadPriceHistoryRepository(PriceHistoryRepository):
 
         history, obtained_at = remembered
 
-        return replace(history, cached_at=obtained_at)
+        return cast(PriceHistory, replace(history, cached_at=obtained_at))
 
 
 def _change(

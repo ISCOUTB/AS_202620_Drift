@@ -1223,8 +1223,8 @@
   margin-left: 8px;
   padding: 3px 7px;
   border-radius: 999px;
-  background: rgba(95, 224, 160, .16);
-  color: #5fe0a0;
+  background: #123a28;
+  color: #6ff0b0;
   font-size: .64rem;
   font-weight: 800;
   white-space: nowrap;
@@ -1256,6 +1256,10 @@
 /* -------------------------------- */
 
 .platformFilter {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

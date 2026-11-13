@@ -63,46 +63,45 @@ class PostgresHardwareBenchmarkStore(HardwareBenchmarkStore):
         if not items:
             raise ValueError("la lista de puntajes está vacía")
 
-        with self._database.connection() as connection:
-            with connection.transaction():
-                # Una carga completa tarda más que una consulta normal.
-                connection.execute("SET LOCAL statement_timeout = 15000")
-                connection.execute(
-                    "DELETE FROM hardware_benchmark WHERE kind = %s",
-                    (kind,),
-                )
+        with self._database.connection() as connection, connection.transaction():
+            # Una carga completa tarda más que una consulta normal.
+            connection.execute("SET LOCAL statement_timeout = 15000")
+            connection.execute(
+                "DELETE FROM hardware_benchmark WHERE kind = %s",
+                (kind,),
+            )
 
-                with connection.cursor() as cursor:
-                    cursor.executemany(
-                        """
-                        INSERT INTO hardware_benchmark
-                                    (kind, position, name, score, laptop)
-                             VALUES (%s, %s, %s, %s, %s)
-                        """,
-                        [
-                            (kind, position, name, score, laptop)
-                            for position, (name, score, laptop) in enumerate(items)
-                        ],
-                    )
-
-                connection.execute(
+            with connection.cursor() as cursor:
+                cursor.executemany(
                     """
-                    INSERT INTO hardware_benchmark_set
-                                (kind, source, benchmark, retrieved_at, loaded_at)
-                         VALUES (%s, %s, %s, %s, now())
-                    ON CONFLICT (kind) DO UPDATE
-                            SET source = EXCLUDED.source,
-                                benchmark = EXCLUDED.benchmark,
-                                retrieved_at = EXCLUDED.retrieved_at,
-                                loaded_at = EXCLUDED.loaded_at
+                    INSERT INTO hardware_benchmark
+                                (kind, position, name, score, laptop)
+                         VALUES (%s, %s, %s, %s, %s)
                     """,
-                    (
-                        kind,
-                        _text(payload.get("source")),
-                        _text(payload.get("benchmark")),
-                        _text(payload.get("retrieved_at")),
-                    ),
+                    [
+                        (kind, position, name, score, laptop)
+                        for position, (name, score, laptop) in enumerate(items)
+                    ],
                 )
+
+            connection.execute(
+                """
+                INSERT INTO hardware_benchmark_set
+                            (kind, source, benchmark, retrieved_at, loaded_at)
+                     VALUES (%s, %s, %s, %s, now())
+                ON CONFLICT (kind) DO UPDATE
+                        SET source = EXCLUDED.source,
+                            benchmark = EXCLUDED.benchmark,
+                            retrieved_at = EXCLUDED.retrieved_at,
+                            loaded_at = EXCLUDED.loaded_at
+                """,
+                (
+                    kind,
+                    _text(payload.get("source")),
+                    _text(payload.get("benchmark")),
+                    _text(payload.get("retrieved_at")),
+                ),
+            )
 
         return len(items)
 
