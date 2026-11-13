@@ -365,7 +365,7 @@ flowchart LR
         LS[("localStorage<br/>drift.pcProfile")]
     end
 
-    subgraph PROXY["Proxy de la plataforma<br/>Azure App Service · Traefik (Dokploy) · Vercel"]
+    subgraph PROXY["Proxy de la plataforma<br/>Traefik (Dokploy)"]
         TLS["HTTPS<br/>agrega X-Forwarded-For"]
     end
 
@@ -404,21 +404,20 @@ flowchart LR
 | Usuario → API | A2 y A5: operaciones administrativas abiertas | `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`; 401 sin token; 403 si el servidor no tiene token (falla cerrado) | `require_admin_token`, ADR-0011 |
 | Usuario → API | A9: CORS demasiado amplio | Orígenes por configuración, sin credenciales, solo `GET`/`POST` y `Content-Type` | `main.py`, ADR-0012 |
 | Usuario → API | A7: perfil manipulado | Validación estricta del cuerpo (`StrictInt`, longitud máxima de los nombres) | `CompatibilityRequest` |
-| Proxy → API | IP del cliente falsificada | El limitador usa la **última** IP de `X-Forwarded-For` (la agrega el proxy) y le quita el puerto de Azure | `client_ip`, `DRIFT_TRUST_FORWARDED_FOR` |
+| Proxy → API | IP del cliente falsificada | El limitador usa la **última** IP de `X-Forwarded-For` (la agrega el proxy) y le quita el puerto si el proxy lo escribe | `client_ip`, `DRIFT_TRUST_FORWARDED_FOR` |
 | API → fuentes externas | A11: suplantación por TLS | `certifi` ≥ 2026.10.18 | PR #34, #35 |
 | API → fuentes externas | Respuestas inválidas o lentas | Plazos, reintentos acotados y validación de forma | §8.15, ADR-0009 |
 | Fuentes externas → frontend | A4: enlaces manipulados | `rel="noopener noreferrer"`; React bloquea URLs `javascript:`. Riesgo residual aceptado (§11.9) | `DriftHome.js` |
 | Cadena de suministro | A1: dependencias vulnerables | `pip-audit` y `npm audit` bloquean el pipeline; Dependabot semanal; versiones exactas | Job `dependency-audit`, [análisis S13](../evidencias/s13-analisis-dependencias.md) |
-| Cadena de suministro | A8: secretos de CI y acciones comprometidas | Acciones fijadas por SHA, OIDC hacia Azure, `permissions: contents: read` | `.github/workflows/` |
+| Cadena de suministro | A8: secretos de CI y acciones comprometidas | Acciones fijadas por SHA, `permissions: contents: read` y sin credenciales de despliegue en el pipeline (ADR-0022) | `.github/workflows/` |
 
 ### Secretos
 
 | Secreto | Dónde vive | Nunca en |
 |---|---|---|
-| `DRIFT_ADMIN_TOKEN` | Dokploy → Environment; configuración de App Service (parámetro `@secure()` del Bicep) | El repositorio, `.env.example`, el chat ni los registros |
-| `DRIFT_GPU_BENCHMARKS_URL`, `DRIFT_CPU_BENCHMARKS_URL` | Dokploy y Azure | El repositorio (A6, aceptada) |
+| `DRIFT_ADMIN_TOKEN` | Dokploy → Environment | El repositorio, `.env.example`, el chat ni los registros |
+| `DRIFT_GPU_BENCHMARKS_URL`, `DRIFT_CPU_BENCHMARKS_URL` | Dokploy | El repositorio (A6, aceptada) |
 | `SONAR_TOKEN` | Secretos de GitHub Actions | Los workflows en texto plano |
-| Identidad de despliegue en Azure | OIDC federado (`azure/login`), sin contraseña guardada | — |
 
 ### Registro de eventos de seguridad
 

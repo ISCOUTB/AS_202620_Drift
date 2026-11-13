@@ -21,7 +21,7 @@ def build_source_snapshot_store() -> SourceSnapshotStore:
     Elige dónde se guardan las copias de respaldo (ADR-0014).
 
     Con `DRIFT_DATABASE_URL`: PostgreSQL, con la memoria como segundo
-    respaldo. Sin ella (Azure, Vercel, desarrollo local): solo memoria.
+    respaldo. Sin ella (desarrollo local, CI): solo memoria.
 
     El controlador de PostgreSQL se importa solo si hace falta, así los
     entornos sin base de datos no necesitan tenerlo instalado.

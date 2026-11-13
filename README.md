@@ -130,15 +130,6 @@ DRIFT/
 │   ├── ia.md
 │   └── matriz.md
 │
-├── deployment/
-│   └── vercel/
-│       ├── api/
-│       │   └── index.py
-│       ├── requirements.txt
-│       ├── pyproject.toml
-│       └── .vercel/
-│           └── project.json
-│
 ├── scripts/
 │   ├── start.py
 │   └── k6_baseline.js
@@ -338,7 +329,7 @@ El pipeline ejecuta:
 
 El pipeline corre en cada push a `master` y en cada pull request hacia `master`. El análisis espera el veredicto del Quality Gate y el job falla si no pasa, así que un cambio con hallazgos no se integra. La configuración está en [`sonar-project.properties`](sonar-project.properties) y usa el secreto de GitHub `SONAR_TOKEN`.
 
-Los jobs de Python instalan desde `backend/requirements.txt`, igual que el despliegue en Azure, así que el CI prueba las mismas versiones que se despliegan. La imagen Docker instala `backend/requirements.lock`, con hashes verificados.
+Los jobs de Python instalan desde `backend/requirements.txt`, que fija las mismas versiones que `backend/requirements.lock`, así que el CI prueba lo que se despliega. La imagen Docker instala `backend/requirements.lock`, con hashes verificados.
 
 [Dependabot](.github/dependabot.yml) revisa cada semana las dependencias del backend, del frontend y de las acciones de GitHub, y abre un PR por grupo. Dependabot solo edita `requirements.txt`: antes de integrar uno de sus PR hay que regenerar `requirements.lock` con `pip-compile --generate-hashes` (instrucciones en la cabecera del archivo). La revisión de cada PR queda registrada en el [análisis de dependencias](docs/evidencias/s13-analisis-dependencias.md). Sus PR fallan en SonarQube mientras `SONAR_TOKEN` no esté también en los secretos de Dependabot.
 
@@ -347,15 +338,15 @@ Los jobs de Python instalan desde `backend/requirements.txt`, igual que el despl
 - **Modelo de amenazas:** STRIDE sobre los contenedores del C4, con 11 amenazas priorizadas por probabilidad e impacto, cada una con su dueño y su estado ([modelo de amenazas](docs/seguridad/modelo-amenazas.md)).
 - **Controles de la API:** token de servicio para las operaciones administrativas (ADR-0011), límite de tasa por cliente y CORS acotado (ADR-0012). Arquitectura de seguridad en [arc42 §8.16](docs/arc42/arc42_8_conceptos_transversales.md); amenazas aceptadas en [arc42 §11.9](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).
 - **Privacidad:** se puede usar sin registrarse. DRIFT trata la IP del visitante y, en los registros de acceso, sus búsquedas. Quien inicia sesión con Google deja además su nombre, su correo, su foto, los dispositivos que registre y los juegos que guarde en favoritos, y puede borrarlo todo desde «Mi cuenta» (ADR-0017). Sin sesión, el perfil del PC se queda en el navegador. Detalle y base del tratamiento (Ley 1581 de 2012) en [privacidad](docs/seguridad/privacidad.md); el aviso está en el pie de la página.
-- **Secretos:** ninguno se versiona. `DRIFT_ADMIN_TOKEN` y las URL de benchmarks viven en Dokploy y Azure; `DRIFT_DB_PASSWORD`, `DRIFT_ITAD_API_KEY` y `DRIFT_GOOGLE_CLIENT_SECRET`, en Dokploy; `SONAR_TOKEN`, en los secretos de GitHub.
+- **Secretos:** ninguno se versiona. `DRIFT_ADMIN_TOKEN` y las URL de benchmarks viven en Dokploy; `DRIFT_DB_PASSWORD`, `DRIFT_ITAD_API_KEY` y `DRIFT_GOOGLE_CLIENT_SECRET`, en Dokploy; `SONAR_TOKEN`, en los secretos de GitHub.
 
 ## Despliegue
 
 | Entorno | Qué publica | Dirección | Cómo se despliega |
 |---|---|---|---|
 | Servidor del laboratorio (Dokploy) | Frontend, backend y PostgreSQL | https://drift.iscoutb.dev | Docker Compose con [`deploy/compose.lab.yaml`](deploy/compose.lab.yaml), automático en cada push a `master` |
-| Azure App Service | Backend | https://drift-utb-202620-g5fvchdcgpcthkeg.mexicocentral-01.azurewebsites.net | GitHub Actions en cada push a `master` |
-| Vercel | Frontend | https://drift-frontend-as202620.vercel.app | Manual, desde la línea de comandos de Vercel |
+
+El laboratorio es el único entorno desplegado: el 13 de noviembre de 2026 se retiraron Azure y Vercel ([ADR-0022](docs/adr/0022-desplegar-solo-en-el-laboratorio.md)). GitHub Actions prueba y analiza el código, pero no despliega.
 
 Para probar en local la misma composición del laboratorio (requiere Docker):
 
@@ -382,7 +373,7 @@ Todas las variables son opcionales, salvo `DRIFT_DB_PASSWORD` para levantar el c
 | `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` | `2.0` | Máximo que se respeta del `Retry-After` de Steam |
 | `DRIFT_ADMIN_TOKEN` | vacía | **Secreta.** Token para `POST /games/sync/playstation` y `/metrics` (`Authorization: Bearer …`). Vacía = esas operaciones quedan deshabilitadas (ADR-0011) |
 | `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en búsqueda y compatibilidad; `0` lo desactiva (ADR-0012) |
-| `DRIFT_TRUST_FORWARDED_FOR` | `false` | Usa la última IP de `X-Forwarded-For` para el límite; solo detrás de un proxy de confianza (Azure, Traefik) |
+| `DRIFT_TRUST_FORWARDED_FOR` | `false` | Usa la última IP de `X-Forwarded-For` para el límite; solo detrás de un proxy de confianza (Traefik) |
 | `DRIFT_DB_PASSWORD` | sin valor | **Secreta.** Contraseña de PostgreSQL en el compose del laboratorio. Obligatoria allí; debe ser segura para una URL (ADR-0014) |
 | `DRIFT_DATABASE_URL` | vacía | **Secreta.** Conexión a PostgreSQL. El compose la arma solo. Vacía = las copias de respaldo viven en memoria |
 | `DRIFT_GOOGLE_CLIENT_ID` y `DRIFT_GOOGLE_CLIENT_SECRET` | vacías | Cliente OAuth de Google; el secreto es **secreto**. Vacías = sin inicio de sesión (ADR-0017) |
@@ -432,12 +423,12 @@ Limitaciones conocidas:
 
 - **Historial de precios:** cubre 12 meses y solo las tiendas de PC. Steam entra con precios de Colombia, calculados con su precio normal de hoy y el descuento de cada fecha; si ese precio normal cambió en el periodo, los valores antiguos quedan desviados. Las demás tiendas son precios de Estados Unidos convertidos a pesos con la tasa de hoy. No hay historial de consolas (ADR-0016).
 - **Precios de IsThereAnyDeal y de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia. Los precios de Steam sí son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
-- **Persistencia:** las copias de respaldo de las fuentes se guardan en PostgreSQL en el laboratorio (ADR-0014). El catálogo de PlayStation, las cachés de 60 s y las métricas siguen en memoria y se pierden al reiniciar. En Azure y Vercel no hay PostgreSQL: allí las copias también viven en memoria.
+- **Persistencia:** las copias de respaldo de las fuentes se guardan en PostgreSQL en el laboratorio (ADR-0014). El catálogo de PlayStation, las cachés de 60 s y las métricas siguen en memoria y se pierden al reiniciar. Sin `DRIFT_DATABASE_URL` (desarrollo local, CI) las copias viven en memoria.
 - **Copia de respaldo:** un precio puede tener hasta 15 minutos sin aviso y hasta 72 horas con aviso. Un juego que nadie ha buscado no tiene copia: si su fuente cae, se muestra como no disponible (ADR-0015).
 - **Tienda de Xbox:** se consulta con los endpoints que usa la propia tienda web de Microsoft, que no tienen contrato publicado ni soporte oficial y pueden cambiar sin aviso. Se consultan a la vez sus dos buscadores, porque el de sugerencias devuelve pocos resultados y a veces solo complementos, y el de búsqueda completa rellena con juegos que no tienen que ver. No informa cuándo termina una oferta. Un juego que se vende a la vez para Xbox y para PC queda solo como Xbox.
 - **Ofertas de PlayStation:** el precio de oferta se lee del campo `rewards` de la tienda. No se pudo comprobar con datos reales porque el 12 de noviembre de 2026 ninguno de los juegos consultados estaba en oferta.
 - **Compatibilidad:** solo se estima para juegos con identificador de Steam. Un juego que solo aparece en una tienda de consola, o en otra tienda de PC sin equivalente en Steam, no tiene estimación.
 - **Pruebas del frontend:** no hay pruebas automatizadas del frontend.
-- **Cuentas:** el inicio de sesión solo funciona donde la página y la API están en el mismo sitio (el laboratorio y `localhost`), no entre Vercel y Azure. No se ha probado un inicio de sesión real de punta a punta. No hay copias de seguridad de las cuentas (ADR-0017).
-- **Seguridad:** hay usuarios pero no roles; el token administrativo es un único secreto del equipo, y el límite de tasa cuenta por proceso. El backend serverless de Vercel no tiene límite de tasa (arc42 §11.9).
+- **Cuentas:** el inicio de sesión solo funciona donde la página y la API están en el mismo sitio (el laboratorio y `localhost`). El inicio de sesión con una cuenta real de Google funcionó en `localhost`; falta probarlo en el laboratorio. No hay copias de seguridad de las cuentas (ADR-0017).
+- **Seguridad:** hay usuarios pero no roles; el token administrativo es un único secreto del equipo, y el límite de tasa cuenta por proceso.
 - **Riesgos y deuda técnica:** el resto, con los modos de fallo de Steam, está en [arc42 §11](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).

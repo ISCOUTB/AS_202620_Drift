@@ -1965,8 +1965,8 @@ export default function DriftHome() {
               <p>
                 Puedes usar DRIFT sin registrarte. Para funcionar y
                 protegerse contra el abuso, el servicio y sus proveedores de
-                alojamiento (Microsoft Azure, Vercel y el servidor de la
-                Universidad Tecnológica de Bolívar) registran tu dirección IP
+                alojamiento (el servidor de la Universidad Tecnológica de
+                Bolívar) registran tu dirección IP
                 y las búsquedas que haces, solo para operar y diagnosticar el
                 servicio. Sin sesión, el perfil de tu PC se guarda únicamente
                 en tu navegador.

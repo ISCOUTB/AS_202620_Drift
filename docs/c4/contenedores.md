@@ -84,7 +84,7 @@ Todas las flechas hacia sistemas externos son HTTPS con JSON. Una línea puntead
 | Modelo de ejecución | Síncrono. En cada búsqueda las cuatro fuentes se consultan a la vez, con hilos; no hay cola ni planificador. |
 | Sesión | Cookie `HttpOnly` y `SameSite=Lax`; en la base solo se guarda la huella del identificador. |
 | Configuración y secretos | Variables de entorno en Dokploy: contraseña de la base, llave de IsThereAnyDeal, secreto del cliente de Google, token administrativo y direcciones de la copia de puntajes. |
-| Despliegue | Servidor del laboratorio (`https://drift.iscoutb.dev`): Docker Compose en Dokploy con 3 contenedores y 480 MB de 512 MB. Los despliegues en Azure App Service y Vercel están en retiro: allí no hay base de datos y el inicio de sesión no funciona. |
+| Despliegue | Servidor del laboratorio (`https://drift.iscoutb.dev`): Docker Compose en Dokploy con 3 contenedores y 480 MB de 512 MB. Los despliegues en Azure App Service y Vercel se retiraron el 13 de noviembre de 2026 ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)). |
 
 ### Lo que no se ha comprobado
 

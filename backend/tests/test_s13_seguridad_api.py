@@ -193,7 +193,7 @@ def test_client_ip_ignores_forwarded_for_unless_the_proxy_is_trusted(monkeypatch
     assert client_ip(FakeRequest) == "9.9.9.9"
 
 
-def test_client_ip_drops_the_port_added_by_azure(monkeypatch):
+def test_client_ip_drops_the_port_some_proxies_add(monkeypatch):
     monkeypatch.setenv("DRIFT_TRUST_FORWARDED_FOR", "true")
 
     def request_from(forwarded):

@@ -24,6 +24,7 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 | [ADR-0019](../adr/0019-recomendacion-de-compra.md) | Recomendación de compra con una regla fija en el dominio: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más | Propuesto | Secciones 5 y 6; modelo de amenazas A3 (la ruta entra en el límite de tasa) |
 | [ADR-0020](../adr/0020-juegos-favoritos.md) | Juegos favoritos en PostgreSQL, con el precio al guardarlos como referencia; sin revisión en segundo plano | Propuesto | Secciones 5 y 8; privacidad, sección 8 |
 | [ADR-0021](../adr/0021-alertas-de-precio.md) | Alertas de precio de los favoritos revisadas al entrar, solo tiendas de PC, con caché de una hora; sin correo ni procesos en segundo plano | Propuesto | Secciones 5, 6 y 8; modelo de amenazas A3 (límite de tasa); modifica ADR-0020 |
+| [ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md) | Desplegar solo en el servidor del laboratorio; se retiran Azure App Service y Vercel | Propuesto | Secciones 2, 7, 8 y 11; sustituye a ADR-0005 y ADR-0006; cierra S13-R1 y la amenaza A8 de Azure |
 
 ## 9.2 Resumen
 

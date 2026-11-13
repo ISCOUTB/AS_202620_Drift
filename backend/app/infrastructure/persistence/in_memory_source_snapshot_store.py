@@ -15,8 +15,8 @@ class InMemorySourceSnapshotStore(SourceSnapshotStore):
     """
     Copias de respaldo en la memoria del proceso.
 
-    Se usa sola donde no hay PostgreSQL (Azure, Vercel, el equipo de quien
-    desarrolla) y como segundo respaldo cuando PostgreSQL no responde. Se
+    Se usa sola donde no hay PostgreSQL (el equipo de quien desarrolla, la
+    integración continua) y como segundo respaldo cuando PostgreSQL no responde. Se
     pierde al reiniciar. El número de entradas está acotado para no crecer
     sin límite: al llenarse se descarta la que lleva más tiempo sin usarse.
     """

@@ -2,123 +2,93 @@
 
 ## 7.1 Infraestructura de despliegue
 
-El sistema DRIFT se despliega utilizando diferentes servicios según la responsabilidad de cada pieza de la arquitectura.
-
-La distribución es la siguiente:
+DRIFT se despliega en **un solo entorno**: el servidor compartido del laboratorio, con Dokploy y Docker Compose ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)). Hasta el 12 de noviembre de 2026 también existían el backend en Azure App Service y el frontend en Vercel; se retiraron (sección 7.9).
 
 ```text
                     ┌─────────────────────┐
                     │       Usuario       │
                     └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │       Vercel        │
-                    │      Frontend       │
-                    └──────────┬──────────┘
-                               │
-                               │ HTTP/HTTPS
+                               │ HTTPS
                                ▼
               ┌─────────────────────────────────┐
-              │       Azure App Service         │
-              │                                 │
-              │          Backend / API          │
-              │                                 │
-              │  /health    /metrics    /api   │
-              └─────────────────────────────────┘
+              │  Traefik (Dokploy)              │
+              │  https://drift.iscoutb.dev      │
+              └───────┬─────────────────┬───────┘
+                 "/"  │                 │  "/api" (Strip Path)
+                      ▼                 ▼
+              ┌──────────────┐   ┌───────────────┐        ┌──────────────┐
+              │ web          │   │ api           │ ─────► │ postgres     │
+              │ Next.js      │   │ FastAPI       │        │ PostgreSQL 17│
+              └──────────────┘   └───────┬───────┘        └──────────────┘
+                                         │ HTTPS
+                                         ▼
+                    Steam · IsThereAnyDeal · PlayStation · Xbox
+                    open.er-api.com · Google (inicio de sesión)
 
-                    ┌─────────────────────┐
-                    │   GitHub Actions    │
-                    │       CI/CD         │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   Azure App Service │
-                    │      Deployment      │
-                    └─────────────────────┘
+   GitHub ──► GitHub Actions: pruebas, contrato, SonarQube y dependencias (no despliega)
+   GitHub ──► Dokploy toma `master` y ejecuta docker compose up --build
 ```
 
 ## 7.2 Piezas y ubicación
 
-| Pieza                       | Tecnología / servicio         | Ubicación                   |
-| --------------------------- | ----------------------------- | --------------------------- |
-| Sitio / interfaz            | Frontend                      | Vercel                      |
-| API                         | Backend                       | Azure App Service           |
-| Repositorio                 | GitHub                        | GitHub                      |
-| Pipeline CI/CD              | GitHub Actions                | GitHub Actions              |
-| Infraestructura como código | Azure Bicep                   | `infra/azure/`              |
-| Observabilidad              | Logs estructurados y métricas | Backend / Azure App Service |
+| Pieza | Tecnología / servicio | Ubicación |
+|---|---|---|
+| Sitio / interfaz | Frontend (Next.js) | Contenedor `web` en el laboratorio |
+| API | Backend (FastAPI) | Contenedor `api` en el laboratorio |
+| Base de datos | PostgreSQL 17 | Contenedor `postgres` con el volumen `drift_pgdata` |
+| Repositorio | GitHub | GitHub |
+| Pipeline de pruebas | GitHub Actions | GitHub Actions (no despliega) |
+| Despliegue | Dokploy + Docker Compose | Servidor del laboratorio |
+| Infraestructura como código | Docker Compose y Dockerfiles | `deploy/compose.lab.yaml`, `backend/Dockerfile`, `frontend/Dockerfile` |
+| Observabilidad | Logs estructurados y métricas | Backend (`/api/health`, `/api/metrics`) |
 
-## 7.3 Frontend
+## 7.3 El servidor del laboratorio
 
-El frontend de DRIFT se encuentra desplegado en Vercel.
+| Elemento | Valor |
+|---|---|
+| URL | `https://drift.iscoutb.dev` (frontend en `/`, API en `/api` con *Strip Path*) |
+| Infraestructura como código | `deploy/compose.lab.yaml`, `backend/Dockerfile`, `frontend/Dockerfile` |
+| Contenedores | `api` (FastAPI, 1 proceso) y `web` (Next.js), 192 MB y 0,5 CPU cada uno; `postgres` (PostgreSQL 17), 96 MB y 0,25 CPU, con el volumen `drift_pgdata` (ADR-0014). Total: 480 MB de 512 MB |
+| Despliegue | Automático en cada push a `master` |
+| Health check | `GET /api/health` |
+| Métricas | `GET /api/metrics`: latencia de búsqueda y `drift_source_unavailable_total` |
+| Configuración | `CORS_ALLOWED_ORIGINS`, `USD_TO_COP_RATE`, `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto), `DRIFT_STEAM_TIMEOUT_SECONDS`, `DRIFT_STEAM_MAX_ATTEMPTS` y variables `DRIFT_STEAM_BACKOFF_*` / `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` (ver [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md)) |
+| Secretos | `DRIFT_DB_PASSWORD`, `DRIFT_ADMIN_TOKEN`, `DRIFT_ITAD_API_KEY`, `DRIFT_GOOGLE_CLIENT_SECRET` y las direcciones de los puntajes de hardware, en Dokploy → Environment |
 
-Vercel se encarga de servir la interfaz de usuario y proporcionar el acceso público al frontend.
+El catálogo de PlayStation, las cachés de 60 s y las métricas viven en la memoria del contenedor `api`: se pierden en cada despliegue o reinicio (ADR-0008). Las copias de respaldo de las fuentes, las cuentas, los dispositivos y los favoritos se guardan en PostgreSQL y sobreviven a los despliegues (ADR-0014, ADR-0015, ADR-0017 y ADR-0020). Si PostgreSQL no responde, la búsqueda sigue funcionando con una copia en memoria; las cuentas responden «no disponible».
 
-```text
-Frontend
-   │
-   └── Vercel
-```
+## 7.4 Integración continua y despliegue
 
-## 7.4 Backend
-
-El backend de DRIFT se encuentra desplegado en Azure App Service.
-
-La API proporciona los endpoints utilizados por el sistema, incluyendo:
-
-```text
-/health
-/metrics
-```
-
-El backend cuenta con una URL pública:
-
-```text
-https://drift-utb-202620-g5fvchdcgpcthkeg.mexicocentral-01.azurewebsites.net
-```
-
-El endpoint de comprobación de salud se encuentra disponible mediante:
-
-```text
-GET /health
-```
-
-## 7.5 Integración continua y despliegue
-
-El código fuente se encuentra alojado en GitHub y el proceso de integración y despliegue utiliza GitHub Actions.
-
-El flujo general es:
+El código se aloja en GitHub. **GitHub Actions prueba y analiza; no despliega.** Corre en cada push a `master` y en cada pull request hacia `master`:
 
 ```text
 GitHub
    │
    ▼
 GitHub Actions
-   │
-   ├── Pruebas
-   ├── Validaciones
-   └── Despliegue
-          │
-          ▼
-   Azure App Service
+   ├── Pruebas del backend y contrato de la API
+   ├── Frontend conectado a la API
+   ├── Análisis de dependencias
+   └── SonarQube Cloud
 ```
 
-## 7.6 Infraestructura como código
+El despliegue lo hace Dokploy: al cambiar `master`, reconstruye y levanta los contenedores con `deploy/compose.lab.yaml`.
 
-La infraestructura de Azure se define mediante Azure Bicep y se encuentra versionada dentro del repositorio:
+## 7.5 Infraestructura como código
+
+La infraestructura se define en el repositorio con Docker Compose y los Dockerfiles:
 
 ```text
-infra/azure/
-├── main.bicep
-├── main.parameters.json
-└── README.md
+deploy/
+├── compose.lab.yaml
+└── .env.example
+backend/Dockerfile
+frontend/Dockerfile
 ```
 
-Esto permite definir y reproducir la infraestructura mediante código.
+Las reglas del laboratorio (sin `ports:`, límites de memoria y CPU, sin `docker.sock`) están comentadas en el propio compose.
 
-## 7.7 Observabilidad
+## 7.6 Observabilidad
 
 El backend incorpora mecanismos de observabilidad mediante logs estructurados y métricas.
 
@@ -134,56 +104,30 @@ Entre las métricas disponibles se encuentra:
 drift_search_latency_ms
 ```
 
-Esta métrica puede consultarse mediante:
+Esta métrica puede consultarse mediante `GET /metrics`, que exige el token administrativo (ADR-0011).
 
-```text
-GET /metrics
-```
-
-## 7.8 Flujo general de despliegue
-
-El proceso completo de despliegue queda representado de la siguiente manera:
+## 7.7 Flujo general de despliegue
 
 ```text
 Desarrollador
-     │
+     │ push o pull request
      ▼
-   GitHub
+   GitHub ───────────► GitHub Actions (pruebas y análisis)
      │
+     │ cambio en master
      ▼
-GitHub Actions
-     │
-     ├──────────────► Vercel
-     │                 │
-     │                 ▼
-     │             Frontend
-     │
-     └──────────────► Azure App Service
-                       │
-                       ▼
-                    Backend
-                       │
-                       ├── /health
-                       ├── /metrics
-                       └── API
+  Dokploy ──► docker compose up --build ──► web + api + postgres
 ```
 
-## 7.9 Resumen
+## 7.8 Resumen
 
-La arquitectura de despliegue separa el frontend y el backend en servicios independientes. El frontend se ejecuta en Vercel y el backend en Azure App Service. GitHub y GitHub Actions proporcionan el repositorio y el proceso de integración y despliegue, mientras que Azure Bicep permite definir la infraestructura como código.
+DRIFT tiene un solo entorno desplegado, el servidor del laboratorio, con tres contenedores. GitHub Actions comprueba la calidad del código y Dokploy hace el despliegue. Esto permite que el inicio de sesión y la base de datos funcionen en el mismo sitio que la página (ADR-0017).
 
-## 7.10 Despliegue en el servidor del laboratorio (octubre de 2026)
+## 7.9 Entornos retirados (13 de noviembre de 2026)
 
-Además de Azure y Vercel, el sistema completo está desplegado en el servidor compartido del curso con Dokploy.
+| Entorno | Qué hacía | Por qué se retiró |
+|---|---|---|
+| Azure App Service | Backend, desplegado por GitHub Actions | Sin base de datos ni cuentas; un segundo entorno que mantener |
+| Vercel | Frontend y una API de búsqueda sin servidor | Dominio distinto al de la API: la cookie de sesión no viaja; sin límite de tasa |
 
-| Elemento | Valor |
-|---|---|
-| URL | `https://drift.iscoutb.dev` (frontend en `/`, API en `/api` con *Strip Path*) |
-| Infraestructura como código | `deploy/compose.lab.yaml`, `backend/Dockerfile`, `frontend/Dockerfile` |
-| Contenedores | `api` (FastAPI, 1 proceso) y `web` (Next.js), 192 MB y 0,5 CPU cada uno; `postgres` (PostgreSQL 17), 96 MB y 0,25 CPU, con el volumen `drift_pgdata` (ADR-0014). Total: 480 MB de 512 MB |
-| Despliegue | Automático en cada push a `master` |
-| Health check | `GET /api/health` |
-| Métricas | `GET /api/metrics`: latencia de búsqueda y `drift_source_unavailable_total` |
-| Configuración | `CORS_ALLOWED_ORIGINS`, `USD_TO_COP_RATE`, `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto), `DRIFT_STEAM_TIMEOUT_SECONDS`, `DRIFT_STEAM_MAX_ATTEMPTS` y variables `DRIFT_STEAM_BACKOFF_*` / `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` (ver [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md)); sin secretos |
-
-El catálogo de PlayStation, las cachés de 60 s y las métricas viven en la memoria del contenedor `api`: se pierden en cada despliegue o reinicio (ADR-0008). Las copias de respaldo de las fuentes se guardan en PostgreSQL y sobreviven a los despliegues (ADR-0014 y ADR-0015). Si PostgreSQL no responde, la API sigue funcionando con una copia en memoria. Requiere el secreto `DRIFT_DB_PASSWORD` en Dokploy.
+La decisión y sus consecuencias están en [ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md), que sustituye a ADR-0005 y ADR-0006. Sus archivos siguen en el historial de git.
