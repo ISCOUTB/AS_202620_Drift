@@ -1,32 +1,94 @@
 # C4 — Diagrama de Contenedores de DRIFT
 
-> **Qué vista usar.** La vista que describe el sistema actual es la [«Vista vigente»](#vista-vigente-actualizada-el-20-de-octubre-de-2026), a continuación. La [«Vista histórica»](#vista-histórica-anterior-a-octubre-de-2026-no-describe-el-sistema-actual), al final del documento, se conserva solo como registro y **no debe usarse** para razonar sobre el sistema.
+> **Qué vista usar.** La vista que describe el sistema actual es la [«Vista vigente»](#vista-vigente-actualizada-el-12-de-noviembre-de-2026), a continuación. La [«Vista histórica»](#vista-histórica-anterior-a-octubre-de-2026-no-describe-el-sistema-actual), al final del documento, se conserva solo como registro y **no debe usarse** para razonar sobre el sistema.
 
-## Vista vigente (actualizada el 20 de octubre de 2026)
+## Vista vigente (actualizada el 12 de noviembre de 2026)
 
-Esta es la vista del nivel 2 que describe el sistema actual y la que debe usarse. Está alineada con el código y el entorno desplegados ([ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), [ADR-0010](../adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) y [arc42 §8.13](../arc42/arc42_8_conceptos_transversales.md)). **No hay base de datos, cola ni microservicios:** lo que guarda el servidor vive en la memoria del proceso del backend, y el único dato del usuario, el perfil de su PC, se guarda en el navegador.
+Esta es la vista del nivel 2 que describe el sistema actual. Incluye los cambios de [ADR-0014](../adr/0014-postgresql-como-persistencia.md) a [ADR-0018](../adr/0018-puntajes-de-hardware-en-la-base-de-datos.md), que a esa fecha están en la rama de trabajo y todavía no en `master`. La versión anterior de esta vista (20 de octubre de 2026, sin base de datos) queda en el historial de git.
+
+DRIFT tiene **tres contenedores propios**: la página web, la API y la base de datos. No hay colas ni microservicios, y la comunicación es síncrona.
 
 ```mermaid
 flowchart LR
-    USER["Usuario"] -->|"HTTPS"| WEB["Frontend web<br/>Next.js"]
-    WEB -->|"lee y escribe el perfil del PC<br/>clave drift.pcProfile"| LOCAL[("Almacén del navegador<br/>localStorage<br/>perfil del PC del usuario")]
-    WEB -->|"HTTPS + JSON<br/>GET /games/search"| API["Backend / API<br/>FastAPI, 1 proceso<br/>catálogo y cachés en memoria"]
-    API -->|"HTTPS + JSON, síncrono<br/>plazo total 4 s, 1 reintento"| STEAM["Steam Store API<br/>(fuente primaria)"]
-    API -->|"HTTPS + JSON, síncrono<br/>plazo 3 s"| CHEAP["CheapShark API<br/>(tiendas de PC)"]
-    API -->|"HTTPS + JSON, síncrono<br/>plazo 3 s"| PSN["PlayStation Store"]
-    API -->|"HTTPS + JSON, caché 12 h"| FX["open.er-api.com<br/>(tasa USD a COP)"]
+    USER["Jugador<br/>[Persona]"]
+    ADMIN["Integrante del equipo<br/>[Persona]"]
+
+    subgraph DRIFT["DRIFT"]
+        WEB["Página web<br/>[Next.js]<br/>Búsqueda, filtros, historial,<br/>compatibilidad y Mi cuenta"]
+        API["API<br/>[FastAPI, 1 proceso]<br/>Casos de uso, adaptadores de las<br/>fuentes y cachés de 60 s en memoria"]
+        DB[("Base de datos<br/>[PostgreSQL 17]<br/>Copias de respaldo, cuentas,<br/>dispositivos y puntajes")]
+    end
+
+    LOCAL[("Almacén del navegador<br/>[localStorage]<br/>Perfil del PC y filtro<br/>de plataformas")]
+
+    STEAM["Steam"]
+    ITAD["IsThereAnyDeal"]
+    CHEAP["CheapShark"]
+    PSN["PlayStation Store"]
+    XBOX["Tienda de Xbox"]
+    GOOGLE["Google"]
+    FX["open.er-api.com"]
+    COPY["Copia privada<br/>de puntajes"]
+
+    USER -->|"HTTPS"| WEB
+    WEB -->|"lee y escribe"| LOCAL
+    WEB -->|"HTTPS + JSON<br/>cookie de sesión"| API
+    ADMIN -->|"HTTPS + token"| API
+    API -->|"SQL, plazo 0,5 s<br/>red interna"| DB
+
+    API -->|"plazo total 4 s"| STEAM
+    API -->|"plazo 3 s, cuota 900 / 5 min"| ITAD
+    API -.->|"plazo 3 s, sin llave"| CHEAP
+    API -->|"plazo 3 s"| PSN
+    API -->|"plazo 3 s"| XBOX
+    API -->|"al iniciar sesión"| GOOGLE
+    USER -.->|"inicia sesión"| GOOGLE
+    API -->|"caché 12 h"| FX
+    API -.->|"al cargar puntajes"| COPY
+
+    classDef own fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef store fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    classDef person fill:#08427b,stroke:#052e56,color:#ffffff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#ffffff
+
+    class WEB,API own
+    class DB,LOCAL store
+    class USER,ADMIN person
+    class STEAM,ITAD,CHEAP,PSN,XBOX,GOOGLE,FX,COPY external
 ```
+
+Todas las flechas hacia sistemas externos son HTTPS con JSON. Una línea punteada es una relación que solo ocurre en algunos casos.
+
+### Contenedores
+
+| Contenedor | Tecnología | Responsabilidad | Qué guarda |
+|---|---|---|---|
+| **Página web** | Next.js (React), 192 MB | Interfaz: búsqueda, filtro por plataforma, detalle con precios e historial, compatibilidad, tiendas y «Mi cuenta». Organizada también en dominio, aplicación e infraestructura. | Nada en el servidor. |
+| **API** | FastAPI, 1 proceso, 192 MB | Expone las rutas HTTP, ejecuta los casos de uso y habla con todas las fuentes externas mediante adaptadores. Aplica el límite de tasa, el token administrativo y la sesión. | En memoria: cachés de 60 s por fuente, catálogo de PlayStation, métricas, y un segundo respaldo de las copias. Se pierde al reiniciar. |
+| **Base de datos** | PostgreSQL 17, 96 MB, volumen `drift_pgdata` | Lo que debe sobrevivir a un reinicio. Solo la API la alcanza, por la red interna del compose. | Copias de respaldo de las fuentes (72 h), cuentas, sesiones, dispositivos y puntajes de hardware. |
+| **Almacén del navegador** | `localStorage` | Lo que el usuario sin sesión conserva en su propio navegador. | Perfil del PC (`drift.pcProfile`) y plataformas elegidas (`drift.platformFilter`). |
+
+### Qué pasa cuando algo falla
+
+| Falla | Comportamiento | Decisión |
+|---|---|---|
+| Una fuente de precios no responde o se queda sin cuota | La búsqueda responde con su última copia (hasta 72 h) y lo avisa en `cached_sources`. Sin copia, la fuente va a `unavailable_sources`. | ADR-0015 |
+| La base de datos no responde | La búsqueda sigue con las copias en memoria; los puntajes se leen de su copia JSON. Las cuentas y los dispositivos responden «no disponible». | ADR-0014, ADR-0017, ADR-0018 |
+| Google no responde | Nadie puede iniciar sesión; quien ya tiene sesión no se ve afectado. | ADR-0017 |
+| Falta la llave de IsThereAnyDeal | Las tiendas de PC salen de CheapShark y no hay historial. | ADR-0016 |
+
+### Aspectos transversales
 
 | Aspecto | Estado real |
 |---|---|
-| Persistencia | No hay contenedor de base de datos. El catálogo de PlayStation, el catálogo de respaldo y las cachés viven en la memoria del proceso del backend y se pierden al reiniciar. |
-| Almacén del navegador | `localStorage` del navegador de cada usuario, clave `drift.pcProfile`: guarda el perfil del PC (memoria, procesador, tarjeta gráfica y espacio libre) para la estimación de compatibilidad. Es el único dato del usuario que se conserva, y nunca llega al servidor como dato guardado: se envía en cada consulta de compatibilidad. Si el formato guardado no es válido, el frontend lo descarta y vuelve a pedir el equipo (`frontend/infrastructure/storage/BrowserPcProfileRepository.js`, ADR-0010). |
-| Brokers y colas | No hay. La comunicación es síncrona por HTTPS (ADR-0008). |
-| Modelo de ejecución | Síncrono. Las fuentes se consultan en paralelo con hilos dentro de cada búsqueda; no hay cola ni planificador. |
-| Fuentes de la búsqueda | Steam (primaria, con catálogo local de respaldo), CheapShark y PlayStation (secundarias, con plazo de 3 s y aviso en `unavailable_sources`). |
-| Despliegue | Backend en Azure App Service; frontend en Vercel; frontend y backend en el servidor del laboratorio (`https://drift.iscoutb.dev`, Docker Compose en Dokploy, 2 contenedores de 192 MB). |
+| Modelo de ejecución | Síncrono. En cada búsqueda las cuatro fuentes se consultan a la vez, con hilos; no hay cola ni planificador. |
+| Sesión | Cookie `HttpOnly` y `SameSite=Lax`; en la base solo se guarda la huella del identificador. |
+| Configuración y secretos | Variables de entorno en Dokploy: contraseña de la base, llave de IsThereAnyDeal, secreto del cliente de Google, token administrativo y direcciones de la copia de puntajes. |
+| Despliegue | Servidor del laboratorio (`https://drift.iscoutb.dev`): Docker Compose en Dokploy con 3 contenedores y 480 MB de 512 MB. Los despliegues en Azure App Service y Vercel se retiraron el 13 de noviembre de 2026 ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)). |
 
-Para las garantías de consistencia de cada operación y la política de invalidación por fuente, ver [arc42 §8.13 y §8.14](../arc42/arc42_8_conceptos_transversales.md).
+### Lo que no se ha comprobado
+
+Esta vista describe el código y el archivo `deploy/compose.lab.yaml`. **El contenedor de la base de datos no se ha levantado en el laboratorio**: la base se probó en un equipo de desarrollo con PostgreSQL 16.2. Falta confirmar que arranca dentro de 96 MB y que Dokploy acepta el volumen con nombre.
 
 
 ---

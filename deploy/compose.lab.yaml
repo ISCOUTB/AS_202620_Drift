@@ -11,9 +11,13 @@
 # Reglas del laboratorio:
 #   - Sin "ports:": Traefik enruta el tráfico público; se usa "expose".
 #   - Sin bind mounts, docker.sock, privileged, container_name ni redes externas.
-#   - Límites en cada servicio: el total del equipo no pasa de 512 MB (aquí 384 MB).
-#   - DRIFT no guarda datos propios: no hay base de datos ni volúmenes.
+#   - Límites en cada servicio: el total del equipo no pasa de 512 MB (aquí 480 MB).
 #   - Secretos en Dokploy → Environment; aquí solo se referencian con ${VARIABLE}.
+#
+# Base de datos (ADR-0014): PostgreSQL guarda las copias de respaldo de las
+# fuentes. Usa un volumen con nombre, no un bind mount. Antes de desplegar hay
+# que definir DRIFT_DB_PASSWORD en Dokploy → Environment; sin ella el
+# despliegue se detiene con un mensaje claro y sigue corriendo la versión anterior.
 
 services:
   api:
@@ -36,6 +40,24 @@ services:
       DRIFT_RATE_LIMIT_PER_MINUTE: ${DRIFT_RATE_LIMIT_PER_MINUTE:-60}
       # Traefik agrega la IP real del cliente al final de X-Forwarded-For.
       DRIFT_TRUST_FORWARDED_FOR: "true"
+      # Copias de respaldo en PostgreSQL (ADR-0014). La contraseña debe ser
+      # segura para una URL: generarla con secrets.token_urlsafe.
+      DRIFT_DATABASE_URL: postgresql://drift:${DRIFT_DB_PASSWORD:?Define DRIFT_DB_PASSWORD en Dokploy}@postgres:5432/drift
+      # Secreto: llave de IsThereAnyDeal (tiendas de PC e historial de precios).
+      # Sin ella se usa CheapShark y el historial queda deshabilitado.
+      DRIFT_ITAD_API_KEY: ${DRIFT_ITAD_API_KEY:-}
+      # Inicio de sesión con Google (ADR-0017). El Client Secret es secreto.
+      # Sin estos valores el inicio de sesión queda deshabilitado.
+      DRIFT_GOOGLE_CLIENT_ID: ${DRIFT_GOOGLE_CLIENT_ID:-}
+      DRIFT_GOOGLE_CLIENT_SECRET: ${DRIFT_GOOGLE_CLIENT_SECRET:-}
+      # Debe coincidir, letra por letra, con la URI registrada en Google.
+      DRIFT_GOOGLE_REDIRECT_URI: ${DRIFT_GOOGLE_REDIRECT_URI:-https://drift.iscoutb.dev/api/auth/google/callback}
+      DRIFT_FRONTEND_URL: ${DRIFT_FRONTEND_URL:-https://drift.iscoutb.dev}
+      DRIFT_CACHE_FRESH_SECONDS: ${DRIFT_CACHE_FRESH_SECONDS:-900}
+      DRIFT_CACHE_STALE_SECONDS: ${DRIFT_CACHE_STALE_SECONDS:-259200}
+    # Solo el orden de arranque: la API funciona aunque PostgreSQL esté caído.
+    depends_on:
+      - postgres
     expose:
       - "8000"
     healthcheck:
@@ -64,3 +86,43 @@ services:
         limits:
           cpus: "0.50"
           memory: 192M
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: drift
+      POSTGRES_USER: drift
+      POSTGRES_PASSWORD: ${DRIFT_DB_PASSWORD:?Define DRIFT_DB_PASSWORD en Dokploy}
+    # Ajustes para caber en 96 MB: pocas conexiones y memoria compartida mínima.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=16MB
+      - -c
+      - max_connections=12
+      - -c
+      - work_mem=1MB
+      - -c
+      - maintenance_work_mem=8MB
+      - -c
+      - effective_cache_size=48MB
+      - -c
+      - max_wal_size=64MB
+    # Sin "ports:" ni "expose:" hacia Traefik: solo la API la alcanza por la red interna.
+    volumes:
+      - drift_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drift -d drift"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 96M
+
+volumes:
+  drift_pgdata:

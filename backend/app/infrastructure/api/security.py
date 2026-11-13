@@ -66,7 +66,7 @@ def require_admin_token(
 def client_ip(request: Request) -> str:
     """IP del cliente usada para limitar la tasa.
 
-    Detrás de un proxy (Azure App Service, Traefik en Dokploy) todas las
+    Detrás de un proxy (Traefik en Dokploy) todas las
     peticiones llegan desde la IP del proxy. Con `DRIFT_TRUST_FORWARDED_FOR=true`
     se usa la última entrada de `X-Forwarded-For`, que es la que agrega el
     proxy de confianza; las anteriores las puede escribir el cliente.
@@ -83,7 +83,7 @@ def client_ip(request: Request) -> str:
 
 
 def _without_port(address: str) -> str:
-    """Azure App Service escribe `IP:puerto`; el puerto cambia en cada conexión."""
+    """Algunos proxies escriben `IP:puerto`; el puerto cambia en cada conexión."""
 
     if address.startswith("["):  # IPv6 con puerto: [2001:db8::1]:51234
         return address[1:].split("]", 1)[0]

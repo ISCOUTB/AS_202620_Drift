@@ -69,7 +69,8 @@ def environment_record(name):
         "corrida": name,
         "fecha_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "entorno": "local: backend y upstream simulado en 127.0.0.1 (no desplegado)",
-        "commit": command_output(["git", "rev-parse", "--short", "HEAD"]),
+        # «-dirty»: se midió con cambios sin commit sobre ese commit.
+        "commit": command_output(["git", "describe", "--always", "--dirty"]),
         "sistema": platform.platform(),
         "cpus": os.cpu_count(),
         "python": platform.python_version(),

@@ -1,0 +1,203 @@
+/* Usa las variables de color definidas en .pageShell (DriftHome.module.css). */
+
+.panel {
+  /* Color del fondo del panel: separa los marcadores de la línea. */
+  --chart-surface: #1c1030;
+}
+
+.panel h3 {
+  margin: 0;
+  font: 600 1rem var(--display);
+}
+
+.description {
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: .84rem;
+}
+
+.note,
+.footnote {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.footnote {
+  color: var(--faint);
+  font-size: .72rem;
+}
+
+.warning {
+  margin: 10px 0 0;
+  color: var(--warn);
+  font-size: .78rem;
+}
+
+
+/* Cifras principales */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.summary > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .04);
+}
+
+.summary dt {
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.summary dd {
+  margin: 2px 0 0;
+  font: 700 1.08rem var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary small {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--faint);
+  font-size: .68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* Gráfica */
+
+.chartWrap {
+  position: relative;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;
+}
+
+.grid {
+  stroke: rgba(255, 255, 255, .09);
+  stroke-width: 1;
+}
+
+.axisLabel {
+  fill: var(--faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.lowestDot,
+.hoverDot {
+  fill: var(--accent);
+  stroke: var(--chart-surface);
+  stroke-width: 2;
+}
+
+.pointLabel {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.crosshair {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: .72rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.tooltip strong {
+  font: 700 .86rem var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip span {
+  color: var(--muted);
+}
+
+.tooltip small {
+  color: var(--faint);
+  font-size: .66rem;
+}
+
+
+/* Tabla alternativa */
+
+.tableToggle {
+  margin-top: 8px;
+}
+
+.tableToggle summary {
+  width: fit-content;
+  color: var(--accent);
+  font-size: .76rem;
+  cursor: pointer;
+}
+
+.tableToggle summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tableScroll {
+  max-height: 220px;
+  margin-top: 8px;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table th {
+  color: var(--muted);
+  font-weight: 600;
+}

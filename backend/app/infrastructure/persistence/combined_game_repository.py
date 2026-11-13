@@ -6,7 +6,7 @@ import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as SourceTimeoutError
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from app.domain.model.game import Game
 from app.domain.ports.game_repository import GameRepository
@@ -67,6 +67,10 @@ class CombinedGameRepository(GameRepository):
     La fuente secundaria es opcional: si falla o no responde dentro del
     plazo, la búsqueda continúa con lo ya encontrado y el nombre de la
     fuente queda en `unavailable_sources` de cada resultado.
+
+    `secondary_last_known` (ADR-0015) entrega la copia de respaldo de la
+    fuente secundaria cuando se agota su plazo. Con ella, la fuente no
+    queda en `unavailable_sources` sino en `cached_sources`.
     """
 
     def __init__(
@@ -75,10 +79,14 @@ class CombinedGameRepository(GameRepository):
         secondary_repository: GameRepository,
         secondary_name: str,
         timeout_seconds: Optional[float] = None,
+        secondary_last_known: Optional[
+            Callable[[str], Optional[List[Game]]]
+        ] = None,
     ):
         self.primary_repository = primary_repository
         self.secondary_repository = secondary_repository
         self.secondary_name = secondary_name
+        self.secondary_last_known = secondary_last_known
 
         if timeout_seconds is None:
             timeout_seconds = float(
@@ -117,8 +125,13 @@ class CombinedGameRepository(GameRepository):
                 timeout=remaining_seconds,
             )
         except SourceTimeoutError:
-            secondary_games = []
-            self._mark_unavailable(games, "timeout", launched_at)
+            # La fuente sigue ocupada en su hilo y no puede entregar su
+            # copia de respaldo: se le pide aparte.
+            secondary_games = self._last_known(query)
+
+            if secondary_games is None:
+                secondary_games = []
+                self._mark_unavailable(games, "timeout", launched_at)
         except ExternalSourceError as error:
             # Fallo tipado de la fuente (timeout, 429, 5xx, respuesta
             # inválida…): se mantiene la taxonomía «timeout»/«error» y la
@@ -163,7 +176,36 @@ class CombinedGameRepository(GameRepository):
             games_by_name[normalized_name] = game
             games_by_id[game.id] = game
 
+        self._share_cached_sources(games, secondary_games)
+
         return games
+
+    def _last_known(self, query: str) -> Optional[List[Game]]:
+        if self.secondary_last_known is None:
+            return None
+
+        return self.secondary_last_known(query)
+
+    @staticmethod
+    def _share_cached_sources(
+        games: List[Game],
+        secondary_games: List[Game],
+    ) -> None:
+        """
+        Que una fuente respondió con su copia de respaldo se avisa en todos
+        los resultados de la búsqueda, igual que `unavailable_sources`.
+        """
+
+        cached_sources = {}
+
+        for game in [*games, *secondary_games]:
+            cached_sources.update(game.cached_sources)
+
+        if not cached_sources:
+            return
+
+        for game in games:
+            game.cached_sources.update(cached_sources)
 
     def _mark_unavailable(
         self,
@@ -205,8 +247,14 @@ class CombinedGameRepository(GameRepository):
             ):
                 existing_game.prices[store] = price
 
-                # El enlace de compra acompaña al precio que se conserva.
+                # El enlace de compra y el descuento acompañan al precio
+                # que se conserva.
                 if store in game.links:
                     existing_game.links[store] = game.links[store]
                 else:
                     existing_game.links.pop(store, None)
+
+                if store in game.discounts:
+                    existing_game.discounts[store] = game.discounts[store]
+                else:
+                    existing_game.discounts.pop(store, None)

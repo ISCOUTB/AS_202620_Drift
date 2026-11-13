@@ -1,6 +1,5 @@
 node_modules/
 .next/
-.vercel/
 .env*
 Dockerfile
 .dockerignore

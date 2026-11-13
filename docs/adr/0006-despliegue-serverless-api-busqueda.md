@@ -1,6 +1,6 @@
 # ADR-0006: Despliegue serverless para la API de búsqueda de DRIFT
 
-- **Estado:** Aceptado
+- **Estado:** Reemplazado por [ADR-0022](0022-desplegar-solo-en-el-laboratorio.md) (13 de noviembre de 2026)
 - **Fecha:** 2026-09-26
 - **Decisores:** Equipo DRIFT
 - **Relacionado con:** ADR-0002 — Selección de arquitectura base

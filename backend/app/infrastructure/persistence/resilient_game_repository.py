@@ -8,6 +8,14 @@ from app.infrastructure.external.resilient_http import ExternalSourceError
 
 
 class ResilientGameRepository(GameRepository):
+    """
+    Si Steam falla, responde con el catálogo local de respaldo.
+
+    Desde ADR-0015 la fuente principal llega envuelta en
+    `StaleFallbackGameRepository`: este catálogo solo se usa cuando tampoco
+    hay una copia guardada de esa búsqueda.
+    """
+
     def __init__(
         self,
         primary_repository: GameRepository,
