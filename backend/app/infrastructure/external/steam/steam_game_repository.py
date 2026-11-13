@@ -100,6 +100,52 @@ class SteamGameRepository(GameRepository):
         return games
 
 
+    def price_in_colombia(self, app_id: str) -> Optional[tuple]:
+        """
+        (precio normal, precio de hoy, descuento) de un juego en pesos.
+
+        Lo usa el historial de precios para poner a Steam en pesos de
+        Colombia. Devuelve `None` si Steam no responde o el juego no tiene
+        precio: el historial sigue sin la serie de Steam.
+        """
+
+        try:
+            details = self._get_json(
+                "https://store.steampowered.com/api/appdetails",
+                {"appids": app_id, "cc": "co", "filters": "price_overview"},
+                budget=TimeBudget.from_policy(self._policy, self._clock),
+            )
+        except ExternalSourceError:
+            return None
+
+        entry = details.get(str(app_id)) if isinstance(details, dict) else None
+        data = entry.get("data") if isinstance(entry, dict) else None
+        price = data.get("price_overview") if isinstance(data, dict) else None
+
+        if not isinstance(price, dict):
+            return None
+
+        initial = price.get("initial")
+        final = price.get("final")
+        discount = price.get("discount_percent")
+
+        for value in (initial, final):
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or value <= 0
+            ):
+                return None
+
+        if (
+            isinstance(discount, bool)
+            or not isinstance(discount, int)
+            or not 0 <= discount <= 100
+        ):
+            discount = 0
+
+        return (initial / 100, final / 100, discount)
+
     @staticmethod
     def _is_valid_item(item) -> bool:
         return (
@@ -146,6 +192,7 @@ class SteamGameRepository(GameRepository):
             game_data = {}
 
         prices = {}
+        discounts = {}
         price_overview = game_data.get("price_overview")
 
         # Un juego sin precio (gratuito, no lanzado o no vendido en la
@@ -158,6 +205,15 @@ class SteamGameRepository(GameRepository):
             ):
                 prices["Steam"] = final_price / 100
 
+                discount = price_overview.get("discount_percent")
+
+                if (
+                    isinstance(discount, int)
+                    and not isinstance(discount, bool)
+                    and 0 < discount <= 100
+                ):
+                    discounts["Steam"] = discount
+
         return Game(
             id=app_id,
             name=item["name"],
@@ -168,4 +224,5 @@ class SteamGameRepository(GameRepository):
                 if prices
                 else {}
             ),
+            discounts=discounts,
         )

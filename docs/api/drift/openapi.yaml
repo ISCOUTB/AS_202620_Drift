@@ -2,12 +2,14 @@ openapi: 3.1.0
 
 info:
   title: DRIFT API
-  version: 1.5.0
+  version: 1.8.0
   description: |
     Contrato HTTP de la API de DRIFT.
-    Permite consultar el estado del servicio, buscar videojuegos,
-    sincronizar el catálogo de PlayStation y estimar la compatibilidad
-    de un juego con un computador.
+    Permite consultar el estado del servicio, buscar videojuegos, ver la
+    portada y las tiendas comparadas, sincronizar el catálogo de PlayStation,
+    estimar la compatibilidad de un juego con un computador, recomendar dónde
+    comprarlo y, con sesión de Google, guardar dispositivos y favoritos con
+    alertas de precio.
 
 servers:
   - url: http://localhost:8000
@@ -19,7 +21,13 @@ tags:
   - name: Juegos
     description: Búsqueda y consulta de videojuegos.
   - name: Compatibilidad
-    description: Estimación de compatibilidad de PC.
+    description: Estimación de compatibilidad de PC y recomendación de compra.
+  - name: Portada
+    description: Juegos destacados y tiendas comparadas.
+  - name: Cuentas
+    description: Inicio de sesión con Google, sesión y dispositivos (ADR-0017).
+  - name: Favoritos
+    description: Juegos favoritos y sus alertas de precio (ADR-0020, ADR-0021).
 
 paths:
 
@@ -57,6 +65,25 @@ paths:
             minLength: 1
           example: Portal 2
 
+        - name: platform
+          in: query
+          required: false
+          description: >-
+            Plataformas que tiene el usuario. Se puede repetir
+            (`platform=PC&platform=Xbox`). Con este filtro, cada juego trae
+            solo las tiendas de esas plataformas y se omiten los juegos que
+            no se venden en ninguna. Sin él se devuelven todas las tiendas.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - PC
+                - PlayStation
+                - Xbox
+
       responses:
         "200":
           description: Lista de videojuegos encontrados.
@@ -76,6 +103,64 @@ paths:
 
         "429":
           $ref: "#/components/responses/RateLimited"
+
+
+  /games/{game_id}/price-history:
+    get:
+      tags:
+        - Juegos
+      summary: Historial del mejor precio de un juego en las tiendas de PC
+      description: >-
+        Últimos 12 meses, según IsThereAnyDeal (ADR-0016). Los importes son
+        precios de Estados Unidos convertidos a pesos con la tasa de hoy.
+        Cuando no hay historial, responde 200 con `available` en falso y el
+        motivo en `reason`.
+      operationId: getPriceHistory
+
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          description: Identificador del juego tal como lo entrega la búsqueda.
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,80}$"
+          example: "1245620"
+
+      responses:
+        "200":
+          description: Historial del juego, o el motivo por el que no hay.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceHistory"
+
+        "422":
+          description: Identificador inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+        "503":
+          description: La fuente del historial no respondió y no hay una copia anterior.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                        example: IsThereAnyDeal
+                      reason:
+                        type: string
+                        example: source_unavailable
 
 
   /games/sync/playstation:
@@ -238,6 +323,748 @@ paths:
                 $ref: "#/components/schemas/HardwareCatalogue"
 
 
+  /health:
+    get:
+      tags:
+        - Estado
+      summary: Consultar estado de la API (sonda del despliegue)
+      operationId: getHealth
+      responses:
+        "200":
+          description: La API está disponible.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+
+  /metrics:
+    get:
+      tags:
+        - Estado
+      summary: Métricas de búsqueda, degradación de fuentes y copia de respaldo
+      operationId: getMetrics
+      description: |
+        Operación administrativa. Exige `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`
+        (ADR-0011). Si el servidor no tiene token configurado, queda deshabilitada.
+      security:
+        - adminToken: []
+      responses:
+        "200":
+          description: Instantánea de las métricas en memoria del proceso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  search_latency:
+                    type: object
+                  source_degradation:
+                    type: object
+                  source_backup:
+                    type: object
+                  itad_quota:
+                    type:
+                      - object
+                      - "null"
+                    description: Consumo de la cuota de IsThereAnyDeal; nulo sin llave configurada.
+        "401":
+          $ref: "#/components/responses/AdminUnauthorized"
+        "403":
+          $ref: "#/components/responses/AdminDisabled"
+
+
+  /games/explore:
+    get:
+      tags:
+        - Portada
+      summary: Recorrer el catálogo de Steam por género, etiquetas, orden y precio
+      description: >-
+        Una página (25 juegos como máximo) de la búsqueda de la tienda de
+        Steam en Colombia, con la ficha de cada juego: imágenes, descripción,
+        etiquetas, fecha, desarrolladores, reseñas y precio en Steam. Si las
+        fichas no responden, los juegos llegan solo con nombre e imágenes. Cada
+        página se guarda 15 minutos.
+      operationId: exploreGames
+      parameters:
+        - name: genre
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [accion, aventura, rol, estrategia, simulacion, deportes, carreras, terror, casuales]
+        - name: tag
+          in: query
+          required: false
+          description: Etiquetas que afinan la lista. Se puede repetir (hasta 6).
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 6
+            items:
+              type: string
+              enum:
+                - un-jugador
+                - multijugador
+                - cooperativo
+                - mundo-abierto
+                - buena-trama
+                - indie
+                - anime
+                - pixelados
+                - fantasia
+                - ciencia-ficcion
+                - supervivencia
+                - por-turnos
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [populares, valorados, precio-asc, precio-desc]
+            default: populares
+        - name: price
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [todos, gratis, hasta-40000, hasta-100000, ofertas]
+            default: todos
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 1
+      responses:
+        "200":
+          description: Una página del catálogo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExplorePage"
+        "422":
+          description: Filtro desconocido o página fuera de rango.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: Steam no respondió.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                        example: Steam
+                      reason:
+                        type: string
+                        example: source_unavailable
+
+
+  /stores:
+    get:
+      tags:
+        - Portada
+      summary: Listar las tiendas cuyos precios compara DRIFT
+      description: >-
+        Primero las tiendas que DRIFT consulta directamente (Steam,
+        PlayStation, Xbox, Microsoft Store) y luego las tiendas de PC que
+        entrega el intermediario de precios. Si el intermediario no responde,
+        `complete` es falso y solo aparecen las primeras.
+      operationId: listStores
+      responses:
+        "200":
+          description: Tiendas comparadas.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreList"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+
+  /games/featured:
+    get:
+      tags:
+        - Portada
+      summary: Juegos más vendidos del momento para la portada
+      description: La lista sale de Steam y cambia con las ventas.
+      operationId: listFeaturedGames
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Género por el que se filtra la portada.
+          schema:
+            type: string
+            enum:
+              - Acción
+              - Aventura
+              - Carreras
+              - Deportes
+              - RPG
+              - Estrategia
+      responses:
+        "200":
+          description: Juegos destacados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeaturedGames"
+        "422":
+          description: Categoría desconocida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+
+  /games/{game_id}/recommendation:
+    post:
+      tags:
+        - Compatibilidad
+      summary: Recomendar dónde comprar un juego según los dispositivos del usuario
+      description: >-
+        Recibe los precios que la persona tiene en pantalla y sus
+        dispositivos (sin sesión, desde el navegador). Para cada tienda
+        estima cómo correría el juego en el dispositivo que la usa y elige la
+        opción más barata, salvo que pagar hasta un 10 % más dé una
+        experiencia mejor.
+      operationId: recommendPurchase
+      parameters:
+        - $ref: "#/components/parameters/GameId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationRequest"
+            example:
+              prices:
+                Steam: 35000
+                PlayStation: 42000
+              discounts:
+                Steam: 40
+              devices:
+                - name: Mi PC
+                  kind: pc
+                  specs:
+                    ram_gb: 16
+                    gpu_score: 4
+      responses:
+        "400":
+          $ref: "#/components/responses/MalformedBody"
+        "200":
+          description: Opción recomendada, alternativas y dispositivos descartados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+        "422":
+          description: Cuerpo, precio, tienda o dispositivo inválido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail: {}
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+
+  /auth/me:
+    get:
+      tags:
+        - Cuentas
+      summary: Consultar la sesión actual
+      description: >-
+        Nunca falla por falta de sesión: indica si el inicio de sesión está
+        configurado en el servidor y, si hay sesión, el nombre, correo y foto
+        de la persona (ADR-0017).
+      operationId: getCurrentSession
+      security:
+        - {}
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Estado de la sesión.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStatus"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+    delete:
+      tags:
+        - Cuentas
+      summary: Borrar la cuenta y todos sus datos
+      description: Borra la cuenta, sus dispositivos y favoritos, y cierra la sesión.
+      operationId: deleteAccount
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Origin"
+      responses:
+        "200":
+          description: Cuenta borrada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - deleted
+                properties:
+                  deleted:
+                    type: boolean
+                    const: true
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /auth/google/login:
+    get:
+      tags:
+        - Cuentas
+      summary: Empezar el inicio de sesión con Google
+      description: >-
+        Redirige a Google (OpenID Connect) y guarda en cookies `HttpOnly` el
+        `state` y el `nonce` del intento, válidos por 10 minutos.
+      operationId: beginGoogleLogin
+      responses:
+        "303":
+          description: Redirección a la página de inicio de sesión de Google.
+          headers:
+            Location:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+
+  /auth/google/callback:
+    get:
+      tags:
+        - Cuentas
+      summary: Recibir la respuesta de Google
+      description: >-
+        Comprueba que el `state` coincide con el de la cookie, valida el
+        token de identidad y crea la sesión. Siempre redirige a la página de
+        DRIFT con `login=ok`, `login=error` o `login=unavailable`.
+      operationId: completeGoogleLogin
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "303":
+          description: Redirección a DRIFT con el resultado del inicio de sesión.
+          headers:
+            Location:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "422":
+          description: Parámetros de consulta inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+
+  /auth/logout:
+    post:
+      tags:
+        - Cuentas
+      summary: Cerrar la sesión
+      operationId: logout
+      parameters:
+        - $ref: "#/components/parameters/Origin"
+      responses:
+        "200":
+          description: Sesión cerrada (también si no había sesión).
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authenticated
+                properties:
+                  authenticated:
+                    type: boolean
+                    const: false
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /devices:
+    get:
+      tags:
+        - Cuentas
+      summary: Listar los dispositivos de la cuenta
+      operationId: listDevices
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Dispositivos guardados.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+    post:
+      tags:
+        - Cuentas
+      summary: Agregar un dispositivo
+      operationId: addDevice
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Origin"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRequest"
+      responses:
+        "400":
+          $ref: "#/components/responses/MalformedBody"
+        "201":
+          description: Dispositivo creado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "422":
+          $ref: "#/components/responses/InvalidData"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /devices/{device_id}:
+    put:
+      tags:
+        - Cuentas
+      summary: Cambiar un dispositivo
+      operationId: updateDevice
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - $ref: "#/components/parameters/Origin"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRequest"
+      responses:
+        "400":
+          $ref: "#/components/responses/MalformedBody"
+        "200":
+          description: Dispositivo actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/InvalidData"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+    delete:
+      tags:
+        - Cuentas
+      summary: Quitar un dispositivo
+      operationId: deleteDevice
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - $ref: "#/components/parameters/Origin"
+      responses:
+        "200":
+          $ref: "#/components/responses/Deleted"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /favorites:
+    get:
+      tags:
+        - Favoritos
+      summary: Listar los juegos favoritos
+      operationId: listFavorites
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Favoritos guardados.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Favorite"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /favorites/alerts:
+    get:
+      tags:
+        - Favoritos
+      summary: Revisar las alertas de precio de los favoritos
+      description: >-
+        Consulta el precio de hoy de cada favorito y avisa cuando llegó al
+        precio objetivo o bajó respecto al precio guardado (ADR-0021). Las
+        alertas solo se calculan cuando la persona abre DRIFT; no hay aviso
+        por correo.
+      operationId: checkFavoriteAlerts
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Estado de cada favorito y cuántas alertas hay.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteAlerts"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /favorites/{game_id}:
+    put:
+      tags:
+        - Favoritos
+      summary: Guardar un juego como favorito
+      description: Si el juego ya estaba, actualiza sus datos y conserva el precio objetivo.
+      operationId: saveFavorite
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/GameId"
+        - $ref: "#/components/parameters/Origin"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteRequest"
+      responses:
+        "400":
+          $ref: "#/components/responses/MalformedBody"
+        "200":
+          description: Favorito guardado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Favorite"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/LoginNotConfigured"
+        "422":
+          $ref: "#/components/responses/InvalidData"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+    delete:
+      tags:
+        - Favoritos
+      summary: Quitar un juego de favoritos
+      operationId: deleteFavorite
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/GameId"
+        - $ref: "#/components/parameters/Origin"
+      responses:
+        "200":
+          $ref: "#/components/responses/Deleted"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/InvalidData"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /favorites/{game_id}/target:
+    put:
+      tags:
+        - Favoritos
+      summary: Fijar o quitar el precio objetivo de un favorito
+      operationId: setFavoriteTarget
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/GameId"
+        - $ref: "#/components/parameters/Origin"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_price:
+                  type:
+                    - number
+                    - "null"
+                  exclusiveMinimum: 0
+                  maximum: 1000000000
+                  description: Precio en pesos; `null` quita el objetivo.
+      responses:
+        "400":
+          $ref: "#/components/responses/MalformedBody"
+        "200":
+          description: Favorito con su nuevo precio objetivo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Favorite"
+        "401":
+          $ref: "#/components/responses/NotAuthenticated"
+        "403":
+          $ref: "#/components/responses/UntrustedOrigin"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/InvalidData"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/AccountsUnavailable"
+
+
+  /hardware/benchmarks/sync:
+    post:
+      tags:
+        - Compatibilidad
+      summary: Volver a cargar los puntajes de benchmark desde su copia privada
+      description: |
+        Operación administrativa (ADR-0018). Exige `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`.
+        Si la copia está vacía o la base de datos falla, conserva los puntajes guardados.
+      operationId: syncHardwareBenchmarks
+      security:
+        - adminToken: []
+      responses:
+        "200":
+          description: Puntajes cargados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loaded:
+                    type: object
+        "401":
+          $ref: "#/components/responses/AdminUnauthorized"
+        "403":
+          $ref: "#/components/responses/AdminDisabled"
+        "503":
+          description: La copia está vacía o el almacén de puntajes no respondió.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorReason"
+
+
 components:
 
   securitySchemes:
@@ -245,6 +1072,42 @@ components:
       type: http
       scheme: bearer
       description: Token de servicio para operaciones administrativas (variable `DRIFT_ADMIN_TOKEN`).
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: drift_session
+      description: Cookie `HttpOnly` y `SameSite=Lax` que crea el inicio de sesión con Google (ADR-0017).
+
+  parameters:
+    GameId:
+      name: game_id
+      in: path
+      required: true
+      description: Identificador del juego tal como lo entrega la búsqueda.
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9_-]{1,80}$"
+      example: "620"
+
+    DeviceId:
+      name: device_id
+      in: path
+      required: true
+      description: Identificador del dispositivo, tal como lo entrega `GET /devices`.
+      schema:
+        type: string
+
+    Origin:
+      name: Origin
+      in: header
+      required: false
+      description: >-
+        Origen de la página que hace la petición. Toda petición que cambia
+        datos debe venir de un origen permitido; si no, responde 403
+        (ADR-0017).
+      schema:
+        type: string
+      example: http://localhost:3000
 
   responses:
     RateLimited:
@@ -272,6 +1135,77 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorReason"
+
+    NotAuthenticated:
+      description: No hay sesión o expiró.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReason"
+
+    UntrustedOrigin:
+      description: La petición no viene de un origen permitido (`untrusted_origin`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReason"
+
+    LoginNotConfigured:
+      description: El servidor no tiene configurado el inicio de sesión (`login_not_configured`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReason"
+
+    NotFound:
+      description: >-
+        El inicio de sesión no está configurado (`login_not_configured`) o el
+        elemento no existe en la cuenta (`device_not_found`,
+        `favorite_not_found`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReason"
+
+    AccountsUnavailable:
+      description: El almacén de cuentas no respondió (`accounts_unavailable`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorReason"
+
+    InvalidData:
+      description: >-
+        Datos inválidos: error de validación de FastAPI o de las reglas del
+        dominio (`invalid_device`, `invalid_favorite`).
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail: {}
+
+    MalformedBody:
+      description: El cuerpo no es JSON válido.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail: {}
+
+    Deleted:
+      description: Elemento borrado.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - deleted
+            properties:
+              deleted:
+                type: boolean
+                const: true
 
   schemas:
 
@@ -337,6 +1271,87 @@ components:
 
 
 
+    PricePoint:
+      type: object
+      required:
+        - date
+        - store
+        - price
+        - discount
+      properties:
+        date:
+          type: string
+          format: date-time
+        store:
+          type: string
+        price:
+          type: number
+        discount:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    PriceHistory:
+      type: object
+      required:
+        - game_id
+        - available
+        - points
+      properties:
+        game_id:
+          type: string
+        available:
+          type: boolean
+        reason:
+          type:
+            - string
+            - "null"
+          description: >-
+            Por qué no hay historial: `not_configured` (la fuente no está
+            configurada) o `not_found` (la fuente no conoce el juego).
+        source:
+          type: string
+        currency:
+          type: string
+          example: COP
+        since:
+          type:
+            - string
+            - "null"
+          format: date-time
+        cached_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+          description: Fecha del historial cuando la fuente no respondió y se entrega el último obtenido.
+        current:
+          description: Mejor precio de hoy.
+          oneOf:
+            - $ref: "#/components/schemas/PricePoint"
+            - type: "null"
+        lowest:
+          description: Precio más bajo registrado en el periodo.
+          oneOf:
+            - $ref: "#/components/schemas/PricePoint"
+            - type: "null"
+        steam_best_discount:
+          description: Mayor descuento de Steam en el periodo, solo como porcentaje.
+          type:
+            - object
+            - "null"
+          properties:
+            date:
+              type: string
+              format: date-time
+            discount:
+              type: integer
+        points:
+          type: array
+          description: Un punto cada vez que cambió el mejor precio, del más antiguo al más reciente.
+          items:
+            $ref: "#/components/schemas/PricePoint"
+
     GameSearchResult:
       type: object
 
@@ -350,6 +1365,11 @@ components:
 
         id:
           type: string
+          description: >-
+            Identificador de Steam (numérico) cuando el juego existe en
+            Steam; es el que usa la estimación de compatibilidad. Un juego
+            que solo existe en otra tienda conserva el identificador de esa
+            tienda, que no es numérico.
 
         name:
           type: string
@@ -359,11 +1379,47 @@ components:
           additionalProperties:
             type: number
 
-        unavailable_sources:
+        discounts:
+          type: object
+          description: >-
+            Porcentaje de descuento que anuncia cada tienda sobre su precio
+            normal, con las mismas claves que prices. Solo aparecen las
+            tiendas con una oferta activa.
+          additionalProperties:
+            type: integer
+            minimum: 1
+            maximum: 100
+          example:
+            Steam: 40
+
+        platforms:
           type: array
-          description: Fuentes que fallaron o no respondieron dentro del plazo (Steam, CheapShark, PlayStation).
+          description: Plataformas para las que hay al menos un precio.
           items:
             type: string
+            enum:
+              - PC
+              - PlayStation
+              - Xbox
+
+        unavailable_sources:
+          type: array
+          description: Fuentes que fallaron o no respondieron dentro del plazo (Steam, IsThereAnyDeal o CheapShark, PlayStation, Xbox).
+          items:
+            type: string
+
+        cached_sources:
+          type: object
+          description: >-
+            Fuentes que no respondieron y cuyos precios salen de la copia de
+            respaldo (ADR-0015). La clave es la fuente (Steam, CheapShark,
+            PlayStation, Xbox) y el valor, la fecha en que se obtuvo ese dato.
+            Vacío cuando todas las fuentes respondieron.
+          additionalProperties:
+            type: string
+            format: date-time
+          example:
+            CheapShark: "2026-11-12T08:00:00+00:00"
 
         image:
           type:
@@ -604,3 +1660,475 @@ components:
 
           items:
             type: object
+
+    StoreList:
+      type: object
+      required:
+        - complete
+        - items
+      properties:
+        complete:
+          type: boolean
+          description: Falso si la fuente de las tiendas de PC no respondió.
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - platform
+              - source
+            properties:
+              name:
+                type: string
+              platform:
+                type: string
+                enum:
+                  - PC
+                  - PlayStation
+                  - Xbox
+              source:
+                type: string
+                description: Fuente de la que DRIFT obtiene el precio de esa tienda.
+
+
+    FeaturedGames:
+      type: object
+      required:
+        - source
+        - items
+      properties:
+        category:
+          type:
+            - string
+            - "null"
+        source:
+          type: string
+          example: Steam
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - name
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              image:
+                type:
+                  - string
+                  - "null"
+              hero:
+                type:
+                  - string
+                  - "null"
+              header:
+                type:
+                  - string
+                  - "null"
+
+
+    RecommendationRequest:
+      type: object
+      required:
+        - prices
+      properties:
+        prices:
+          type: object
+          description: Precio en pesos que la persona tiene en pantalla, por tienda (máximo 60).
+          maxProperties: 60
+          additionalProperties:
+            type: number
+            minimum: 0
+            maximum: 1000000000
+        discounts:
+          type: object
+          maxProperties: 60
+          additionalProperties:
+            type: integer
+        devices:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - name
+              - kind
+            properties:
+              id:
+                type:
+                  - string
+                  - "null"
+                maxLength: 80
+              name:
+                type: string
+                minLength: 1
+                maxLength: 40
+              kind:
+                type: string
+                enum:
+                  - pc
+                  - playstation
+                  - xbox
+              specs:
+                oneOf:
+                  - $ref: "#/components/schemas/CompatibilityRequest"
+                  - type: "null"
+
+
+    RecommendationOption:
+      type: object
+      properties:
+        store:
+          type: string
+        platform:
+          type: string
+        price:
+          type: number
+        discount:
+          type: integer
+        experience:
+          type:
+            - string
+            - "null"
+          description: "`recommended`, `minimum`, `console` o `unverified`."
+        device:
+          type:
+            - object
+            - "null"
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            kind:
+              type: string
+
+
+    Recommendation:
+      type: object
+      required:
+        - game_id
+        - uses_devices
+        - recommended
+        - alternatives
+        - excluded
+      properties:
+        game_id:
+          type: string
+        uses_devices:
+          type: boolean
+        recommended:
+          oneOf:
+            - $ref: "#/components/schemas/RecommendationOption"
+            - type: "null"
+        reason:
+          type:
+            - string
+            - "null"
+          description: "`cheapest`, `better_experience` u `only_option`."
+        price_difference:
+          type:
+            - number
+            - "null"
+        alternatives:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecommendationOption"
+        excluded:
+          type: array
+          description: Dispositivos descartados y por qué (`not_sold`, `insufficient`).
+          items:
+            type: object
+            properties:
+              device:
+                type: object
+              reason:
+                type: string
+
+
+    SessionStatus:
+      type: object
+      required:
+        - login_available
+        - authenticated
+        - user
+      properties:
+        login_available:
+          type: boolean
+          description: Falso si el servidor no tiene configurado el inicio de sesión.
+        authenticated:
+          type: boolean
+        user:
+          type:
+            - object
+            - "null"
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+            picture:
+              type:
+                - string
+                - "null"
+
+
+    PcSpecs:
+      type: object
+      required:
+        - ram_gb
+        - gpu_score
+      properties:
+        ram_gb:
+          type: integer
+        gpu_score:
+          type: integer
+        gpu_name:
+          type:
+            - string
+            - "null"
+          maxLength: 120
+        cpu_name:
+          type:
+            - string
+            - "null"
+          maxLength: 120
+        cpu_score:
+          type:
+            - integer
+            - "null"
+        storage_gb:
+          type:
+            - integer
+            - "null"
+
+
+    DeviceRequest:
+      type: object
+      required:
+        - name
+        - kind
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        kind:
+          type: string
+          enum:
+            - pc
+            - playstation
+            - xbox
+        specs:
+          description: Solo para un PC.
+          oneOf:
+            - $ref: "#/components/schemas/PcSpecs"
+            - type: "null"
+
+
+    Device:
+      type: object
+      required:
+        - id
+        - name
+        - kind
+        - specs
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+          enum:
+            - pc
+            - playstation
+            - xbox
+        specs:
+          oneOf:
+            - $ref: "#/components/schemas/PcSpecs"
+            - type: "null"
+
+
+    FavoriteRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        image:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+        price:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1000000000
+          description: Mejor precio que la persona tenía en pantalla al guardar.
+        store:
+          type:
+            - string
+            - "null"
+          minLength: 1
+          maxLength: 60
+
+
+    Favorite:
+      type: object
+      required:
+        - game_id
+        - name
+      properties:
+        game_id:
+          type: string
+        name:
+          type: string
+        image:
+          type:
+            - string
+            - "null"
+        price:
+          type:
+            - number
+            - "null"
+        store:
+          type:
+            - string
+            - "null"
+        saved_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        target_price:
+          type:
+            - number
+            - "null"
+
+
+    FavoriteAlerts:
+      type: object
+      required:
+        - checked_at
+        - alerts
+        - items
+      properties:
+        checked_at:
+          type: string
+          format: date-time
+        alerts:
+          type: integer
+          description: Cuántos favoritos tienen una alerta.
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - game_id
+            properties:
+              game_id:
+                type: string
+              current:
+                type:
+                  - object
+                  - "null"
+                description: Mejor precio de hoy; nulo si ninguna fuente lo entregó.
+                properties:
+                  store:
+                    type: string
+                  price:
+                    type: number
+              alert:
+                type:
+                  - object
+                  - "null"
+                properties:
+                  reason:
+                    type: string
+                    description: "`target_reached` o `price_dropped`."
+                  saved_difference:
+                    type:
+                      - number
+                      - "null"
+
+    ExplorePage:
+      type: object
+      required:
+        - page
+        - has_more
+        - items
+      properties:
+        genre:
+          type:
+            - string
+            - "null"
+        page:
+          type: integer
+        has_more:
+          type: boolean
+          description: Verdadero si probablemente hay otra página.
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExploreGame"
+
+
+    ExploreGame:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Identificador de Steam.
+        name:
+          type: string
+        image:
+          type: [string, "null"]
+          description: Carátula vertical.
+        hero:
+          type: [string, "null"]
+        header:
+          type: [string, "null"]
+        capsule:
+          type: [string, "null"]
+          description: Imagen horizontal grande.
+        description:
+          type: [string, "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        release_date:
+          type: [string, "null"]
+          format: date
+        developers:
+          type: array
+          items:
+            type: string
+        review:
+          type: [string, "null"]
+          example: Muy positivas
+        review_percent:
+          type: [integer, "null"]
+        price:
+          type: [number, "null"]
+          description: Precio en Steam, en pesos; nulo si es gratis o no se vende.
+        original_price:
+          type: [number, "null"]
+          description: Precio sin descuento; nulo si no hay oferta.
+        discount:
+          type: integer
+        is_free:
+          type: boolean

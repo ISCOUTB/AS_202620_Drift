@@ -71,3 +71,47 @@ Antes de concluir se revisó qué datos guarda o recibe el sistema, no solo lo q
 ## 7. Texto del aviso de privacidad (publicado en el pie de página)
 
 > **Privacidad.** DRIFT no pide registro ni usa cookies. Para funcionar y protegerse contra el abuso, el servicio y sus proveedores de alojamiento (Microsoft Azure, Vercel y el servidor de la Universidad Tecnológica de Bolívar) registran tu dirección IP y las búsquedas que haces, solo para operar y diagnosticar el servicio. El perfil de tu PC se guarda únicamente en tu navegador. Al usar el sitio aceptas este tratamiento, conforme a la Ley 1581 de 2012. Consultas sobre tus datos: abre un caso en el repositorio del proyecto (https://github.com/ISCOUTB/AS_202620_Drift/issues).
+
+## 8. Cambio propuesto: cuentas con Google y base de datos (12 de noviembre de 2026)
+
+> Esta sección describe cambios que todavía no están en `master` (ADR-0014 a ADR-0017). Cuando se integren, las secciones 1 a 7 dejan de ser exactas en lo que aquí se indica y deben reescribirse.
+
+**Qué cambia en la conclusión.** DRIFT pasa a tener cuentas. Quien inicia sesión con Google es identificable: DRIFT guarda su nombre y su correo. Quien no inicia sesión sigue como antes.
+
+**Datos nuevos que se tratan**
+
+| Dato | De quién | Dónde se guarda | Para qué | Cuánto tiempo |
+|---|---|---|---|---|
+| Identificador de la cuenta de Google, correo, nombre y dirección de la foto | Quien inicia sesión | PostgreSQL (`app_user`) | Reconocer a la persona cuando vuelve | Hasta que borre su cuenta |
+| Dispositivos: nombre que les pone, tipo y, en un PC, sus componentes | Quien inicia sesión | PostgreSQL (`user_device`) | Filtrar tiendas y estimar compatibilidad | Hasta que los borre o borre su cuenta |
+| Juegos favoritos: identificador y nombre del juego, su imagen, el precio y la tienda al guardarlo, y el precio objetivo si lo pone (ADR-0020, ADR-0021) | Quien inicia sesión | PostgreSQL (`user_favorite`) | Mostrarle su lista y si el precio cambió | Hasta que los quite o borre su cuenta |
+| Huella de la sesión y su vencimiento | Quien inicia sesión | PostgreSQL (`user_session`) | Mantener la sesión | 30 días o hasta cerrar sesión |
+| Búsquedas hechas en DRIFT (texto de la búsqueda y la respuesta de cada tienda) | Cualquier visitante | PostgreSQL (`source_snapshot`) | Copia de respaldo de las fuentes | 72 horas |
+
+La tabla `source_snapshot` **no guarda quién buscó**: no tiene IP, sesión ni usuario. Aun así, el texto de una búsqueda queda en la base hasta 72 horas, y antes no se conservaba en el servidor fuera de los registros de acceso.
+
+**Lo que deja de ser cierto de las secciones anteriores**
+
+- «No tiene cuentas, formularios de registro, cookies» (sección 1) y «No se tratan: nombres, correos, […] cuentas de usuario, cookies» (sección 3).
+- «CORS sin credenciales y sin cookies» (sección 5): ahora hay tres cookies propias, todas necesarias para el inicio de sesión (`drift_session`, y por 10 minutos `drift_login_state` y `drift_login_nonce`). No hay cookies de analítica ni de publicidad.
+- «DRIFT no puede asociar una IP con una persona concreta, ni tiene cuentas donde consultar datos» (sección 4): con cuentas, los derechos del titular sí se pueden atender directamente.
+
+**Base del tratamiento y derechos**
+
+- **Autorización:** la persona decide iniciar sesión y Google le muestra qué datos comparte. El aviso de la página lo explica antes.
+- **Minimización:** solo se piden los permisos `openid`, `email` y `profile`. No se guardan contraseñas ni los tokens de Google.
+- **Consultar:** «Mi cuenta» muestra el nombre, el correo y los dispositivos guardados; la pestaña «Favoritos», los juegos guardados.
+- **Suprimir:** «Eliminar mi cuenta» (`DELETE /auth/me`) borra la cuenta, sus sesiones, sus dispositivos y sus favoritos.
+- **Actualizar:** el nombre, el correo y la foto se actualizan desde Google en cada inicio de sesión.
+
+**Terceros nuevos**
+
+- **Google**, como proveedor de identidad: sabe que la persona inició sesión en DRIFT.
+- **IsThereAnyDeal** y la **tienda de Xbox** (Microsoft): reciben el texto de las búsquedas, igual que Steam, CheapShark y PlayStation. No reciben la IP ni la identidad del visitante.
+- Para las alertas de precio (ADR-0021), Steam e IsThereAnyDeal reciben los identificadores de los juegos favoritos, sin decir de quién son.
+
+**Pendientes**
+
+- No hay copias de seguridad del volumen de PostgreSQL ni un procedimiento para restaurarlo.
+- No se registra la fecha en que la persona aceptó el tratamiento.
+- El texto de la sección 7 ya no coincide con el aviso publicado en el pie de página, que se actualizó junto con este cambio.

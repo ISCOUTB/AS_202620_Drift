@@ -205,9 +205,14 @@ def get_json(
     uniform: Callable[[], float] = random.random,
     headers: Optional[dict] = None,
     budget: Optional[TimeBudget] = None,
+    json_body: Optional[Any] = None,
 ) -> Any:
     """
     GET con timeout explícito y reintentos solo ante fallos transitorios.
+
+    Con `json_body` la petición es un POST con ese cuerpo JSON. Solo debe
+    usarse para consultas (lecturas que la fuente recibe por POST): se
+    reintenta igual que un GET, así que no puede tener efectos.
 
     Transitorios: timeout, errores de conexión, HTTP 429 y HTTP 5xx.
     Permanentes (sin reintento): el resto de 4xx y un cuerpo que no es JSON.
@@ -247,11 +252,19 @@ def get_json(
             attempt_timeout = min(attempt_timeout, remaining)
 
         try:
-            response = httpx.get(
-                url,
-                timeout=attempt_timeout,
-                **call_kwargs,
-            )
+            if json_body is None:
+                response = httpx.get(
+                    url,
+                    timeout=attempt_timeout,
+                    **call_kwargs,
+                )
+            else:
+                response = httpx.post(
+                    url,
+                    json=json_body,
+                    timeout=attempt_timeout,
+                    **call_kwargs,
+                )
             response.raise_for_status()
             return _decode_json(response, source)
 

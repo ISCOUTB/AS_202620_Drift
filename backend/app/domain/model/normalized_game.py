@@ -13,3 +13,4 @@ class NormalizedGame:
     currency: str
     discount: int
     captured_at: datetime
+    image: Optional[str] = None

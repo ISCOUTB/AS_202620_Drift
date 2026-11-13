@@ -29,12 +29,15 @@ DRIFT adopta una **Arquitectura Hexagonal (Ports and Adapters)**.
 | Fuente | Para qué se usa | Adaptador |
 |---|---|---|
 | Steam | Fuente principal: búsqueda, precio en pesos, portada y requisitos de PC | `backend/app/infrastructure/external/steam/` |
-| CheapShark | Precios de otras tiendas de PC (GOG, Epic, Humble, Fanatical y más) | `backend/app/infrastructure/external/cheapshark/` |
+| IsThereAnyDeal | Precios de otras tiendas de PC (GOG, Epic, Humble, Fanatical y más) e historial de precios. Necesita `DRIFT_ITAD_API_KEY` | `backend/app/infrastructure/external/isthereanydeal/` |
+| CheapShark | Las mismas tiendas de PC cuando no hay llave de IsThereAnyDeal; sin historial | `backend/app/infrastructure/external/cheapshark/` |
 | PlayStation Store Colombia | Precio de la versión de consola | `backend/app/infrastructure/external/playstation/` |
+| Tienda de Xbox Colombia | Precio de la versión de Xbox, en pesos | `backend/app/infrastructure/external/xbox/` |
 | open.er-api.com | Tasa de cambio de dólares a pesos | `backend/app/infrastructure/external/exchange/` |
 
 - Las fuentes se consultan en paralelo, cada una con un plazo de 3 segundos. Si una no responde a tiempo, la búsqueda sigue con las demás y avisa cuál faltó en `unavailable_sources`.
 - Steam tiene además timeout explícito, un reintento con espera creciente y validación de sus respuestas. Si falla, se usa un catálogo local de respaldo.
+- Cada fuente guarda una copia de su última respuesta a cada búsqueda. Si la fuente falla o se queda sin cuota, se responde con esa copia (hasta 72 horas) y se avisa en `cached_sources` con la fecha del dato (ADR-0015).
 - `backend/tests/test_architecture.py` falla si el dominio o la aplicación importan infraestructura.
 
 Decisiones de arquitectura vigentes:
@@ -53,6 +56,11 @@ Decisiones de arquitectura vigentes:
 | [ADR-0011](docs/adr/0011-autenticacion-operaciones-administrativas.md) | Token de servicio para la sincronización del catálogo y `/metrics`; registro de las operaciones administrativas |
 | [ADR-0012](docs/adr/0012-limitacion-de-tasa-en-la-api.md) | Límite de tasa por cliente en búsqueda y compatibilidad; CORS acotado |
 | [ADR-0013](docs/adr/0013-plazo-total-en-la-busqueda-de-steam.md) | Plazo total por búsqueda en Steam; correcciones a ADR-0009 y ADR-0010 (propuesto) |
+| [ADR-0014](docs/adr/0014-postgresql-como-persistencia.md) | PostgreSQL como persistencia; reemplaza la persistencia en memoria de ADR-0008 (propuesto) |
+| [ADR-0018](docs/adr/0018-puntajes-de-hardware-en-la-base-de-datos.md) | Puntajes de gráficas y procesadores en PostgreSQL, con la copia JSON como respaldo (propuesto) |
+| [ADR-0017](docs/adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) | Inicio de sesión con Google y registro de dispositivos; CORS con credenciales (propuesto) |
+| [ADR-0016](docs/adr/0016-isthereanydeal-e-historial-de-precios.md) | IsThereAnyDeal para las tiendas de PC y el historial de precios, con control de cuota (propuesto) |
+| [ADR-0015](docs/adr/0015-copia-de-respaldo-de-las-fuentes.md) | Copia de respaldo de cada fuente: si una falla, se responde con su último precio guardado y se avisa (propuesto) |
 
 ## Organización del proyecto
 
@@ -256,7 +264,7 @@ Desde la carpeta `backend`:
 python -m pytest tests -q
 ```
 
-La suite incluye la búsqueda, la degradación de fuentes, la resiliencia de Steam (no responde, responde tarde, responde dos veces, 429, 5xx y respuestas inválidas), la compatibilidad de PC, los controles de seguridad de la API (token administrativo, límite de tasa, CORS y registro, en `test_s13_seguridad_api.py`) y la regla de dependencias de la arquitectura. Ninguna de estas pruebas sale a internet.
+La suite incluye la búsqueda, la degradación de fuentes, la copia de respaldo de cada fuente (`test_copia_de_respaldo.py`), la resiliencia de Steam (no responde, responde tarde, responde dos veces, 429, 5xx y respuestas inválidas), la compatibilidad de PC, los controles de seguridad de la API (token administrativo, límite de tasa, CORS y registro, en `test_s13_seguridad_api.py`) y la regla de dependencias de la arquitectura. Ninguna de estas pruebas sale a internet.
 
 Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/api/drift/openapi.yaml`](docs/api/drift/openapi.yaml) y necesitan la API encendida en `http://localhost:8000`. Sin ella fallan por conexión, no por un error del código. Para correr solo el resto:
 
@@ -264,7 +272,9 @@ Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/ap
 python -m pytest tests -q --ignore=tests/test_contract.py
 ```
 
-Última validación local (1 de noviembre de 2026, Python 3.12): **201 pruebas aprobadas**, más las 6 de contrato con la API encendida (207 en total). Las de contrato tardan varios minutos porque consultan las fuentes reales.
+Las pruebas del adaptador de PostgreSQL (`tests/test_postgres_snapshot_store.py`) necesitan una base de datos que se pueda vaciar, indicada en `DRIFT_TEST_DATABASE_URL`. Sin esa variable se omiten; el CI las corre con un PostgreSQL de servicio.
+
+Última validación local (13 de noviembre de 2026, Python 3.12): **432 pruebas aprobadas** sin base de datos y **452** con un PostgreSQL de prueba. Las 6 de contrato no se repitieron en esa fecha: su última corrida fue el 1 de noviembre de 2026, antes de añadir `cached_sources`, `discounts`, `platforms` y la fuente de Xbox. Tardan varios minutos porque consultan las fuentes reales.
 
 ### Experimento E6 (degradación de una fuente)
 
@@ -336,14 +346,14 @@ Los jobs de Python instalan desde `backend/requirements.txt`, igual que el despl
 
 - **Modelo de amenazas:** STRIDE sobre los contenedores del C4, con 11 amenazas priorizadas por probabilidad e impacto, cada una con su dueño y su estado ([modelo de amenazas](docs/seguridad/modelo-amenazas.md)).
 - **Controles de la API:** token de servicio para las operaciones administrativas (ADR-0011), límite de tasa por cliente y CORS acotado (ADR-0012). Arquitectura de seguridad en [arc42 §8.16](docs/arc42/arc42_8_conceptos_transversales.md); amenazas aceptadas en [arc42 §11.9](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).
-- **Privacidad:** DRIFT no tiene cuentas ni cookies. Trata la IP del visitante y, en los registros de acceso, sus búsquedas. El perfil del PC se queda en el navegador. Detalle y base del tratamiento (Ley 1581 de 2012) en [privacidad](docs/seguridad/privacidad.md); el aviso está en el pie de la página.
-- **Secretos:** ninguno se versiona. `DRIFT_ADMIN_TOKEN` y las URL de benchmarks viven en Dokploy y Azure; `SONAR_TOKEN`, en los secretos de GitHub.
+- **Privacidad:** se puede usar sin registrarse. DRIFT trata la IP del visitante y, en los registros de acceso, sus búsquedas. Quien inicia sesión con Google deja además su nombre, su correo, su foto, los dispositivos que registre y los juegos que guarde en favoritos, y puede borrarlo todo desde «Mi cuenta» (ADR-0017). Sin sesión, el perfil del PC se queda en el navegador. Detalle y base del tratamiento (Ley 1581 de 2012) en [privacidad](docs/seguridad/privacidad.md); el aviso está en el pie de la página.
+- **Secretos:** ninguno se versiona. `DRIFT_ADMIN_TOKEN` y las URL de benchmarks viven en Dokploy y Azure; `DRIFT_DB_PASSWORD`, `DRIFT_ITAD_API_KEY` y `DRIFT_GOOGLE_CLIENT_SECRET`, en Dokploy; `SONAR_TOKEN`, en los secretos de GitHub.
 
 ## Despliegue
 
 | Entorno | Qué publica | Dirección | Cómo se despliega |
 |---|---|---|---|
-| Servidor del laboratorio (Dokploy) | Frontend y backend | https://drift.iscoutb.dev | Docker Compose con [`deploy/compose.lab.yaml`](deploy/compose.lab.yaml), automático en cada push a `master` |
+| Servidor del laboratorio (Dokploy) | Frontend, backend y PostgreSQL | https://drift.iscoutb.dev | Docker Compose con [`deploy/compose.lab.yaml`](deploy/compose.lab.yaml), automático en cada push a `master` |
 | Azure App Service | Backend | https://drift-utb-202620-g5fvchdcgpcthkeg.mexicocentral-01.azurewebsites.net | GitHub Actions en cada push a `master` |
 | Vercel | Frontend | https://drift-frontend-as202620.vercel.app | Manual, desde la línea de comandos de Vercel |
 
@@ -357,7 +367,7 @@ Detalle de la infraestructura en [arc42 §7](docs/arc42/arc42_7_vista_despliegue
 
 ## Configuración
 
-Todas las variables son opcionales: sin ellas el sistema arranca con los valores por defecto. La plantilla está en [`deploy/.env.example`](deploy/.env.example); la copia con valores reales, `deploy/.env`, no se versiona.
+Todas las variables son opcionales, salvo `DRIFT_DB_PASSWORD` para levantar el compose del laboratorio: sin las demás el sistema arranca con los valores por defecto. La plantilla está en [`deploy/.env.example`](deploy/.env.example); la copia con valores reales, `deploy/.env`, no se versiona.
 
 | Variable | Por defecto | Para qué sirve |
 |---|---|---|
@@ -373,14 +383,24 @@ Todas las variables son opcionales: sin ellas el sistema arranca con los valores
 | `DRIFT_ADMIN_TOKEN` | vacía | **Secreta.** Token para `POST /games/sync/playstation` y `/metrics` (`Authorization: Bearer …`). Vacía = esas operaciones quedan deshabilitadas (ADR-0011) |
 | `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en búsqueda y compatibilidad; `0` lo desactiva (ADR-0012) |
 | `DRIFT_TRUST_FORWARDED_FOR` | `false` | Usa la última IP de `X-Forwarded-For` para el límite; solo detrás de un proxy de confianza (Azure, Traefik) |
-| `DRIFT_GPU_BENCHMARKS_URL` y `DRIFT_CPU_BENCHMARKS_URL` | vacías | Direcciones privadas de los puntajes de benchmarks. Sin ellas, la compatibilidad compara por niveles. Son secretas y no se escriben en el repositorio |
+| `DRIFT_DB_PASSWORD` | sin valor | **Secreta.** Contraseña de PostgreSQL en el compose del laboratorio. Obligatoria allí; debe ser segura para una URL (ADR-0014) |
+| `DRIFT_DATABASE_URL` | vacía | **Secreta.** Conexión a PostgreSQL. El compose la arma solo. Vacía = las copias de respaldo viven en memoria |
+| `DRIFT_GOOGLE_CLIENT_ID` y `DRIFT_GOOGLE_CLIENT_SECRET` | vacías | Cliente OAuth de Google; el secreto es **secreto**. Vacías = sin inicio de sesión (ADR-0017) |
+| `DRIFT_GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/google/callback` | Dirección a la que Google devuelve a la persona. Debe coincidir con una URI autorizada del cliente |
+| `DRIFT_FRONTEND_URL` | el primer origen de `CORS_ALLOWED_ORIGINS` | Página a la que se vuelve después de iniciar sesión |
+| `DRIFT_ITAD_API_KEY` | vacía | **Secreta.** Llave de IsThereAnyDeal. Vacía = las tiendas de PC salen de CheapShark y el historial queda deshabilitado (ADR-0016) |
+| `DRIFT_ITAD_QUOTA_LIMIT` | `900` | Llamadas a IsThereAnyDeal permitidas cada 5 minutos antes de responder con la copia de respaldo |
+| `DRIFT_CACHE_FRESH_SECONDS` | `900` | Una copia más nueva se usa sin llamar a la fuente (ADR-0015) |
+| `DRIFT_CACHE_STALE_SECONDS` | `259200` | Una copia más vieja ya no se muestra cuando la fuente falla (72 horas) |
+| `DRIFT_GPU_BENCHMARKS_URL` y `DRIFT_CPU_BENCHMARKS_URL` | vacías | Direcciones privadas de los puntajes de benchmarks. Con base de datos se usan para llenarla la primera vez y al sincronizar; después los puntajes se leen de PostgreSQL (ADR-0018). Sin ellas ni archivo local, la compatibilidad compara por niveles. Son secretas y no se escriben en el repositorio |
 
 ## Observabilidad
 
 | Ruta | Qué muestra |
 |---|---|
 | `/health` | Estado de la API |
-| `/metrics` | Requiere `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`. Latencia de búsqueda (promedio y p95 de las últimas 100) y búsquedas con una fuente no disponible, por fuente |
+| `POST /hardware/benchmarks/sync` | Requiere `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`. Vuelve a cargar los puntajes de gráficas y procesadores desde su copia privada (ADR-0018) |
+| `/metrics` | Requiere `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`. Latencia de búsqueda (promedio y p95 de las últimas 100), búsquedas con una fuente no disponible y búsquedas respondidas con una copia de respaldo, por fuente, y el uso de la cuota de IsThereAnyDeal |
 
 En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.dev/api/metrics. Las métricas viven en memoria y se reinician con cada despliegue. Cada búsqueda deja además una línea de log en JSON.
 
@@ -404,14 +424,20 @@ En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.d
 
 ## Alcance actual
 
-DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC y con PlayStation Store, y abre la página de compra de cada tienda en una pestaña nueva. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
+DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC, con PlayStation Store y con la tienda de Xbox, muestra el descuento que anuncia cada tienda y abre su página de compra en una pestaña nueva. Al abrir un juego de PC muestra cómo se movió su mejor precio en los últimos 12 meses. Al abrir un juego recomienda dónde comprarlo y en cuál dispositivo jugarlo: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más, y sin contar los PC que no alcanzan los requisitos mínimos (ADR-0019). Quien inicia sesión con Google puede registrar sus dispositivos (varios PC y consolas) y usarlos desde cualquier navegador, y guardar juegos en favoritos con un precio objetivo. Al entrar, DRIFT revisa el precio de hoy de sus favoritos en las tiendas de PC y avisa en la página cuáles llegaron a ese precio o bajaron 5 % o más (ADR-0020 y ADR-0021; no envía correos y no revisa los juegos que solo están en consola). La portada muestra los juegos más vendidos del momento en Steam, generales y por categoría, y la pestaña «Tiendas» lista todas las tiendas conectadas con su enlace. El usuario puede elegir las plataformas que tiene (PC, PlayStation, Xbox) y ver solo esas tiendas; la elección se recuerda en su navegador. Los juegos que solo existen en una tienda de consola también aparecen. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
 
 La compatibilidad de PC usa los requisitos reales de cada juego en Steam y el equipo que el usuario guarda en su navegador. Compara memoria, procesador, tarjeta gráfica y espacio libre; la gráfica y el procesador se comparan por benchmark cuando hay datos y por niveles cuando no.
 
 Limitaciones conocidas:
 
-- **Precios de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia. Los precios de Steam sí son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
-- **Persistencia:** el catálogo, las cachés y las métricas viven en memoria y se pierden al reiniciar (ADR-0008).
+- **Historial de precios:** cubre 12 meses y solo las tiendas de PC. Steam entra con precios de Colombia, calculados con su precio normal de hoy y el descuento de cada fecha; si ese precio normal cambió en el periodo, los valores antiguos quedan desviados. Las demás tiendas son precios de Estados Unidos convertidos a pesos con la tasa de hoy. No hay historial de consolas (ADR-0016).
+- **Precios de IsThereAnyDeal y de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia. Los precios de Steam sí son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
+- **Persistencia:** las copias de respaldo de las fuentes se guardan en PostgreSQL en el laboratorio (ADR-0014). El catálogo de PlayStation, las cachés de 60 s y las métricas siguen en memoria y se pierden al reiniciar. En Azure y Vercel no hay PostgreSQL: allí las copias también viven en memoria.
+- **Copia de respaldo:** un precio puede tener hasta 15 minutos sin aviso y hasta 72 horas con aviso. Un juego que nadie ha buscado no tiene copia: si su fuente cae, se muestra como no disponible (ADR-0015).
+- **Tienda de Xbox:** se consulta con los endpoints que usa la propia tienda web de Microsoft, que no tienen contrato publicado ni soporte oficial y pueden cambiar sin aviso. Se consultan a la vez sus dos buscadores, porque el de sugerencias devuelve pocos resultados y a veces solo complementos, y el de búsqueda completa rellena con juegos que no tienen que ver. No informa cuándo termina una oferta. Un juego que se vende a la vez para Xbox y para PC queda solo como Xbox.
+- **Ofertas de PlayStation:** el precio de oferta se lee del campo `rewards` de la tienda. No se pudo comprobar con datos reales porque el 12 de noviembre de 2026 ninguno de los juegos consultados estaba en oferta.
+- **Compatibilidad:** solo se estima para juegos con identificador de Steam. Un juego que solo aparece en una tienda de consola, o en otra tienda de PC sin equivalente en Steam, no tiene estimación.
 - **Pruebas del frontend:** no hay pruebas automatizadas del frontend.
-- **Seguridad:** no hay usuarios ni roles; el token administrativo es un único secreto del equipo, y el límite de tasa cuenta por proceso. El backend serverless de Vercel no tiene límite de tasa (arc42 §11.9).
+- **Cuentas:** el inicio de sesión solo funciona donde la página y la API están en el mismo sitio (el laboratorio y `localhost`), no entre Vercel y Azure. No se ha probado un inicio de sesión real de punta a punta. No hay copias de seguridad de las cuentas (ADR-0017).
+- **Seguridad:** hay usuarios pero no roles; el token administrativo es un único secreto del equipo, y el límite de tasa cuenta por proceso. El backend serverless de Vercel no tiene límite de tasa (arc42 §11.9).
 - **Riesgos y deuda técnica:** el resto, con los modos de fallo de Steam, está en [arc42 §11](docs/arc42/arc42-11-riesgos-y-deuda-tecnica.md).

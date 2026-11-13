@@ -1,0 +1,127 @@
+/* Usa las variables de color definidas en .pageShell (DriftHome.module.css). */
+
+.panel {
+  margin: 4px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font: 600 .68rem var(--display);
+  letter-spacing: .08em;
+}
+
+.best {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.bestText {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.best h3 {
+  margin: 0;
+  font: 600 1.05rem var(--display);
+}
+
+.best h3 span {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.reason,
+.experience,
+.note,
+.excluded,
+.hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.experience {
+  --tone: var(--muted);
+  padding-left: 10px;
+  border-left: 3px solid var(--tone);
+  color: var(--text);
+}
+
+.good {
+  --tone: #5fe0a0;
+}
+
+.warn {
+  --tone: #ffcf70;
+}
+
+.neutral {
+  --tone: var(--faint);
+}
+
+.bestPrice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.bestPrice strong {
+  font: 700 1.3rem var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.bestPrice small {
+  color: #5fe0a0;
+  font-size: .78rem;
+  font-weight: 600;
+}
+
+.bestPrice a {
+  color: var(--accent);
+  font-size: .82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bestPrice a:hover,
+.bestPrice a:focus-visible {
+  text-decoration: underline;
+}
+
+.alternatives {
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.alternatives li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 3px 0;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.alternatives strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.excluded,
+.hint {
+  color: var(--faint);
+  font-size: .76rem;
+}

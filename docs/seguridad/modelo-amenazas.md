@@ -66,3 +66,20 @@ Si una versión futura lo incorpora, el nuevo ADR deberá añadir a esta tabla e
 - **Inyección de prompt:** desde la consulta del usuario y desde los datos de las tiendas.
 - **Fuga de datos:** el perfil del PC y las consultas enviadas al proveedor del modelo.
 - **Envenenamiento del contexto:** descripciones de juegos manipuladas en las fuentes externas.
+
+## 6. Amenazas nuevas por cuentas y base de datos (propuesto, 12 de noviembre de 2026)
+
+> Corresponden a cambios que todavía no están en `master` (ADR-0014 a ADR-0017). No se revisaron entre pares ni se probaron en el laboratorio; la prioridad es la estimación de quien las escribió y debe confirmarla el equipo. Elementos nuevos del C4: la base de datos PostgreSQL, Google como proveedor de identidad, y las fuentes IsThereAnyDeal y tienda de Xbox.
+
+| ID | STRIDE | Elemento | Amenaza | P | I | Prioridad | Mitigación | Estado | Evidencia |
+|---|---|---|---|---|---|---|---|---|---|
+| A12 | S, E | Backend / API (sesión) | Otro sitio hace que el navegador de la víctima cambie o borre sus dispositivos o su cuenta (CSRF) | 2 | 3 | **6 Alta** | Cookie `SameSite=Lax` y comprobación del `Origin` en toda petición que cambia datos | Hecha | ADR-0017, `test_changes_from_another_site_are_refused` |
+| A13 | S | Backend / API (inicio de sesión) | Un atacante completa en el navegador de la víctima un inicio de sesión que ella no empezó | 2 | 3 | **6 Alta** | `state` al azar comparado con la cookie del navegador; `nonce` dentro del `id_token` | Hecha | `test_login_is_rejected_without_the_state_this_browser_received` |
+| A14 | E, I | Backend / API (dispositivos) | Un usuario lee, cambia o borra dispositivos de otro adivinando su identificador | 2 | 3 | **6 Alta** | Toda consulta filtra por el dueño de la sesión; al guardar, la base no reemplaza una fila de otro dueño | Hecha | `test_one_user_cannot_touch_the_devices_of_another`, `test_devices_belong_to_their_owner` |
+| A15 | I | Base de datos | Quien lee la base o una copia obtiene sesiones utilizables | 1 | 3 | **3 Media** | Solo se guarda la huella SHA-256 del identificador de sesión | Hecha | `test_only_the_hash_of_the_session_token_is_stored` |
+| A16 | I, S | Navegador | Robo de la cookie de sesión por un script inyectado (XSS) | 1 | 3 | **3 Media** | Cookie `HttpOnly`; por HTTPS, `Secure`. Sigue pendiente una política CSP | Parcial | ADR-0017 |
+| A17 | S | Backend / API → Google | Se acepta un `id_token` de otro cliente, vencido o con correo sin verificar | 1 | 3 | **3 Media** | Se comprueban emisor, destinatario, vencimiento, `nonce` y correo verificado. La firma no se verifica porque el token llega directo de Google por TLS | Hecha, con riesgo aceptado | `test_google_token_that_does_not_match_is_rejected` |
+| A18 | I, D | Base de datos | Pérdida de las cuentas por borrado del volumen o fallo del servidor | 2 | 2 | **4 Media** | Ninguna todavía: no hay copias de seguridad | **Pendiente** | ADR-0014 |
+| A19 | D | Backend / API (copia de respaldo) | Búsquedas inventadas llenan la tabla de copias | 2 | 2 | **4 Media** | Límite de tasa (ADR-0012), máximo de 5.000 filas, 72 horas y 256 KB por respuesta | Hecha | ADR-0015, `test_cleanup_keeps_only_the_newest_rows` |
+| A20 | I | Configuración | Fuga de la llave de IsThereAnyDeal o del secreto del cliente de Google | 1 | 3 | **3 Media** | Solo en variables de entorno; la llave viaja en una cabecera y no se registra | Hecha | ADR-0016, `test_search_returns_pc_stores_in_pesos_with_discount_and_link` |
+| A21 | T | Configuración | `CORS_ALLOWED_ORIGINS` con un origen de más: ahora ese origen podría actuar con la sesión del usuario | 1 | 3 | **3 Media** | Lista explícita, sin comodín; revisar la variable en cada entorno | Parcial: depende de la configuración | `test_cors_allows_credentials_only_for_the_configured_origin` |

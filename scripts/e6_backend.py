@@ -26,6 +26,9 @@ UPSTREAMS = {
     "https://www.cheapshark.com": f"{STUB_URL}/cheapshark",
     "https://store.playstation.com": f"{STUB_URL}/playstation",
     "https://open.er-api.com": f"{STUB_URL}/exchange",
+    "https://www.microsoft.com": f"{STUB_URL}/xbox-suggest",
+    "https://storeedgefd.dsx.mp.microsoft.com": f"{STUB_URL}/xbox-search",
+    "https://displaycatalog.mp.microsoft.com": f"{STUB_URL}/xbox-catalog",
 }
 
 # Transporte del experimento. `httpx.get` crea un cliente (y su contexto TLS)

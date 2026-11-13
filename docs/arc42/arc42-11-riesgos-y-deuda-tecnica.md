@@ -176,3 +176,20 @@ Cuando el equipo los aporte, se anotarán **todos** en esta tabla, se vayan a co
 El umbral de E1 no se cambió para hacerlo cumplir.
 
 **Cambio de numeración:** los riesgos S14-R2, S14-R3 y S14-R4 del PR #60 son ahora S14-R5, S14-R6 y S14-R7. Su S14-R1 («E1 no está medido sobre el entorno desplegado») quedó cerrado con la medición vigente.
+
+## 11.11 Verificaciones pendientes tras las cuentas, favoritos y Xbox (13 de noviembre de 2026)
+
+Revisión de lo que quedó sin verificar al añadir el inicio de sesión, los favoritos con alertas, la tienda de Xbox y la copia de respaldo en PostgreSQL.
+
+| ID | Pendiente | Estado | Evidencia o motivo |
+|---|---|---|---|
+| S14-P1 | Las rutas de cuentas, dispositivos, favoritos, alertas, recomendación, portada, tiendas, `/health`, `/metrics` y la recarga de puntajes no estaban en `openapi.yaml`. | Resuelto | Contrato 1.7.0 (1.8.0 con `/games/explore`). schemathesis cubre las 28 operaciones sin fallos (1.035 casos, semilla 42) con las versiones de `requirements.txt` (FastAPI 0.162, Starlette 1.10). Al documentarlas aparecieron dos defectos, corregidos: el `Allow` de las respuestas 405 omitía métodos y `PUT /favorites/alerts` guardaba un favorito llamado «alerts». |
+| S14-P2 | Los diagramas Mermaid nuevos de C4 y arc42 no se habían renderizado. | Resuelto | Los 17 diagramas de `docs/c4/` y de arc42 §5, §6 y §8 renderizan sin errores con Mermaid 11.4.1. |
+| S14-P3 | E1 y E6 no se habían vuelto a medir tras los cambios de búsqueda. | Resuelto en local | [Nueva medición](../evidencias/s14-remedicion-e1-e6.md): E1 con p95 mediano de 955 ms y E6 de 3,41 s; ambos cumplen. No es comparable con las cifras anteriores (otro equipo) ni cambia el resultado del despliegue (S14-R1). |
+| S14-P4 | La búsqueda de Portal 2 mostraba un precio de PlayStation unido por nombre. | Resuelto | Era el mismo juego, pero la versión de **PS3**, que no corre en PS4 ni PS5. El adaptador de PlayStation ahora descarta los productos que solo corren en PS3 o PS Vita. Se quitó el mapeo fijo de ese producto a Steam. |
+| S14-P5 | Una edición de consola con nombre propio no se une al juego de PC. | Abierto | Ejemplo: «Hollow Knight Edición Corazón Vacío» (PS5) no se une a «Hollow Knight». La normalización solo quita «edición estándar, deluxe, digital o ultimate». Ampliarla sin datos podría unir juegos distintos. |
+| S14-P6 | Las alertas de precio no avisan si la persona no entra a DRIFT. | Aceptado | Decisión de [ADR-0021](../adr/0021-alertas-de-precio.md) (sin correo ni procesos en segundo plano). Se revisa si las personas piden avisos sin entrar; el diseño con outbox está en §8.12. |
+| S14-P7 | El inicio de sesión con una cuenta real de Google no se ha probado. | Verificado en local | El 13 de noviembre de 2026 una persona del equipo inició sesión con su cuenta de Google en `http://localhost:3000` y funcionó. Falta repetirlo en el laboratorio (pasos G9 y G10 de la [guía de verificación](../evidencias/verificaciones-pendientes-google-y-laboratorio.md)). |
+| S14-P8 | `deploy/compose.lab.yaml` con PostgreSQL no se ha levantado con Docker. | Pendiente | El adaptador y las migraciones sí se prueban en CI contra PostgreSQL 17. Pasos en la misma guía. |
+| S14-P9 | Algunas carátulas de la portada no cargaban (Call of Duty: Modern Warfare 4, AION 2, Phantom Blade Zero, entre otras). | Resuelto | En los juegos recientes Steam guarda las imágenes en carpetas con un código; la ruta armada con el identificador daba 404 (7 de 12 de los más vendidos). La portada pide ahora las rutas reales a `IStoreBrowseService/GetItems`. Si ese servicio falla, usa las armadas como antes. En el navegador, las 106 imágenes de la portada y de «Explorar» cargaron. |
+| S14-P10 | Antes de esta revisión, las pruebas y schemathesis se corrieron en local con FastAPI 0.135, no con la 0.162 de `requirements.txt`. | Resuelto | Con la 0.162, la corrección del `Allow` de los 405 no veía las rutas de cuentas (el router incluido se guarda como `_IncludedRouter`). Se corrigió y todo se volvió a correr con las versiones del proyecto: 454 pruebas y el contrato completo. |

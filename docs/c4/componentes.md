@@ -1,5 +1,230 @@
 # C4 — Diagrama de Componentes de DRIFT
 
+> **Qué vista usar.** La [«Vista vigente»](#vista-vigente-actualizada-el-12-de-noviembre-de-2026) describe el sistema actual. Lo que sigue a partir de [«Vista anterior»](#vista-anterior-octubre-de-2026) se conserva como registro: no incluye la base de datos, Xbox, IsThereAnyDeal, el historial ni las cuentas.
+
+## Vista vigente (actualizada el 12 de noviembre de 2026)
+
+Nivel 3: los componentes dentro de la API y de la página web. Incluye los cambios de ADR-0014 a ADR-0021, que a esa fecha están en la rama de trabajo y todavía no en `master`. Cada componente corresponde a archivos que existen en el repositorio.
+
+### Componentes de la API
+
+La API sigue la arquitectura hexagonal (ADR-0002): las rutas llaman a casos de uso, los casos de uso dependen de puertos del dominio, y los adaptadores implementan esos puertos. `backend/tests/test_architecture.py` falla si el dominio o la aplicación importan infraestructura.
+
+```mermaid
+flowchart TB
+    WEB["Página web"]
+
+    subgraph API["API — FastAPI"]
+        direction TB
+
+        subgraph ENTRADA["Entrada (infrastructure/api, main.py)"]
+            ROUTES["Rutas de juegos<br/>búsqueda, historial, destacados,<br/>tiendas, compatibilidad"]
+            ACCOUNT_ROUTES["Rutas de cuentas<br/>/auth y /devices"]
+            ADMIN_ROUTES["Rutas administrativas<br/>sincronizar y métricas"]
+            SECURITY["Seguridad<br/>límite de tasa, token, CORS,<br/>origen y cookie de sesión"]
+        end
+
+        subgraph CASOS["Casos de uso (application/usecases)"]
+            SEARCH["SearchGames<br/>busca y filtra por plataforma"]
+            HISTORY["GetPriceHistory"]
+            COMPAT["EstimateCompatibility<br/>RecommendPurchase"]
+            SHOWCASE["ListFeaturedGames<br/>ListStores"]
+            ACCOUNTS["Sessions, Devices, Favorites<br/>y CheckFavoriteAlerts"]
+            SYNC["SyncPlayStationCatalog<br/>SyncHardwareBenchmarks"]
+        end
+
+        subgraph DOMINIO["Dominio (domain)"]
+            MODEL["Modelo<br/>Game, PriceHistory, User,<br/>Device, SourceSnapshot"]
+            SERVICES["Servicios<br/>plataformas, línea de precios, recomendación,<br/>alertas de precio, clasificadores"]
+            PORTS["Puertos<br/>GameRepository, PriceHistoryRepository,<br/>SourceSnapshotStore, AccountRepository,<br/>IdentityProvider, HardwareBenchmarkStore…"]
+        end
+
+        subgraph FUENTES["Adaptadores de fuentes (infrastructure/external)"]
+            A_STEAM["Steam<br/>búsqueda, requisitos, destacados"]
+            A_ITAD["IsThereAnyDeal<br/>precios, historial, cuota"]
+            A_CHEAP["CheapShark"]
+            A_PSN["PlayStation"]
+            A_XBOX["Xbox"]
+            A_GOOGLE["Google"]
+            A_FX["Tasa de cambio"]
+            A_NOW["Precio de hoy<br/>Steam + IsThereAnyDeal,<br/>para las alertas"]
+            HTTP["resilient_http<br/>plazos, reintentos, errores tipados"]
+        end
+
+        subgraph PERSISTENCIA["Adaptadores de persistencia (infrastructure/persistence)"]
+            COMBINED["CombinedGameRepository<br/>consulta las fuentes a la vez<br/>y une sus precios"]
+            STALE["StaleFallbackGameRepository<br/>copia de respaldo por fuente"]
+            RESILIENT["ResilientSourceSnapshotStore<br/>PostgreSQL + memoria"]
+            PG["Adaptadores de PostgreSQL<br/>copias, cuentas, puntajes"]
+            MEM["Adaptadores en memoria<br/>copias, cuentas, catálogos"]
+            BENCH["Catálogo de puntajes<br/>base de datos o copia JSON"]
+        end
+    end
+
+    DB[("PostgreSQL")]
+    EXT["Sistemas externos"]
+
+    WEB --> ROUTES
+    WEB --> ACCOUNT_ROUTES
+    ROUTES --> SECURITY
+    ACCOUNT_ROUTES --> SECURITY
+    ADMIN_ROUTES --> SECURITY
+
+    ROUTES --> SEARCH
+    ROUTES --> HISTORY
+    ROUTES --> COMPAT
+    ROUTES --> SHOWCASE
+    ACCOUNT_ROUTES --> ACCOUNTS
+    ADMIN_ROUTES --> SYNC
+
+    SEARCH --> PORTS
+    HISTORY --> PORTS
+    COMPAT --> PORTS
+    SHOWCASE --> PORTS
+    ACCOUNTS --> PORTS
+    SYNC --> PORTS
+    CASOS --> MODEL
+    CASOS --> SERVICES
+
+    PORTS -.->|"implementado por"| COMBINED
+    PORTS -.->|"implementado por"| FUENTES
+    PORTS -.->|"implementado por"| PG
+    PORTS -.->|"implementado por"| MEM
+    PORTS -.->|"implementado por"| BENCH
+
+    COMBINED --> STALE
+    STALE --> A_STEAM
+    STALE --> A_ITAD
+    STALE --> A_CHEAP
+    STALE --> A_PSN
+    STALE --> A_XBOX
+    STALE --> RESILIENT
+    RESILIENT --> PG
+    RESILIENT --> MEM
+    BENCH --> PG
+
+    A_STEAM --> HTTP
+    A_ITAD --> HTTP
+    A_CHEAP --> HTTP
+    A_PSN --> HTTP
+    A_XBOX --> HTTP
+    A_FX --> HTTP
+    ACCOUNTS --> A_NOW
+    A_NOW --> A_STEAM
+    A_NOW --> A_ITAD
+    HTTP --> EXT
+    A_GOOGLE --> EXT
+    PG --> DB
+```
+
+| Componente | Archivos | Responsabilidad |
+|---|---|---|
+| Rutas de juegos | `backend/app/main.py` | `GET /games/search`, `/games/{id}/price-history`, `/games/featured`, `/stores`, `/hardware/gpus`, `/hardware/cpus` y `POST /games/{id}/compatibility`. |
+| Rutas de cuentas | `infrastructure/api/account_routes.py` | `/auth/google/login`, `/auth/google/callback`, `/auth/me`, `/auth/logout` y `/devices`. |
+| Rutas administrativas | `backend/app/main.py` | `POST /games/sync/playstation`, `POST /hardware/benchmarks/sync` y `GET /metrics`, con token. |
+| Seguridad | `infrastructure/api/security.py`, `account_routes.py` | Límite de tasa por cliente, token administrativo, CORS acotado, comprobación del origen y cookie de sesión. |
+| SearchGames | `application/usecases/search_games.py` | Busca en todas las tiendas y, si se piden plataformas, deja solo sus tiendas. |
+| GetPriceHistory | `application/usecases/get_price_history.py` | Historial del mejor precio, o el motivo por el que no hay. |
+| EstimateCompatibility | `application/usecases/estimate_compatibility.py` | Compara el PC del usuario con los requisitos, por puntaje o por niveles. |
+| RecommendPurchase | `application/usecases/recommend_purchase.py`, `domain/services/recommendation.py` | Recomienda dónde comprar y en qué dispositivo jugar: cruza los precios con la compatibilidad de cada PC del usuario (ADR-0019). |
+| ListFeaturedGames y ListStores | `application/usecases/showcase.py` | Lo que muestra la portada: los más vendidos del momento y las tiendas conectadas. |
+| Sessions, Devices y Favorites | `application/usecases/accounts.py` | Iniciar y cerrar sesión, borrar la cuenta, administrar los dispositivos y los juegos favoritos con su precio objetivo (ADR-0020, ADR-0021). |
+| CheckFavoriteAlerts | `application/usecases/favorite_alerts.py`, `domain/services/price_alerts.py` | Precio de hoy de los favoritos y cuáles llegaron a su objetivo o bajaron 5 % (ADR-0021). |
+| Precio de hoy | `infrastructure/external/store_current_prices.py` | Mejor precio de PC de varios juegos a la vez: Steam en pesos e IsThereAnyDeal en dos llamadas, con caché de una hora. |
+| Sincronizaciones | `sync_playstation_catalog.py`, `sync_hardware_benchmarks.py` | Cargas pedidas por el equipo; rechazan una respuesta vacía para no borrar lo guardado. |
+| Servicios del dominio | `domain/services/` | Plataforma de cada tienda, línea del mejor precio y clasificadores de hardware. |
+| CombinedGameRepository | `persistence/combined_game_repository.py` | Lanza cada fuente en un hilo, aplica el plazo y une los precios por identificador o por nombre. |
+| StaleFallbackGameRepository | `persistence/stale_fallback_game_repository.py` | Envuelve a cada fuente: copia fresca 15 minutos, de respaldo hasta 72 horas. |
+| ResilientSourceSnapshotStore | `persistence/resilient_source_snapshot_store.py` | Escribe en PostgreSQL y en memoria; si PostgreSQL falla, deja de llamarlo 30 segundos. |
+| Adaptadores de PostgreSQL | `persistence/postgres_*.py` | Pool de conexiones con plazos cortos, migraciones y las tablas de copias, cuentas y puntajes. |
+| Catálogo de puntajes | `persistence/json_hardware_benchmark_repository.py` | Lee de la base o de la copia JSON y reconoce modelos dentro del texto de los requisitos. |
+| Steam | `external/steam/` | Búsqueda y precio en pesos, requisitos, precio regional para el historial y más vendidos. |
+| IsThereAnyDeal | `external/isthereanydeal/` | Cliente con control de cuota, precios de tiendas de PC, lista de tiendas e historial. |
+| Xbox | `external/xbox/` | Dos buscadores de la tienda a la vez y el catálogo de precios en pesos. |
+| PlayStation, CheapShark, Google, tasa de cambio | `external/playstation/`, `cheapshark/`, `google/`, `exchange/` | Un adaptador por sistema externo. |
+| resilient_http | `external/resilient_http.py` | Plazo por intento y plazo total, un reintento ante fallos transitorios y errores con causa. |
+
+### Componentes de la página web
+
+```mermaid
+flowchart TB
+    USER["Jugador"]
+
+    subgraph WEB["Página web — Next.js"]
+        direction TB
+
+        subgraph UI["Interfaz (ui/components)"]
+            HOME["DriftHome<br/>portada, búsqueda, resultados,<br/>filtro por plataforma, detalle"]
+            HISTORY_UI["PriceHistoryPanel<br/>cifras, gráfica y tabla"]
+            COMPAT_UI["CompatibilityPanel y RecommendationPanel<br/>equipo del usuario, resultado<br/>y opción recomendada"]
+            ACCOUNT_UI["AccountPanel<br/>Mi cuenta y dispositivos"]
+            STORES_UI["StoresPanel y FavoritesPanel<br/>tiendas con ícono y enlace;<br/>juegos guardados"]
+        end
+
+        subgraph APP["Aplicación (application)"]
+            USECASES["Casos de uso<br/>searchGames, getPriceHistory, getRecommendation,<br/>estimateCompatibility, account, showcase"]
+            WEB_PORTS["Puertos<br/>GameSearch, PriceHistory,<br/>GameCompatibility, Account…"]
+        end
+
+        subgraph DOM["Dominio (domain/model)"]
+            WEB_MODEL["Game, PriceHistory, PcProfile,<br/>Account, Store, Recommendation, Favorite"]
+        end
+
+        subgraph INFRA["Infraestructura"]
+            HTTP_ADAPTERS["Adaptadores HTTP<br/>FastApi…Repository"]
+            STORAGE["Adaptadores del navegador<br/>perfil del PC y filtro"]
+        end
+    end
+
+    API["API"]
+    LOCAL[("localStorage")]
+
+    USER --> HOME
+    HOME --> HISTORY_UI
+    HOME --> COMPAT_UI
+    HOME --> ACCOUNT_UI
+    HOME --> STORES_UI
+    HOME --> USECASES
+    USECASES --> WEB_PORTS
+    USECASES --> WEB_MODEL
+    WEB_PORTS -.->|"implementado por"| HTTP_ADAPTERS
+    WEB_PORTS -.->|"implementado por"| STORAGE
+    HTTP_ADAPTERS -->|"HTTPS + JSON"| API
+    STORAGE --> LOCAL
+```
+
+| Componente | Archivos | Responsabilidad |
+|---|---|---|
+| DriftHome | `frontend/ui/components/DriftHome.js` | Página principal: portada con los más vendidos, búsqueda, resultados, filtro «Tengo:» y detalle del juego. |
+| PriceHistoryPanel | `ui/components/PriceHistoryPanel.js` | Mejor precio de hoy, más bajo en 12 meses, gráfica y tabla. |
+| CompatibilityPanel | `ui/components/CompatibilityPanel.js` | Formulario del equipo y resultado por componente. |
+| RecommendationPanel | `ui/components/RecommendationPanel.js` | Opción recomendada, su motivo, las alternativas y los dispositivos descartados. |
+| AccountPanel | `ui/components/AccountPanel.js` | Botón de Google, dispositivos, cerrar sesión y borrar la cuenta. |
+| FavoritesPanel | `ui/components/FavoritesPanel.js` | Juegos guardados con su precio de hoy, su alerta y el formulario «Avísame si baja de». |
+| StoresPanel | `ui/components/StoresPanel.js` | Todas las tiendas, agrupadas por plataforma. |
+| Casos de uso y puertos | `frontend/application/` | Validan antes de salir a la red y dependen de puertos, no de `fetch`. |
+| Modelo | `frontend/domain/model/` | Reglas que no dependen de la interfaz: plataforma de cada tienda, filtro, cuándo aplica la compatibilidad o el historial. |
+| Adaptadores HTTP | `frontend/infrastructure/http/` | Una llamada a la API por puerto; las de cuentas envían la cookie de sesión. |
+| Adaptadores del navegador | `frontend/infrastructure/storage/` | Perfil del PC y plataformas elegidas en `localStorage`. |
+
+### Recorrido de una búsqueda
+
+1. La página llama a `GET /games/search?q=…`. El límite de tasa cuenta la petición.
+2. `SearchGames` llama al puerto `GameRepository`, que implementa `CombinedGameRepository`.
+3. Cada fuente (Steam, IsThereAnyDeal o CheapShark, PlayStation y Xbox) se consulta a la vez, envuelta en `StaleFallbackGameRepository`:
+   - con una copia de menos de 15 minutos no se llama a la fuente;
+   - si la fuente responde, se guarda su copia;
+   - si falla o excede su plazo, se usa la copia de hasta 72 horas y se marca en `cached_sources`;
+   - sin copia, la fuente queda en `unavailable_sources`.
+4. Los precios se unen en un solo juego por identificador de Steam o por nombre normalizado.
+5. La API devuelve precios, enlaces, descuentos y plataformas; la página aplica el filtro «Tengo:».
+
+---
+
+## Vista anterior (octubre de 2026)
+
+> **Estado: anterior.** Describe el sistema antes de ADR-0014 a ADR-0018. Se conserva como registro.
+
 El diagrama de nivel 3 muestra con mayor detalle la estructura interna de DRIFT y la comunicación entre los componentes que participan en la búsqueda de videojuegos. Se representan los componentes que actualmente existen en el repositorio, sin agregar componentes o funcionalidades que no estén implementados.
 
 ```mermaid

@@ -180,10 +180,10 @@ Además de Azure y Vercel, el sistema completo está desplegado en el servidor c
 |---|---|
 | URL | `https://drift.iscoutb.dev` (frontend en `/`, API en `/api` con *Strip Path*) |
 | Infraestructura como código | `deploy/compose.lab.yaml`, `backend/Dockerfile`, `frontend/Dockerfile` |
-| Contenedores | `api` (FastAPI, 1 proceso) y `web` (Next.js), 192 MB y 0,5 CPU cada uno; sin base de datos ni volúmenes |
+| Contenedores | `api` (FastAPI, 1 proceso) y `web` (Next.js), 192 MB y 0,5 CPU cada uno; `postgres` (PostgreSQL 17), 96 MB y 0,25 CPU, con el volumen `drift_pgdata` (ADR-0014). Total: 480 MB de 512 MB |
 | Despliegue | Automático en cada push a `master` |
 | Health check | `GET /api/health` |
 | Métricas | `GET /api/metrics`: latencia de búsqueda y `drift_source_unavailable_total` |
 | Configuración | `CORS_ALLOWED_ORIGINS`, `USD_TO_COP_RATE`, `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s por defecto), `DRIFT_STEAM_TIMEOUT_SECONDS`, `DRIFT_STEAM_MAX_ATTEMPTS` y variables `DRIFT_STEAM_BACKOFF_*` / `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` (ver [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md)); sin secretos |
 
-El catálogo y las cachés viven en la memoria del contenedor `api`: se pierden en cada despliegue o reinicio (ADR-0008).
+El catálogo de PlayStation, las cachés de 60 s y las métricas viven en la memoria del contenedor `api`: se pierden en cada despliegue o reinicio (ADR-0008). Las copias de respaldo de las fuentes se guardan en PostgreSQL y sobreviven a los despliegues (ADR-0014 y ADR-0015). Si PostgreSQL no responde, la API sigue funcionando con una copia en memoria. Requiere el secreto `DRIFT_DB_PASSWORD` en Dokploy.

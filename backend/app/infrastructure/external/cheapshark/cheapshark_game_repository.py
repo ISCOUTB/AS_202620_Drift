@@ -7,6 +7,7 @@ import httpx  # noqa: F401  los tests parchean cheapshark_game_repository.httpx.
 from app.domain.model.game import Game
 from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
 from app.domain.ports.game_repository import GameRepository
+from app.domain.ports.showcase import PcStoreDirectory
 from app.infrastructure.external.resilient_http import (
     ExternalSourceError,
     RetryPolicy,
@@ -28,7 +29,7 @@ DEFAULT_POLICY = dict(timeout_seconds=3.0, max_attempts=2)
 DEFAULT_TOTAL_DEADLINE_SECONDS = 3.0
 
 
-class CheapSharkGameRepository(GameRepository):
+class CheapSharkGameRepository(GameRepository, PcStoreDirectory):
     """Adaptador de CheapShark: precios de tiendas de juegos de PC."""
 
     _base_url = "https://www.cheapshark.com/api/1.0"
@@ -62,6 +63,17 @@ class CheapSharkGameRepository(GameRepository):
         self._stores_loaded_at = None
         self._stores_duration_seconds = 24 * 60 * 60
         self._lock = Lock()
+
+    def pc_stores(self) -> List[str]:
+        """Tiendas de PC activas en CheapShark, sin Steam (se consulta directo)."""
+
+        stores = self._get_stores(TimeBudget.from_policy(self._policy))
+
+        return [
+            name
+            for store_id, name in stores.items()
+            if store_id not in self._excluded_store_ids
+        ]
 
     def search(self, query: str) -> List[Game]:
         cache_key = query.strip().lower()
@@ -159,12 +171,30 @@ class CheapSharkGameRepository(GameRepository):
 
         game.prices[store_name] = price
 
+        discount = self._discount(deal)
+
+        if discount:
+            game.discounts[store_name] = discount
+        else:
+            game.discounts.pop(store_name, None)
+
         # CheapShark lleva a la oferta en la tienda mediante su enlace de
         # redirección; el dealID ya viene codificado.
         if deal.get("dealID"):
             game.links[store_name] = (
                 f"{self._redirect_url}?dealID={deal['dealID']}"
             )
+
+    @staticmethod
+    def _discount(deal: dict) -> int:
+        """Porcentaje de ahorro que informa CheapShark; 0 si no hay oferta."""
+
+        try:
+            discount = round(float(deal.get("savings")))
+        except (TypeError, ValueError):
+            return 0
+
+        return discount if 0 < discount <= 100 else 0
 
     @staticmethod
     def _price_in_cop(deal: dict, usd_to_cop: float) -> Optional[float]:
