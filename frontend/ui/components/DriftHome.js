@@ -479,6 +479,12 @@ function ResultCard({ game, isSelected, onSelect, compatibility }) {
 }
 
 
+/** Cuántos favoritos tienen alerta; cero si todavía no se revisaron. */
+function countAlerts(alerts) {
+  return alerts?.count ?? 0;
+}
+
+
 /** Cabecera: menú lateral, logo, buscador y cuenta. */
 function TopBar({
   sidebarHidden,
@@ -612,13 +618,14 @@ function MainNav({
   showFavorites,
   authenticated,
   favoritesCount,
-  alertCount,
+  alerts,
   onHome,
   onResults,
   onStores,
   onFavorites,
 }) {
   const activeIf = (condition) => (condition ? styles.navActive : "");
+  const alertCount = countAlerts(alerts);
   const count = (value) => (value ? `(${value})` : "");
 
   return (
@@ -656,7 +663,9 @@ function MainNav({
 
 
 /** Aviso de favoritos que llegaron a su precio o bajaron. */
-function AlertBanner({ visible, count, onOpen, onClose }) {
+function AlertBanner({ visible, alerts, onOpen, onClose }) {
+  const count = countAlerts(alerts);
+
   if (!visible || count <= 0) {
     return null;
   }
@@ -1416,7 +1425,6 @@ export default function DriftHome() {
   const showSuggestions = activeTab === "Sugeridos";
   const showStores = activeTab === "Tiendas";
   const showFavorites = activeTab === "Favoritos" && account.authenticated;
-  const alertCount = favoriteAlerts?.count ?? 0;
 
   const selectedFavorite = findFavorite(favorites, selectedGame);
   const selectedPriceChange = priceChangeSince(selectedFavorite, selectedGame);
@@ -1469,7 +1477,7 @@ export default function DriftHome() {
               showFavorites={showFavorites}
               authenticated={account.authenticated}
               favoritesCount={favorites.length}
-              alertCount={alertCount}
+              alerts={favoriteAlerts}
               onHome={() => {
                 setActiveTab("Sugeridos");
                 setError("");
@@ -1488,7 +1496,7 @@ export default function DriftHome() {
 
             <AlertBanner
               visible={account.authenticated && !alertsDismissed && !showFavorites}
-              count={alertCount}
+              alerts={favoriteAlerts}
               onOpen={openFavorites}
               onClose={() => setAlertsDismissed(true)}
             />
