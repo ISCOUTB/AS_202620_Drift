@@ -55,4 +55,5 @@ def test_search_uses_fallback_when_steam_is_unavailable(monkeypatch):
         "Steam",
         "CheapShark",
         "PlayStation",
+        "Xbox",
     ]

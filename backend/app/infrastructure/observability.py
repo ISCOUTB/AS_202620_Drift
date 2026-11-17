@@ -44,9 +44,16 @@ class SearchMetrics:
         self._total_searches = 0
         self._degraded_searches = 0
         self._unavailable_by_source = Counter()
+        self._backup_searches = 0
+        self._backup_by_source = Counter()
         self._lock = Lock()
 
-    def record_search(self, duration_ms, unavailable_sources=()):
+    def record_search(
+        self,
+        duration_ms,
+        unavailable_sources=(),
+        cached_sources=(),
+    ):
         with self._lock:
             self._durations_ms.append(duration_ms)
             self._total_searches += 1
@@ -54,6 +61,23 @@ class SearchMetrics:
             if unavailable_sources:
                 self._degraded_searches += 1
                 self._unavailable_by_source.update(unavailable_sources)
+
+            if cached_sources:
+                self._backup_searches += 1
+                self._backup_by_source.update(cached_sources)
+
+    def backup_snapshot(self):
+        """Búsquedas en las que una fuente respondió con su copia de respaldo (ADR-0015)."""
+
+        with self._lock:
+            return {
+                "metric": "drift_source_served_from_backup_total",
+                "total_searches": self._total_searches,
+                "backup_searches": self._backup_searches,
+                "by_source": dict(self._backup_by_source),
+                "window": "since process start",
+                "resets_on_restart": True,
+            }
 
     def degradation_snapshot(self):
         """Métrica del escenario E6: búsquedas respondidas sin alguna fuente."""

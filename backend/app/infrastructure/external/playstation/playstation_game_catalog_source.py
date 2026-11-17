@@ -22,6 +22,10 @@ DEFAULT_SYNC_POLICY = dict(timeout_seconds=10.0, max_attempts=2)
 DEFAULT_SEARCH_POLICY = dict(timeout_seconds=3.0, max_attempts=2)
 DEFAULT_SEARCH_DEADLINE_SECONDS = 3.0
 
+# Consolas que DRIFT compara. Un producto que solo corre en PS3 o PS Vita no
+# se puede jugar en ellas.
+CURRENT_CONSOLES = {"PS4", "PS5"}
+
 
 class PlayStationGameCatalogSource(GameCatalogSource):
     """Adaptador del catálogo de PlayStation Store."""
@@ -81,7 +85,7 @@ class PlayStationGameCatalogSource(GameCatalogSource):
         return [
             self._normalize(item, captured_at)
             for item in self._catalog_items(payload)
-            if item.get("id") and item.get("name")
+            if self._is_current_game(item)
         ]
 
     def search_catalog(
@@ -124,8 +128,34 @@ class PlayStationGameCatalogSource(GameCatalogSource):
         return [
             self._normalize(item, captured_at)
             for item in self._catalog_items(payload)
-            if item.get("id") and item.get("name")
+            if self._is_current_game(item)
         ]
+
+    @staticmethod
+    def _is_current_game(item: dict) -> bool:
+        """Un juego con nombre que se puede jugar en PS4 o PS5.
+
+        La tienda todavía vende productos solo de PS3 o PS Vita (por ejemplo,
+        Portal 2 de PS3). Comparten nombre con el juego de PC y se unirían a
+        él, pero no corren en las consolas que DRIFT compara. Si la tienda no
+        indica la plataforma, el producto se conserva.
+        """
+
+        if not (item.get("id") and item.get("name")):
+            return False
+
+        platforms = item.get("playable_platform")
+
+        if not platforms:
+            return True
+
+        if isinstance(platforms, str):
+            platforms = [platforms]
+
+        return any(
+            str(platform).upper().replace(" ", "") in CURRENT_CONSOLES
+            for platform in platforms
+        )
 
     @staticmethod
     def _catalog_items(payload: Any) -> list[dict]:
@@ -153,6 +183,13 @@ class PlayStationGameCatalogSource(GameCatalogSource):
 
         price = self._price(sku)
         currency = self._currency(item, sku)
+        discount = PlayStationGameCatalogSource._discount(sku)
+
+        # Con una oferta activa, el precio que se paga es el de la oferta.
+        sale = self._sale(sku, price)
+
+        if sale is not None:
+            price, discount = sale
 
         # La tienda de Colombia publica precios en USD; se convierten a
         # COP para poder compararlos con los de las demás tiendas.
@@ -172,11 +209,50 @@ class PlayStationGameCatalogSource(GameCatalogSource):
             ) or "PlayStation",
             price=price,
             currency=currency,
-            discount=PlayStationGameCatalogSource._discount(
-                sku
-            ),
+            discount=discount,
             captured_at=captured_at,
+            image=PlayStationGameCatalogSource._image(item),
         )
+
+    @staticmethod
+    def _sale(sku: dict, price: Optional[float]):
+        """
+        (precio de oferta, descuento) si hay una oferta abierta a todos.
+
+        Las ofertas llegan en `rewards`. Las que son solo para suscriptores
+        de PlayStation Plus se ignoran: no es el precio que paga cualquiera.
+        """
+
+        if price is None:
+            return None
+
+        best = None
+
+        for reward in sku.get("rewards") or []:
+            if not isinstance(reward, dict) or reward.get("isPlus"):
+                continue
+
+            try:
+                sale_price = float(reward.get("price")) / 100
+                discount = int(reward.get("discount"))
+            except (TypeError, ValueError):
+                continue
+
+            if not 0 <= sale_price < price or not 0 < discount <= 100:
+                continue
+
+            if best is None or sale_price < best[0]:
+                best = (sale_price, discount)
+
+        return best
+
+    @staticmethod
+    def _image(item: dict) -> Optional[str]:
+        for image in item.get("images") or []:
+            if isinstance(image, dict) and isinstance(image.get("url"), str):
+                return image["url"]
+
+        return None
 
     @staticmethod
     def _currency(item: dict, sku: dict) -> str:

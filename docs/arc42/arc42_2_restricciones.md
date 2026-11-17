@@ -75,19 +75,18 @@ Estos tiempos representan condiciones medibles establecidas para el sistema y de
 
 ## 2.7 Límite de costo y restricción de tarjeta
 
-El proyecto se desarrolla utilizando el beneficio **Azure for Students**, disponible para estudiantes y utilizado para cubrir los recursos del despliegue del backend en Azure.
+DRIFT se despliega en el servidor compartido del laboratorio de la universidad (Dokploy), sin costo para el proyecto. Hasta el 12 de noviembre de 2026 el backend también usaba el beneficio **Azure for Students** y el frontend la capa gratuita de Vercel; ambos se retiraron ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)).
 
-El límite de costo considerado para el proyecto es de **$0 USD de gasto adicional mensual**, mientras los recursos utilizados permanezcan cubiertos por el beneficio académico disponible.
+El límite de costo considerado para el proyecto es de **$0 USD de gasto adicional mensual**.
 
 | Componente | Servicio | Costo esperado |
 |---|---|---:|
-| Frontend | Vercel | $0 USD/mes dentro de la capa gratuita |
-| Backend | Azure App Service | Cubierto por Azure for Students |
-| CI/CD | GitHub Actions | $0 USD/mes |
+| Frontend, backend y base de datos | Servidor del laboratorio (Dokploy) | $0 USD/mes (lo provee la universidad) |
+| CI | GitHub Actions | $0 USD/mes |
 | **Gasto adicional esperado** | | **$0 USD/mes** |
 
-### Restricción de tarjeta
+### Restricción de recursos
 
-El despliegue del backend se realiza mediante la cuenta académica de **Azure for Students**, por lo que el proyecto no depende de contratar un plan de pago personal para mantener el entorno desplegado.
-La restricción establecida para el proyecto es evitar generar cargos adicionales fuera del beneficio académico disponible.
-En caso de que el consumo de los recursos supere las condiciones o crédito disponible de Azure for Students, se deberá revisar el consumo o utilizar una alternativa de despliegue que no genere costos adicionales.
+El laboratorio limita a **512 MB de memoria** el total de los contenedores del equipo (DRIFT usa 480 MB: `api` 192, `web` 192 y `postgres` 96) y obliga a no publicar puertos, a usar volúmenes con nombre y a fijar límites en cada servicio. El proyecto no depende de contratar un plan de pago personal.
+
+Si la memoria deja de alcanzar, hay que reducir el consumo (por ejemplo, el tamaño de las cachés) o pedir más capacidad; no se vuelve a una nube de pago sin una decisión nueva.

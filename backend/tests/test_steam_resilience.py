@@ -470,7 +470,17 @@ def test_a_failed_search_is_not_cached(steam_http):
 
 # --- Endpoint GET /games/search: contrato bajo fallo ------------------------
 
-RESULT_KEYS = {"id", "name", "prices", "unavailable_sources", "image", "links"}
+RESULT_KEYS = {
+    "id",
+    "name",
+    "prices",
+    "unavailable_sources",
+    "cached_sources",
+    "image",
+    "links",
+    "discounts",
+    "platforms",
+}
 
 
 def _steam_search_calls(script):

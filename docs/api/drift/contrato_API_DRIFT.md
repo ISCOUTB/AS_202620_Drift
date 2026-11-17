@@ -71,17 +71,27 @@ Estos procesos forman parte de la estrategia de integración externa y no de los
 
 | Operación o funcionalidad | En el contrato | Implementado actualmente |
 |---|---|---|
-| Estado de salud de la API | Sí | Sí, mediante `GET /` |
+| Estado de salud de la API | Sí | Sí, mediante `GET /` y `GET /health`; métricas administrativas en `GET /metrics` |
 | Búsqueda de videojuegos | Sí | Sí, mediante `GET /games/search?q={consulta}` |
 | Consulta a Steam | Sí | Sí |
 | Catálogo local de respaldo | Sí | Sí, ante falla de Steam |
 | Aviso de fuente no disponible | Sí | Sí, mediante `unavailable_sources` |
+| Aviso de precio tomado de la copia de respaldo | Sí | Sí, mediante `cached_sources` (ADR-0015) |
 | Estimación de compatibilidad | Sí | Sí, mediante `POST /games/{game_id}/compatibility` |
-| Autenticación de usuarios | No | No |
-| Perfil y dispositivos del usuario | No | No |
+| Autenticación de usuarios | Sí (`/auth/me`, `/auth/google/login`, `/auth/google/callback`, `/auth/logout`) | Sí, con Google (ADR-0017) |
+| Perfil y dispositivos del usuario | Sí (`/devices`, `/devices/{device_id}`) | Sí |
 | Detalle individual de un videojuego | No | No |
-| Historial de precios | No | No |
-| Integración real con otras fuentes adicionales | No | No |
+| Recarga de los puntajes de hardware | Sí (`POST /hardware/benchmarks/sync`) | Sí, con el token administrativo (ADR-0018) |
+| Juegos del momento y lista de tiendas | Sí (`GET /games/featured`, `GET /stores`) | Sí |
+| Explorar el catálogo por género y filtros | Sí (`GET /games/explore`) | Sí, con el catálogo de Steam |
+| Juegos favoritos | Sí (`GET /favorites`, `PUT` y `DELETE /favorites/{game_id}`) | Sí, con sesión (ADR-0020) |
+| Alertas de precio de los favoritos | Sí (`GET /favorites/alerts`, `PUT /favorites/{game_id}/target`) | Sí, con sesión; solo tiendas de PC y solo al abrir DRIFT (ADR-0021) |
+| Recomendación de compra | Sí (`POST /games/{game_id}/recommendation`) | Sí, con los precios y dispositivos que envía la página (ADR-0019) |
+| Historial de precios | Sí | Sí, mediante `GET /games/{game_id}/price-history`, con la llave de IsThereAnyDeal (ADR-0016) |
+| Precios de la tienda de Xbox (Colombia, en pesos) | Sí | Sí |
+| Descuento de cada tienda | Sí | Sí, mediante `discounts` |
+| Filtro por plataforma | Sí | Sí, mediante `platform` y el campo `platforms` |
+| Juegos que solo existen en una tienda de consola | Sí | Sí, con el identificador de esa tienda |
 | Eventos o contratos AsyncAPI para la API de DRIFT | No | No |
 
 ## 6. Relación con la arquitectura
@@ -114,7 +124,7 @@ La API mantiene actualmente un modelo síncrono para las operaciones que requier
 
 La versión actual del contrato es:
 
-1.0.0
+1.8.0
 
 El contrato ejecutable se mantiene en:
 
@@ -131,3 +141,6 @@ Los cambios incompatibles en rutas, parámetros, solicitudes o respuestas deber�
 | 1.2.0 | 2026-10-12 | Cambio compatible: `POST /games/{game_id}/compatibility` acepta `gpu_name` y `storage_gb` opcionales; la respuesta añade el desglose por componente (`checks`), el almacenamiento, la fuente y el texto de los requisitos. `minimum_gpu_score` y `recommended_gpu_score` pueden ser nulos. Los requisitos se obtienen de Steam cuando no están en el catálogo propio. |
 | 1.3.0 | 2026-10-12 | Cambio compatible: nuevos `GET /hardware/gpus` y `GET /hardware/cpus` con los nombres y el nivel aproximado de las tarjetas gráficas y los procesadores conocidos (sin puntajes). La estimación acepta `cpu_name` y `cpu_score` opcionales y añade el procesador al desglose. Gráfica y procesador se comparan por puntaje cuando el componente del usuario y el del requisito están en el catálogo (`gpu_benchmark`, `cpu_benchmark`); en otro caso, por niveles. |
 | 1.4.0 | 2026-10-12 | Cambio compatible: `GET /games/search` añade `links`, con la página de compra de cada tienda (Steam, PlayStation Store y las tiendas de PC mediante el enlace de redirección de CheapShark). |
+| 1.6.0 | 2026-11-12 | Cambio compatible: `GET /games/search` añade `cached_sources`. Cuando una fuente falla y existe una copia de su última respuesta (de menos de 72 horas), los precios salen de esa copia y el campo indica la fuente y la fecha del dato. Esa fuente ya no aparece en `unavailable_sources` (ADR-0015). Además: nueva fuente Xbox (puede aparecer en `unavailable_sources` y `cached_sources`); nuevos campos `discounts` y `platforms`; nuevo parámetro opcional `platform`. **Cambio de comportamiento:** la búsqueda ya no omite los juegos sin identificador de Steam. Los que solo existen en PlayStation, Xbox u otra tienda de PC aparecen con el identificador de esa tienda, que no es numérico; `POST /games/{game_id}/compatibility` sigue aceptando solo identificadores de Steam. Nuevo `GET /games/{game_id}/price-history`. Con la llave de IsThereAnyDeal, las tiendas de PC salen de esa fuente y el nombre `IsThereAnyDeal` reemplaza a `CheapShark` en `unavailable_sources` y `cached_sources` (ADR-0016). |
+| 1.7.0 | 2026-11-13 | Cambio compatible: se documentan en OpenAPI las rutas que ya existían sin contrato: estado (`GET /health`, `GET /metrics`), portada (`GET /games/featured`, `GET /stores`), recomendación (`POST /games/{game_id}/recommendation`), cuentas (`/auth/*`, `/devices`), favoritos y alertas (`/favorites`, `/favorites/alerts`, `/favorites/{game_id}/target`) y la recarga de puntajes (`POST /hardware/benchmarks/sync`). Nuevo esquema de seguridad `sessionCookie` (cookie `drift_session`). **Correcciones:** una respuesta 405 lista en `Allow` todos los métodos de la dirección, y `PUT`/`DELETE /favorites/alerts` responden 405 en vez de tratar «alerts» como un juego. |
+| 1.8.0 | 2026-11-13 | Cambio compatible: nuevo `GET /games/explore`, una página del catálogo de Steam por género, etiquetas, orden y precio, con la ficha de cada juego (imágenes, descripción, etiquetas, fecha, desarrolladores, reseñas y precio en Steam). `GET /games/featured` mantiene sus campos, pero `image`, `hero` y `header` ahora son las rutas reales de Steam: las armadas con el identificador daban 404 en los juegos recientes. **Corrección:** el `Allow` de los 405 también lista los métodos de las rutas de cuentas con FastAPI 0.162, que guarda los routers incluidos de otra forma. |

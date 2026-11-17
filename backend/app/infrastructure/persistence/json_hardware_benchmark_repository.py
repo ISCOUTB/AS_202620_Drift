@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import time
@@ -13,6 +14,14 @@ from app.domain.model.hardware_benchmark import HardwareBenchmark
 from app.domain.ports.hardware_benchmark_repository import (
     HardwareBenchmarkRepository,
 )
+from app.domain.ports.hardware_benchmark_store import (
+    CPU,
+    GPU,
+    HardwareBenchmarkStore,
+)
+from app.infrastructure.observability import log_event
+
+logger = logging.getLogger("drift")
 
 DATA_DIRECTORY = Path(__file__).resolve().parent / "data"
 
@@ -59,6 +68,62 @@ def load_benchmark_payload(path: Path, url_variable: str) -> dict:
         return {}
 
     return payload if isinstance(payload, dict) else {}
+
+
+def load_from_store_or_copy(
+    kind: str,
+    store: Optional[HardwareBenchmarkStore],
+    copy_loader: Callable[[], dict],
+) -> dict:
+    """
+    Los puntajes de un tipo: de la base de datos y, si no, de la copia JSON.
+
+    - Si la base tiene la lista, se usa esa.
+    - Si la base está vacía o no responde, se usa la copia (archivo local o
+      dirección privada), igual que antes de ADR-0018. La compatibilidad no
+      depende de que la base esté disponible.
+    - Si la base estaba vacía y la copia trae datos, se guardan en la base:
+      así la migración ocurre sola en el primer uso tras el despliegue.
+    """
+
+    stored = {}
+    store_answered = False
+
+    if store is not None:
+        try:
+            stored = store.load(kind)
+            store_answered = True
+        except Exception as error:  # noqa: BLE001  la base es opcional aquí
+            log_event(
+                logger,
+                "hardware_benchmarks_store_unavailable",
+                kind=kind,
+                error=type(error).__name__,
+            )
+
+    if stored.get("items"):
+        return stored
+
+    payload = copy_loader()
+
+    if store_answered and payload.get("items"):
+        try:
+            saved = store.replace(kind, payload)
+            log_event(
+                logger,
+                "hardware_benchmarks_migrated",
+                kind=kind,
+                items=saved,
+            )
+        except Exception as error:  # noqa: BLE001
+            log_event(
+                logger,
+                "hardware_benchmarks_store_unavailable",
+                kind=kind,
+                error=type(error).__name__,
+            )
+
+    return payload
 
 
 class JsonHardwareBenchmarkRepository(HardwareBenchmarkRepository):
@@ -141,6 +206,13 @@ class JsonHardwareBenchmarkRepository(HardwareBenchmarkRepository):
                 self._loaded = True
             else:
                 self._next_attempt_at = time.monotonic() + RETRY_SECONDS
+
+    def reload(self) -> None:
+        """Vuelve a leer los puntajes en el próximo uso (tras una carga nueva)."""
+
+        with self._lock:
+            self._loaded = False
+            self._next_attempt_at = 0.0
 
     def _index(self, payload: dict) -> None:
         self._source = {
@@ -244,27 +316,69 @@ class JsonHardwareBenchmarkRepository(HardwareBenchmarkRepository):
         return dict(self._source)
 
 
-def gpu_benchmark_repository() -> JsonHardwareBenchmarkRepository:
-    """Catálogo de tarjetas gráficas. La dirección privada es un secreto."""
+def gpu_copy() -> dict:
+    """Copia JSON de las gráficas. La dirección privada es un secreto."""
+
+    return load_benchmark_payload(
+        DATA_DIRECTORY / "gpu_benchmarks.json",
+        "DRIFT_GPU_BENCHMARKS_URL",
+    )
+
+
+def cpu_copy() -> dict:
+    """Copia JSON de los procesadores. La dirección privada es un secreto."""
+
+    return load_benchmark_payload(
+        DATA_DIRECTORY / "cpu_benchmarks.json",
+        "DRIFT_CPU_BENCHMARKS_URL",
+    )
+
+
+def gpu_benchmark_repository(
+    store: Optional[HardwareBenchmarkStore] = None,
+) -> JsonHardwareBenchmarkRepository:
+    """Catálogo de tarjetas gráficas: de la base de datos o de la copia JSON."""
 
     return JsonHardwareBenchmarkRepository(
-        loader=lambda: load_benchmark_payload(
-            DATA_DIRECTORY / "gpu_benchmarks.json",
-            "DRIFT_GPU_BENCHMARKS_URL",
-        ),
+        loader=lambda: load_from_store_or_copy(GPU, store, gpu_copy),
         noise_words=GPU_NOISE_WORDS,
         variant_words=GPU_VARIANT_WORDS,
     )
 
 
-def cpu_benchmark_repository() -> JsonHardwareBenchmarkRepository:
-    """Catálogo de procesadores. La dirección privada es un secreto."""
+def cpu_benchmark_repository(
+    store: Optional[HardwareBenchmarkStore] = None,
+) -> JsonHardwareBenchmarkRepository:
+    """Catálogo de procesadores: de la base de datos o de la copia JSON."""
 
     return JsonHardwareBenchmarkRepository(
-        loader=lambda: load_benchmark_payload(
-            DATA_DIRECTORY / "cpu_benchmarks.json",
-            "DRIFT_CPU_BENCHMARKS_URL",
-        ),
+        loader=lambda: load_from_store_or_copy(CPU, store, cpu_copy),
         noise_words=CPU_NOISE_WORDS,
         variant_words=(),
     )
+
+
+def build_hardware_benchmark_store() -> Optional[HardwareBenchmarkStore]:
+    """El almacén de puntajes en PostgreSQL, o `None` sin `DRIFT_DATABASE_URL`."""
+
+    database_url = os.getenv("DRIFT_DATABASE_URL", "").strip()
+
+    if not database_url:
+        return None
+
+    try:
+        from app.infrastructure.persistence.postgres_database import (
+            shared_database,
+        )
+        from app.infrastructure.persistence.postgres_hardware_benchmark_store import (
+            PostgresHardwareBenchmarkStore,
+        )
+
+        return PostgresHardwareBenchmarkStore(shared_database(database_url))
+    except Exception as error:  # noqa: BLE001  sin base se sigue con la copia
+        log_event(
+            logger,
+            "hardware_benchmarks_store_unavailable",
+            error=type(error).__name__,
+        )
+        return None

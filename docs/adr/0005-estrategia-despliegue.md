@@ -1,6 +1,6 @@
 # ADR-0005: Estrategias de Despliegue
 
-* **Estado:** Aceptado
+* **Estado:** Reemplazado por [ADR-0022](0022-desplegar-solo-en-el-laboratorio.md) (13 de noviembre de 2026)
 * **Fecha:** 2026-09-27
 * **Decisores:** Equipo DRIFT
 * **Relacionado con:** ADR-0006 — Despliegue serverless para la API de búsqueda de DRIFT

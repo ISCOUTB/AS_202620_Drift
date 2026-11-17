@@ -1,0 +1,112 @@
+/* Usa las variables de color definidas en .pageShell (DriftHome.module.css). */
+
+.panel h2 {
+  margin: 0;
+  font: 600 1.02rem var(--display);
+  letter-spacing: .05em;
+}
+
+.panel h3 {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font: 600 .8rem var(--display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.description {
+  margin: 6px 0 18px;
+  color: var(--muted);
+  font-size: .84rem;
+}
+
+.warning {
+  margin: 0 0 16px;
+  color: var(--warn);
+  font-size: .8rem;
+}
+
+.group {
+  margin-bottom: 22px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardLink {
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.cardLink:hover {
+  border-color: var(--accent);
+  background: rgba(201, 139, 255, .1);
+}
+
+.cardLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.logo,
+.initials {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.logo {
+  object-fit: contain;
+  background: #fff;
+  padding: 3px;
+}
+
+.initials {
+  display: grid;
+  place-items: center;
+  background: rgba(201, 139, 255, .2);
+  color: var(--text);
+  font: 800 .7rem var(--display);
+}
+
+.text {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 2px;
+}
+
+.text strong {
+  overflow: hidden;
+  font-size: .88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text small {
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.go {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: .9rem;
+}

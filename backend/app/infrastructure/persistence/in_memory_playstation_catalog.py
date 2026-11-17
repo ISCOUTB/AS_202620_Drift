@@ -93,4 +93,10 @@ class InMemoryPlayStationCatalog(
                     )
                 }
             ),
+            image=game.image,
+            discounts=(
+                {"PlayStation": game.discount}
+                if game.price is not None and 0 < game.discount <= 100
+                else {}
+            ),
         )

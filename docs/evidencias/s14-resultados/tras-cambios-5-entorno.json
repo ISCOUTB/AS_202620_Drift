@@ -1,0 +1,16 @@
+{
+  "corrida": "tras-cambios-5",
+  "fecha_utc": "2026-11-13T06:14:13+00:00",
+  "entorno": "local: backend y upstream simulado en 127.0.0.1 (no desplegado)",
+  "commit": "2d86f2d-dirty",
+  "sistema": "Windows-11-10.0.26200-SP0",
+  "cpus": 16,
+  "python": "3.12.1",
+  "httpx": "0.28.1",
+  "k6": [
+    "k6.EXE v2.2.0 (commit/00a9a1b7f5, go1.26.5, windows/amd64)"
+  ],
+  "uvicorn_workers": 1,
+  "limite_de_tasa": "desactivado (DRIFT_RATE_LIMIT_PER_MINUTE=0)",
+  "fuentes": "simuladas por scripts/stub_upstream.py con STUB_SIN_DEGRADACION=1"
+}

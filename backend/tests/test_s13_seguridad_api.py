@@ -152,7 +152,11 @@ def test_limiter_with_zero_does_not_limit():
 def test_search_answers_429_with_retry_after_once_the_limit_is_reached(monkeypatch):
     monkeypatch.setattr(main.rate_limiter, "limit", 2)
     monkeypatch.setattr(main.rate_limiter, "_hits", {})
-    monkeypatch.setattr(main.search_games, "execute", lambda query: [])
+    monkeypatch.setattr(
+        main.search_games,
+        "execute",
+        lambda query, platforms=None: [],
+    )
 
     statuses = [
         client.get("/games/search", params={"q": "portal"}).status_code
@@ -189,7 +193,7 @@ def test_client_ip_ignores_forwarded_for_unless_the_proxy_is_trusted(monkeypatch
     assert client_ip(FakeRequest) == "9.9.9.9"
 
 
-def test_client_ip_drops_the_port_added_by_azure(monkeypatch):
+def test_client_ip_drops_the_port_some_proxies_add(monkeypatch):
     monkeypatch.setenv("DRIFT_TRUST_FORWARDED_FOR", "true")
 
     def request_from(forwarded):
@@ -206,7 +210,9 @@ def test_client_ip_drops_the_port_added_by_azure(monkeypatch):
 
 # --- A9: CORS -----------------------------------------------------------------
 
-def test_cors_does_not_allow_credentials_and_limits_methods():
+def test_cors_allows_credentials_only_for_the_configured_origin():
+    # ADR-0017 modifica a ADR-0012: la sesión viaja en una cookie, así que el
+    # origen configurado puede enviar credenciales. Nunca se combina con «*».
     origin = main.allowed_origins[0]
 
     response = client.options(
@@ -220,8 +226,9 @@ def test_cors_does_not_allow_credentials_and_limits_methods():
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == origin
-    assert "access-control-allow-credentials" not in response.headers
-    assert "DELETE" not in response.headers["access-control-allow-methods"]
+    assert response.headers["access-control-allow-credentials"] == "true"
+    assert "*" not in main.allowed_origins
+    assert "PATCH" not in response.headers["access-control-allow-methods"]
 
 
 def test_cors_rejects_unknown_origins():

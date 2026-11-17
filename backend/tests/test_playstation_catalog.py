@@ -56,6 +56,54 @@ def test_sync_playstation_catalog_caches_the_single_provider_response(monkeypatc
     assert cached_games[0].prices == {"PlayStation": 59900.0}
 
 
+def test_products_that_only_run_on_ps3_or_vita_are_left_out(monkeypatch):
+    # Portal 2 de PS3 compartía nombre con el de PC y se unía a él, aunque no
+    # corre en PS4 ni PS5.
+    from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
+    from app.infrastructure.external.playstation.playstation_game_catalog_source import (
+        PlayStationGameCatalogSource,
+    )
+
+    class OneToOne(ExchangeRateProvider):
+        def usd_to_cop(self):
+            return 1.0
+
+    def product(product_id, platforms):
+        item = {"id": product_id, "name": product_id, "default_sku": {"price": 1000}}
+
+        if platforms is not None:
+            item["playable_platform"] = platforms
+
+        return item
+
+    def mock_get(url, params=None, headers=None, timeout=None):
+        class MockResponse:
+            status_code = 200
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {
+                    "links": [
+                        product("ps3", ["PS3"]),
+                        product("vita", ["PS Vita"]),
+                        product("ps4", ["PS4"]),
+                        product("ps3-y-ps4", ["PS3", "PS4"]),
+                        product("ps5", "PS5"),
+                        product("sin-plataforma", None),
+                    ]
+                }
+
+        return MockResponse()
+
+    monkeypatch.setattr(playstation_game_catalog_source.httpx, "get", mock_get)
+
+    found = PlayStationGameCatalogSource(OneToOne()).search_catalog("Portal 2")
+
+    assert [game.id for game in found] == ["ps4", "ps3-y-ps4", "ps5", "sin-plataforma"]
+
+
 def test_failed_playstation_sync_preserves_local_catalog(monkeypatch):
     playstation_catalog.replace([])
 

@@ -1,7 +1,9 @@
 """Upstream simulado para el experimento E6 (degradación bajo carga).
 
-Reemplaza a Steam, CheapShark, PlayStation Store y la tasa de cambio con
-latencias fijas, para que la medición no dependa de servicios reales.
+Reemplaza a Steam, CheapShark, PlayStation Store, la tienda de Xbox y la tasa
+de cambio con latencias fijas, para que la medición no dependa de servicios
+reales. Xbox se añadió el 13 de noviembre de 2026, cuando la búsqueda empezó a
+consultarla: sin ella, cada búsqueda la contaría como fuente caída.
 
 CheapShark es la fuente degradada: las consultas marcadas como lentas tardan
 más de 5 s. Qué consultas son lentas depende solo del número de la consulta,
@@ -25,6 +27,11 @@ CHEAPSHARK_DELAY_SECONDS = 0.25
 CHEAPSHARK_SLOW_DELAY_SECONDS = 6.0
 PLAYSTATION_DELAY_SECONDS = 0.25
 EXCHANGE_DELAY_SECONDS = 0.10
+XBOX_SEARCH_DELAY_SECONDS = 0.20
+XBOX_CATALOG_DELAY_SECONDS = 0.25
+
+# Identificador de Xbox -> nombre del juego (lo llenan los buscadores).
+XBOX_NAMES: dict[str, str] = {}
 
 # Residuos (número de consulta módulo 20) que CheapShark responde lento.
 SLOW_RESIDUES = {1, 4, 7, 10, 13, 16, 19}
@@ -136,6 +143,95 @@ async def playstation_search(query: str):
                 },
             }
             for index in range(GAMES_PER_QUERY)
+        ]
+    }
+
+
+def xbox_ids(query: str) -> list[str]:
+    """Identificadores de Xbox de la consulta; recuerda el nombre de cada uno.
+
+    Los buscadores de Xbox entregan identificadores y el catálogo, que solo
+    recibe esos identificadores, tiene que saber a qué juego corresponden.
+    """
+
+    base = zlib.crc32(query.strip().lower().encode())
+    ids = [f"9STUB{base:010d}{index}" for index in range(GAMES_PER_QUERY)]
+
+    for index, product_id in enumerate(ids):
+        XBOX_NAMES[product_id] = game_name(query, index)
+
+    return ids
+
+
+# Xbox (desde S14, tras añadir la tienda de Xbox a la búsqueda): los dos
+# buscadores de la tienda y el catálogo de precios, sin degradación.
+@app.get("/xbox-suggest/msstoreapiprod/api/autosuggest")
+async def xbox_suggest(query: str):
+    await asyncio.sleep(XBOX_SEARCH_DELAY_SECONDS)
+
+    return {
+        "ResultSets": [
+            {
+                "Suggests": [
+                    {
+                        "Metas": [
+                            {"Key": "BigCatalogId", "Value": product_id},
+                            {"Key": "ProductType", "Value": "Games"},
+                        ]
+                    }
+                    for product_id in xbox_ids(query)
+                ]
+            }
+        ]
+    }
+
+
+@app.get("/xbox-search/v9.0/search")
+async def xbox_search(query: str):
+    await asyncio.sleep(XBOX_SEARCH_DELAY_SECONDS)
+
+    return {
+        "Payload": {
+            "SearchResults": [
+                {"ProductId": product_id, "Title": game_name(query, index)}
+                for index, product_id in enumerate(xbox_ids(query))
+            ]
+        }
+    }
+
+
+@app.get("/xbox-catalog/v7.0/products")
+async def xbox_catalog(bigIds: str):
+    await asyncio.sleep(XBOX_CATALOG_DELAY_SECONDS)
+
+    names = XBOX_NAMES
+
+    return {
+        "Products": [
+            {
+                "ProductId": product_id,
+                "ProductKind": "Game",
+                "LocalizedProperties": [
+                    {"ProductTitle": names.get(product_id, product_id), "Images": []}
+                ],
+                "DisplaySkuAvailabilities": [
+                    {
+                        "Availabilities": [
+                            {
+                                "Actions": ["Purchase"],
+                                "OrderManagementData": {
+                                    "Price": {
+                                        "ListPrice": 99900,
+                                        "MSRP": 99900,
+                                        "CurrencyCode": "COP",
+                                    }
+                                },
+                            }
+                        ]
+                    }
+                ],
+            }
+            for product_id in bigIds.split(",")
         ]
     }
 

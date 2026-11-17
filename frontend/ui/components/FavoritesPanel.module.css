@@ -1,0 +1,218 @@
+/* Usa las variables de color definidas en .pageShell (DriftHome.module.css). */
+
+.panel h2 {
+  margin: 0;
+  font: 600 1.02rem var(--display);
+  letter-spacing: .05em;
+}
+
+.description,
+.empty {
+  margin: 6px 0 18px;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.5;
+}
+
+.warning {
+  margin: 0 0 16px;
+  color: var(--warn);
+  font-size: .8rem;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.cover {
+  width: 56px;
+  height: 76px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3a1a5c, #1d2a7c) center / cover;
+}
+
+.text {
+  min-width: 0;
+}
+
+.text strong {
+  display: block;
+  overflow: hidden;
+  font: 600 .92rem var(--display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.primary,
+.remove {
+  min-height: 36px;
+  border-radius: 999px;
+  font: 700 .76rem var(--display);
+  cursor: pointer;
+}
+
+.primary {
+  padding: 6px 14px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.primary:hover {
+  border-color: var(--accent);
+}
+
+.remove {
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: #ff7d8c;
+}
+
+.remove:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.primary:focus-visible,
+.remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Precio de hoy, alerta y precio objetivo (ADR-0021) */
+
+.checked {
+  margin: -10px 0 16px;
+  color: var(--faint);
+  font-size: .74rem;
+}
+
+.cardAlert {
+  border-color: rgba(95, 224, 160, .55);
+}
+
+.text .today {
+  color: var(--text);
+}
+
+.text .today strong {
+  display: inline;
+  font: 700 .8rem var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.alert {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #5fe0a0;
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.target {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 4px;
+}
+
+.target label {
+  color: var(--muted);
+  font-size: .74rem;
+}
+
+.targetRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.targetRow > span {
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+.targetRow input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--text);
+  font: inherit;
+  font-size: .82rem;
+}
+
+.targetRow button {
+  min-height: 34px;
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: 700 .74rem var(--display);
+  cursor: pointer;
+}
+
+.targetRow .clearTarget {
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.targetRow button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.targetRow input:focus-visible,
+.targetRow button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.targetHint,
+.targetError {
+  font-size: .72rem;
+}
+
+.targetHint {
+  color: var(--faint);
+}
+
+.targetError {
+  color: var(--warn);
+}

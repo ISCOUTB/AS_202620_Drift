@@ -240,9 +240,19 @@ Decisión en [ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuen
 
 **Única escritura existente.** `POST /games/sync/playstation` ejecuta `SyncPlayStationCatalog`: lee el catálogo de la fuente y reemplaza el catálogo en memoria con `replace`. Repetirlo deja el mismo estado final para los mismos datos de origen; si la lectura falla, o la fuente responde sin juegos utilizables, el catálogo local no se modifica (el endpoint responde 503 con `local_data_preserved`; ver §8.13). No coordina dos almacenes: lee de una fuente y escribe en un solo catálogo en memoria.
 
-**Saga y outbox: no corresponden hoy.** Una saga coordina transacciones que abarcan varios servicios con compensaciones, y el outbox publica eventos de forma fiable junto con una escritura local. DRIFT no tiene ninguna operación de negocio que escriba en más de un almacén ni publica eventos: no hay compras, favoritos, alertas ni notificaciones. Implementarlos sería añadir complejidad sin un problema que resolver.
+**Escrituras de las cuentas (actualización 13 de noviembre de 2026).** Con el inicio de sesión (ADR-0017), los favoritos (ADR-0020) y sus alertas (ADR-0021) hay escrituras de negocio en PostgreSQL (ADR-0014). Todas escriben en un solo almacén:
 
-**Si se añaden escrituras repetibles.** Un cliente que reintente una escritura podría duplicar su efecto (por ejemplo, dos alertas de precio iguales). El mecanismo apropiado sería una clave de idempotencia enviada por el cliente, guardada de forma persistente junto con una restricción única sobre la operación, para que el segundo intento devuelva el resultado del primero. Esto requeriría persistencia, que hoy DRIFT no tiene (ADR-0008). Si esa escritura además debiera notificar a otro sistema, entonces sí se evaluaría un outbox.
+| Operación | ¿Repetirla cambia el resultado? | Motivo |
+|---|---|---|
+| `PUT /favorites/{game_id}` | No | Reemplaza el favorito de ese juego; la clave es (persona, juego). |
+| `PUT /favorites/{game_id}/target` | No | Fija un valor; repetirlo deja el mismo. |
+| `DELETE /favorites/{game_id}`, `DELETE /devices/{device_id}`, `DELETE /auth/me` | No | El segundo intento responde 404 o 401, pero el estado final es el mismo. |
+| `PUT /devices/{device_id}` | No | Reemplaza los datos del dispositivo. |
+| `POST /devices` | **Sí** | Un reintento crea un segundo dispositivo igual. Lo acota el tope de 10 por persona y la persona puede borrarlo; no se añadió clave de idempotencia. |
+
+**Saga y outbox: no corresponden hoy.** Una saga coordina transacciones que abarcan varios servicios con compensaciones, y el outbox publica eventos de forma fiable junto con una escritura local. Ninguna operación de DRIFT escribe en más de un almacén ni publica eventos. Las alertas de precio no notifican a otro sistema: se calculan cuando la persona abre DRIFT y no se envía correo (ADR-0021, limitación aceptada en §11.11). Implementarlos sería añadir complejidad sin un problema que resolver.
+
+**Si se añade un aviso por correo.** Guardar «hay que avisar» y enviar el correo son dos efectos en dos sistemas: un fallo entre ambos perdería o duplicaría el aviso. Ahí sí se evaluaría un outbox en PostgreSQL, junto con una clave por (persona, juego, precio) para no avisar dos veces la misma baja.
 
 Decisión relacionada: [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md). Riesgos: [arc42 §11.8](arc42-11-riesgos-y-deuda-tecnica.md).
 
@@ -355,7 +365,7 @@ flowchart LR
         LS[("localStorage<br/>drift.pcProfile")]
     end
 
-    subgraph PROXY["Proxy de la plataforma<br/>Azure App Service · Traefik (Dokploy) · Vercel"]
+    subgraph PROXY["Proxy de la plataforma<br/>Traefik (Dokploy)"]
         TLS["HTTPS<br/>agrega X-Forwarded-For"]
     end
 
@@ -394,21 +404,20 @@ flowchart LR
 | Usuario → API | A2 y A5: operaciones administrativas abiertas | `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`; 401 sin token; 403 si el servidor no tiene token (falla cerrado) | `require_admin_token`, ADR-0011 |
 | Usuario → API | A9: CORS demasiado amplio | Orígenes por configuración, sin credenciales, solo `GET`/`POST` y `Content-Type` | `main.py`, ADR-0012 |
 | Usuario → API | A7: perfil manipulado | Validación estricta del cuerpo (`StrictInt`, longitud máxima de los nombres) | `CompatibilityRequest` |
-| Proxy → API | IP del cliente falsificada | El limitador usa la **última** IP de `X-Forwarded-For` (la agrega el proxy) y le quita el puerto de Azure | `client_ip`, `DRIFT_TRUST_FORWARDED_FOR` |
+| Proxy → API | IP del cliente falsificada | El limitador usa la **última** IP de `X-Forwarded-For` (la agrega el proxy) y le quita el puerto si el proxy lo escribe | `client_ip`, `DRIFT_TRUST_FORWARDED_FOR` |
 | API → fuentes externas | A11: suplantación por TLS | `certifi` ≥ 2026.10.18 | PR #34, #35 |
 | API → fuentes externas | Respuestas inválidas o lentas | Plazos, reintentos acotados y validación de forma | §8.15, ADR-0009 |
 | Fuentes externas → frontend | A4: enlaces manipulados | `rel="noopener noreferrer"`; React bloquea URLs `javascript:`. Riesgo residual aceptado (§11.9) | `DriftHome.js` |
 | Cadena de suministro | A1: dependencias vulnerables | `pip-audit` y `npm audit` bloquean el pipeline; Dependabot semanal; versiones exactas | Job `dependency-audit`, [análisis S13](../evidencias/s13-analisis-dependencias.md) |
-| Cadena de suministro | A8: secretos de CI y acciones comprometidas | Acciones fijadas por SHA, OIDC hacia Azure, `permissions: contents: read` | `.github/workflows/` |
+| Cadena de suministro | A8: secretos de CI y acciones comprometidas | Acciones fijadas por SHA, `permissions: contents: read` y sin credenciales de despliegue en el pipeline (ADR-0022) | `.github/workflows/` |
 
 ### Secretos
 
 | Secreto | Dónde vive | Nunca en |
 |---|---|---|
-| `DRIFT_ADMIN_TOKEN` | Dokploy → Environment; configuración de App Service (parámetro `@secure()` del Bicep) | El repositorio, `.env.example`, el chat ni los registros |
-| `DRIFT_GPU_BENCHMARKS_URL`, `DRIFT_CPU_BENCHMARKS_URL` | Dokploy y Azure | El repositorio (A6, aceptada) |
+| `DRIFT_ADMIN_TOKEN` | Dokploy → Environment | El repositorio, `.env.example`, el chat ni los registros |
+| `DRIFT_GPU_BENCHMARKS_URL`, `DRIFT_CPU_BENCHMARKS_URL` | Dokploy | El repositorio (A6, aceptada) |
 | `SONAR_TOKEN` | Secretos de GitHub Actions | Los workflows en texto plano |
-| Identidad de despliegue en Azure | OIDC federado (`azure/login`), sin contraseña guardada | — |
 
 ### Registro de eventos de seguridad
 
