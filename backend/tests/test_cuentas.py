@@ -41,6 +41,9 @@ from app.infrastructure.persistence.in_memory_account_repository import (
 
 ORIGIN = "http://localhost:3000"
 NOW = datetime(2026, 11, 12, 12, 0, tzinfo=timezone.utc)
+# PostgreSQL borra las sesiones vencidas con su propio reloj (`now()`), así
+# que las pruebas de sesiones usan la hora real y no la fecha fija `NOW`.
+SESSION_NOW = datetime.now(timezone.utc).replace(microsecond=0)
 ANA = GoogleIdentity("google-ana", "ana@example.test", "Ana", "https://img.test/ana.png")
 LUIS = GoogleIdentity("google-luis", "luis@example.test", "Luis")
 
@@ -138,15 +141,15 @@ def test_signing_in_twice_keeps_one_account_and_refreshes_its_data(accounts):
 def test_a_session_finds_its_user_until_it_expires(accounts):
     ana = accounts.save_user(ANA)
 
-    accounts.create_session("huella-1", ana.id, NOW + timedelta(days=30))
+    accounts.create_session("huella-1", ana.id, SESSION_NOW + timedelta(days=30))
 
-    assert accounts.find_user_by_session("huella-1", NOW).email == ANA.email
-    assert accounts.find_user_by_session("otra-huella", NOW) is None
-    assert accounts.find_user_by_session("huella-1", NOW + timedelta(days=31)) is None
+    assert accounts.find_user_by_session("huella-1", SESSION_NOW).email == ANA.email
+    assert accounts.find_user_by_session("otra-huella", SESSION_NOW) is None
+    assert accounts.find_user_by_session("huella-1", SESSION_NOW + timedelta(days=31)) is None
 
     accounts.delete_session("huella-1")
 
-    assert accounts.find_user_by_session("huella-1", NOW) is None
+    assert accounts.find_user_by_session("huella-1", SESSION_NOW) is None
 
 
 def test_devices_belong_to_their_owner(accounts):
@@ -196,15 +199,15 @@ def test_deleting_an_account_removes_everything_it_owned(accounts):
     ana = accounts.save_user(ANA)
     luis = accounts.save_user(LUIS)
 
-    accounts.create_session("huella-ana", ana.id, NOW + timedelta(days=1))
-    accounts.create_session("huella-luis", luis.id, NOW + timedelta(days=1))
+    accounts.create_session("huella-ana", ana.id, SESSION_NOW + timedelta(days=1))
+    accounts.create_session("huella-luis", luis.id, SESSION_NOW + timedelta(days=1))
     accounts.save_device(pc(ana))
 
     accounts.delete_user(ana.id)
 
-    assert accounts.find_user_by_session("huella-ana", NOW) is None
+    assert accounts.find_user_by_session("huella-ana", SESSION_NOW) is None
     assert accounts.list_devices(ana.id) == []
-    assert accounts.find_user_by_session("huella-luis", NOW).email == LUIS.email
+    assert accounts.find_user_by_session("huella-luis", SESSION_NOW).email == LUIS.email
 
     # Si vuelve a entrar, empieza con una cuenta nueva y vacía.
     assert accounts.save_user(ANA).id != ana.id
