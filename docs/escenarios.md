@@ -115,4 +115,4 @@
 
 **Los escenarios de calidad se consideran como parte de la evaluación de la arquitectura seleccionada para DRIFT. La decisión arquitectónica base se encuentra documentada en:**
 
-- **[`ADR-0002: Selección de Arquitectura Base`](adr/0002-arquitectura-base.md)**
+- **[`ADR-0002: Adoptar Next.js y FastAPI sobre arquitectura hexagonal`](adr/0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md)**

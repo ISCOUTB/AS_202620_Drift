@@ -4,7 +4,7 @@
 
 ## 1. Mapa de contextos
 
-El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](docs/arc42/arc42_8_conceptos_transversales.md).
+El mapa completo y el lenguaje ubicuo se encuentran en [arc42 sección 8](arc42/arc42_8_conceptos_transversales.md).
 
 | Contexto | Responsabilidad | Tipo |
 |---|---|---|
