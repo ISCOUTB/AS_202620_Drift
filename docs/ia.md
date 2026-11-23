@@ -1277,3 +1277,33 @@ Se utilizó Claude para:
 - Se descartó esperar una API oficial de precios: no hay una documentada para la tienda de Colombia.
 - Se descartó tomar el precio de Microsoft Store desde IsThereAnyDeal: el adaptador propio ya lo da en pesos de Colombia.
 - Se aceptó el riesgo de usar endpoints sin contrato publicado; quedó en las limitaciones del README y en las verificaciones pendientes de [arc42 §11.11](arc42/arc42-11-riesgos-y-deuda-tecnica.md).
+
+### Registro 54 — Integrador de búsqueda en las vistas C4
+
+**Fecha:** 2026-11-23
+**Herramienta:** Claude (Claude Code, aplicación de escritorio)
+
+**Consulta utilizada (resumen):**
+
+> El profesor preguntó si había un componente que integrara todas las búsquedas de juegos y pidió mostrar ese componente en el C4, en lugar de las tiendas, y desplegarlo completo en el nivel 3. Compara los tres C4 derivados del código con los del repositorio y lleva el integrador a las vistas del repositorio.
+
+**Uso:**
+
+Se utilizó Claude para:
+
+- confirmar en el código que el integrador existe: tres `CombinedGameRepository` anidados en `backend/app/main.py`, detrás del puerto `GameRepository` que usa `SearchGames`;
+- comparar las vistas derivadas del código (registro 50) con `contexto.md`, `contenedores.md` y `componentes.md`. El código no había cambiado desde la revisión de esas vistas (`6bbf83e`), así que la única diferencia de fondo era el integrador;
+- en [contexto](c4/contexto.md) y [contenedores](c4/contenedores.md), reemplazar Steam, IsThereAnyDeal, CheapShark, PlayStation Store y la tienda de Xbox por la caja del integrador, conservando las tablas, la leyenda y los colores;
+- en [componentes](c4/componentes.md), agregar el diagrama «Integrador de búsqueda desplegado» con su tabla de fallos, y las flechas de los adaptadores hacia la tasa de cambio;
+- corregir en contenedores la duración de las cachés, que no son todas de 60 s.
+
+**Validación:**
+
+- Cada caja y flecha nueva se buscó en `main.py` y en los adaptadores; las duraciones de caché, en cada `SingleFlightCache`.
+- `scripts/validar_docs.py` sin errores, incluidos los enlaces a la sección nueva del nivel 3.
+- Se borró el archivo de trabajo `docs/c4/c4-desde-el-codigo.md`, que nunca se versionó.
+
+**Alternativa descartada:**
+
+- Se descartó reemplazar las vistas del repositorio por las derivadas del código: las del repositorio tienen tablas, leyenda y tabla de fallos que las otras no tenían.
+- Se descartó dejar las tiendas en el nivel 1 junto al integrador: el profesor pidió que solo apareciera el integrador. Se dejó escrito que en C4 estricto un componente no va en el contexto y que la portada, «Explorar», el historial y las alertas llaman a las tiendas fuera de `CombinedGameRepository`.
