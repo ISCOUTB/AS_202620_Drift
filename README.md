@@ -4,7 +4,7 @@ Proyecto del curso **Arquitectura de Software (AS_202620)** — Universidad Tecn
 
 ## ¿Qué es DRIFT?
 
-**DRIFT** es una plataforma web para apoyar la decisión de compra de videojuegos. Permite buscar juegos, consultar precios disponibles, identificar la mejor opción mostrada y estimar compatibilidad básica de PC.
+**DRIFT** es una plataforma web para apoyar la decisión de compra de videojuegos. Permite buscar un juego y comparar su precio y su descuento en Steam, otras tiendas de PC, PlayStation Store y la tienda de Xbox; ver el historial de precios; filtrar por las plataformas que tiene el usuario; registrar sus dispositivos; estimar si el juego corre en su PC, y recomendar dónde comprarlo y en qué dispositivo jugarlo.
 
 El sistema está diseñado para incorporar nuevas fuentes externas de información sin afectar el núcleo de negocio.
 
@@ -61,6 +61,11 @@ Decisiones de arquitectura vigentes:
 | [ADR-0017](docs/adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) | Inicio de sesión con Google y registro de dispositivos; CORS con credenciales |
 | [ADR-0016](docs/adr/0016-isthereanydeal-e-historial-de-precios.md) | IsThereAnyDeal para las tiendas de PC y el historial de precios, con control de cuota |
 | [ADR-0015](docs/adr/0015-copia-de-respaldo-de-las-fuentes.md) | Copia de respaldo de cada fuente: si una falla, se responde con su último precio guardado y se avisa |
+| [ADR-0019](docs/adr/0019-recomendacion-de-compra.md) | Recomendar la opción de compra con una regla explicable |
+| [ADR-0020](docs/adr/0020-juegos-favoritos.md) | Juegos favoritos de quien inicia sesión |
+| [ADR-0021](docs/adr/0021-alertas-de-precio.md) | Alertas de precio de los favoritos, revisadas al entrar |
+| [ADR-0022](docs/adr/0022-desplegar-solo-en-el-laboratorio.md) | Desplegar solo en el servidor del laboratorio |
+| [ADR-0024](docs/adr/0024-precios-de-colombia-y-de-referencia.md) | Separar los precios de Colombia de los precios de referencia |
 
 ADR-0013 a ADR-0022 se ratifican con [ADR-0023](docs/adr/0023-ratificar-decisiones-de-noviembre.md); [ADR-0024](docs/adr/0024-precios-de-colombia-y-de-referencia.md) separa los precios de Colombia de los de referencia. Índice completo y evolución en [arc42 §9](docs/arc42/arc42_9_Decisiones_Arquitectonicas.md).
 
@@ -220,7 +225,7 @@ python -m pytest tests -q
 
 La suite incluye la búsqueda, la degradación de fuentes, la copia de respaldo de cada fuente (`test_copia_de_respaldo.py`), la resiliencia de Steam (no responde, responde tarde, responde dos veces, 429, 5xx y respuestas inválidas), la compatibilidad de PC, los controles de seguridad de la API (token administrativo, límite de tasa, CORS y registro, en `test_s13_seguridad_api.py`) y la regla de dependencias de la arquitectura. Ninguna de estas pruebas sale a internet.
 
-Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/api/drift/openapi.yaml`](docs/api/drift/openapi.yaml) y necesitan la API encendida en `http://localhost:8000`. Sin ella fallan por conexión, no por un error del código. Para correr solo el resto:
+Las pruebas de contrato (`tests/test_contract.py`) comparan la API con [`docs/api/drift/openapi.yaml`](docs/api/drift/openapi.yaml) y necesitan la API de DRIFT encendida en `http://localhost:8000`. Sin ella fallan por conexión, no por un error del código. Si otro servicio ocupa ese puerto, se prueban contra él y fallan: compruebe antes que `http://localhost:8000/health` responde con la huella de DRIFT. Para correr solo el resto:
 
 ```bash
 python -m pytest tests -q --ignore=tests/test_contract.py
@@ -228,7 +233,7 @@ python -m pytest tests -q --ignore=tests/test_contract.py
 
 Las pruebas del adaptador de PostgreSQL (`tests/test_postgres_snapshot_store.py`) necesitan una base de datos que se pueda vaciar, indicada en `DRIFT_TEST_DATABASE_URL`. Sin esa variable se omiten; el CI las corre con un PostgreSQL de servicio.
 
-Última validación local (22 de noviembre de 2026, Python 3.14): **462 pruebas aprobadas y 20 omitidas** sin base de datos (las omitidas necesitan `DRIFT_TEST_DATABASE_URL` y corren en CI), más **28 de contrato** con la API encendida. Las de contrato tardan unos 40 minutos porque consultan las fuentes reales.
+Última validación local (23 de noviembre de 2026, Python 3.12 con las versiones de `requirements.txt`): **463 pruebas aprobadas y 20 omitidas** sin base de datos (las omitidas necesitan `DRIFT_TEST_DATABASE_URL` y corren en CI). Las **28 de contrato** no se validaron ese día porque el puerto 8000 estaba ocupado por otra aplicación; la última corrida con la API de DRIFT encendida es la del 22 de noviembre. Tardan unos 40 minutos porque consultan las fuentes reales.
 
 ### Experimento E6 (degradación de una fuente)
 
@@ -329,8 +334,11 @@ Todas las variables son opcionales, salvo `DRIFT_DB_PASSWORD` para levantar el c
 | `DRIFT_STEAM_BACKOFF_BASE_SECONDS` | `0.25` | Espera base antes de reintentar |
 | `DRIFT_STEAM_BACKOFF_MAX_SECONDS` | `2.0` | Espera máxima antes de reintentar |
 | `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` | `2.0` | Máximo que se respeta del `Retry-After` de Steam |
-| `DRIFT_ADMIN_TOKEN` | vacía | **Secreta.** Token para `POST /games/sync/playstation` y `/metrics` (`Authorization: Bearer …`). Vacía = esas operaciones quedan deshabilitadas (ADR-0011) |
-| `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en búsqueda y compatibilidad; `0` lo desactiva (ADR-0012) |
+| `DRIFT_STEAM_TOTAL_DEADLINE_SECONDS` | `4.0` | Plazo total de una búsqueda en Steam, reintentos incluidos (ADR-0013) |
+| `DRIFT_CHEAPSHARK_TIMEOUT_SECONDS`, `DRIFT_XBOX_TIMEOUT_SECONDS`, `DRIFT_EXCHANGE_TIMEOUT_SECONDS` | `3.0` | Timeout de cada llamada a CheapShark, a la tienda de Xbox y a la API de tasa de cambio |
+| `DRIFT_CHEAPSHARK_TOTAL_DEADLINE_SECONDS`, `DRIFT_XBOX_TOTAL_DEADLINE_SECONDS` | `3.0` | Plazo total por búsqueda en CheapShark y en Xbox |
+| `DRIFT_ADMIN_TOKEN` | vacía | **Secreta.** Token para `POST /games/sync/playstation`, `POST /hardware/benchmarks/sync` y `/metrics` (`Authorization: Bearer …`). Vacía = esas operaciones quedan deshabilitadas (ADR-0011) |
+| `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en las rutas que salen a fuentes externas: búsqueda, Explorar, historial, compatibilidad, recomendación, regreso de Google y alertas de favoritos; `0` lo desactiva (ADR-0012) |
 | `DRIFT_TRUST_FORWARDED_FOR` | `false` | Usa la última IP de `X-Forwarded-For` para el límite; solo detrás de un proxy de confianza (Traefik) |
 | `DRIFT_DB_PASSWORD` | sin valor | **Secreta.** Contraseña de PostgreSQL en el compose del laboratorio. Obligatoria allí; debe ser segura para una URL (ADR-0014) |
 | `DRIFT_DATABASE_URL` | vacía | **Secreta.** Conexión a PostgreSQL. El compose la arma solo. Vacía = las copias de respaldo viven en memoria |
@@ -373,9 +381,24 @@ En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.d
 
 ## Alcance actual
 
-DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC, con PlayStation Store y con la tienda de Xbox, muestra el descuento que anuncia cada tienda y abre su página de compra en una pestaña nueva. Al abrir un juego de PC muestra cómo se movió su mejor precio en los últimos 12 meses. Al abrir un juego recomienda dónde comprarlo y en cuál dispositivo jugarlo: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más, y sin contar los PC que no alcanzan los requisitos mínimos (ADR-0019). Quien inicia sesión con Google puede registrar sus dispositivos (varios PC y consolas) y usarlos desde cualquier navegador, y guardar juegos en favoritos con un precio objetivo. Al entrar, DRIFT revisa el precio de hoy de sus favoritos en las tiendas de PC y avisa en la página cuáles llegaron a ese precio o bajaron 5 % o más (ADR-0020 y ADR-0021; no envía correos y no revisa los juegos que solo están en consola). La portada muestra los juegos más vendidos del momento en Steam, generales y por categoría, y la pestaña «Tiendas» lista todas las tiendas conectadas con su enlace. El usuario puede elegir las plataformas que tiene (PC, PlayStation, Xbox) y ver solo esas tiendas; la elección se recuerda en su navegador. Los juegos que solo existen en una tienda de consola también aparecen. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
+DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC, con PlayStation Store y con la tienda de Xbox, muestra el descuento que anuncia cada tienda y abre su página de compra en una pestaña nueva. Al abrir un juego de PC muestra cómo se movió su mejor precio en los últimos 12 meses. Al abrir un juego recomienda dónde comprarlo y en cuál dispositivo jugarlo: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más, y sin contar los PC que no alcanzan los requisitos mínimos (ADR-0019). Quien inicia sesión con Google puede registrar sus dispositivos (varios PC y consolas) y usarlos desde cualquier navegador, y guardar juegos en favoritos con un precio objetivo. Al entrar, DRIFT revisa el precio de hoy de sus favoritos en las tiendas de PC y avisa en la página cuáles llegaron a ese precio o bajaron 5 % o más (ADR-0020 y ADR-0021; no envía correos y no revisa los juegos que solo están en consola). La portada muestra los juegos más vendidos del momento en Steam, generales y por categoría; la página «Explorar» los recorre por género (más vendidos, en oferta y gratis), y la pestaña «Tiendas» lista todas las tiendas conectadas con su enlace. El usuario puede elegir las plataformas que tiene (PC, PlayStation, Xbox) y ver solo esas tiendas; la elección se recuerda en su navegador. Los juegos que solo existen en una tienda de consola también aparecen. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
 
 La compatibilidad de PC usa los requisitos reales de cada juego en Steam y el equipo que el usuario guarda en su navegador. Compara memoria, procesador, tarjeta gráfica y espacio libre; la gráfica y el procesador se comparan por benchmark cuando hay datos y por niveles cuando no.
+
+### Estado frente a la ficha del problema
+
+Revisión del 23 de noviembre de 2026 contra el código, punto por punto de la [propuesta de solución](docs/ficha_problema.md#propuesta-de-solución):
+
+| La ficha pide | Estado en el código | Qué falta o queda parcial |
+|---|---|---|
+| Comparar precios y descuentos entre plataformas | Cumplido: Steam, IsThereAnyDeal o CheapShark (Epic, GOG, Humble y más), PlayStation y Xbox, con descuento por tienda | Las tiendas de PC distintas de Steam dan precio de Estados Unidos, solo de referencia (ADR-0024) |
+| Consultar el historial de precios | Parcial | Solo tiendas de PC y solo con `DRIFT_ITAD_API_KEY`; sin historial de PlayStation ni de Xbox |
+| Filtrar según las plataformas disponibles | Cumplido: PC, PlayStation y Xbox, guardado en el navegador | — |
+| Registrar los dispositivos del usuario | Cumplido con sesión de Google (varios PC y consolas) | Sin sesión solo se guarda un perfil de PC en el navegador |
+| Estimar el rendimiento en PC | Parcial: memoria, procesador, gráfica y espacio contra los requisitos de Steam | Da niveles (compatible, con limitaciones, no compatible), no FPS ni calidad gráfica; no aplica a juegos sin identificador de Steam |
+| Recomendar la opción más conveniente | Cumplido: precio + compatibilidad + experiencia por dispositivo (ADR-0019) | Las consolas no se evalúan: se asume que el juego de su tienda corre en ellas |
+| Tensión mantenibilidad vs. rendimiento | Arquitectura hexagonal con prueba de dependencias | E1 no cumple en el despliegue: p95 de 9,05 s con búsquedas distintas frente a 3 s |
+| Tensión disponibilidad vs. actualización | Copia de respaldo por fuente: 15 min sin aviso, 72 h con aviso (ADR-0015) | — |
 
 Limitaciones conocidas:
 

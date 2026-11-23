@@ -1152,3 +1152,128 @@ Se utilizó Claude para comparar el PR #66 con un trabajo previo de la misma ses
 - Se descartaron los cambios previos de privacidad, amenazas, Next.js y contrato porque el PR #66 ya los cubría; duplicarlos habría producido conflictos.
 - Se descartó activar en el CI el contrato con token y sin límite de tasa: la sincronización llamaría a PlayStation desde el runner y la recarga de puntajes responde 503 sin las direcciones privadas.
 - No se redactaron señalamientos de pares ni el desafío final: no están en el repositorio.
+
+### Registro 50 — Revisión contra la ficha del problema y C4 derivado solo del código
+
+**Fecha:** 2026-11-23
+**Herramienta:** Claude (Claude Code, aplicación de escritorio), en un worktree sobre `b841450`
+
+**Consulta utilizada:**
+
+> Revisa todo el repositorio de Drift ahora mismo e indícame si falta actualmente algo que esté en la ficha problema. Actualiza el IA.md y el readme. Realiza el C4 de contexto, contenedores y componentes tal cual el código que está ahora mismo para Drift, no mires la documentación.
+
+**Uso:**
+
+Se utilizó Claude para:
+
+- comparar cada punto de la propuesta de solución y de las tensiones de calidad de la ficha con el código (`main.py`, casos de uso, adaptadores, frontend), sin apoyarse en arc42 ni en las vistas C4 existentes;
+- rehacer los tres niveles del C4 a partir de la raíz de composición (`backend/app/main.py`), los `import`, las URL que llama cada adaptador, las tablas de `postgres_database.py`, `frontend/` y `deploy/compose.lab.yaml`; incluyen el nivel 3 de la API y el de la aplicación web, y el equipo decidirá aparte dónde integrarlos en `docs/c4/`;
+- actualizar el README: descripción, ADR-0019 a ADR-0024 en la tabla, variables de entorno que faltaban, rutas con límite de tasa y token, la página «Explorar», el resultado de las pruebas y una tabla del estado frente a la ficha.
+
+**Validación:**
+
+- Suite del backend en un entorno con las versiones de `requirements.txt` (Python 3.12): 463 aprobadas y 20 omitidas. Con las versiones viejas instaladas en el equipo (FastAPI 0.135) el resultado no es representativo.
+- Las 27 pruebas de contrato fallaron, pero no por DRIFT: `GET http://localhost:8000/health` respondió `"service":"AulaCheck API"`, otra aplicación que ocupaba el puerto. No se volvieron a correr con la API de DRIFT; quedan sin verificar ese día.
+- `scripts/validar_docs.py` sin errores después de los cambios. El render de los diagramas con mermaid-cli no se probó en local; los cuatro diagramas se renderizaron con Mermaid 11 en la conversación.
+- Cada caja y flecha del C4 se buscó en el código. Al revisarlas se corrigieron dos afirmaciones de la primera versión: Google no se valida con JWKS (el `id_token` se lee de la respuesta del endpoint de tokens) y `ListStores` usa la tienda de PC activa, que puede ser CheapShark.
+
+**Alternativa descartada:**
+
+- Se descartó sobrescribir `contexto.md`, `contenedores.md` y `componentes.md`: la consulta pedía no partir de la documentación, y reemplazar las vistas vigentes es decisión del equipo después de comparar ambas.
+- Se descartó dar por buenas las 27 fallas de contrato como un defecto de la API sin comprobar qué servicio respondía en el puerto 8000.
+- No se agregó historial de consolas ni estimación en FPS: son cambios de alcance, no de documentación.
+
+### Registro 51 — Elección de PostgreSQL como base de datos
+
+**Fecha:** 2026-11-12
+**Herramienta:** Claude (Claude Code, aplicación de escritorio)
+
+> Los registros 51 a 53 corresponden a trabajo del 12 y 13 de noviembre que se integró en `cdb2486` y `24ea9c5` y no se había registrado. Se numeran después del 50 para no renumerar los anteriores. Las consultas se transcriben resumidas: el texto exacto no quedó guardado.
+
+**Consulta utilizada (resumen):**
+
+> El profesor recomendó Redis o PostgreSQL. ¿Cuál conviene para DRIFT, si además vamos a tener cuentas de usuario y no queremos que una tienda caída deje la búsqueda sin datos?
+
+**Uso:**
+
+Se utilizó Claude para:
+
+- comparar seis alternativas (PostgreSQL, Redis, PostgreSQL con Redis, MySQL, SQLite en un volumen y seguir en memoria) contra los 128 MB libres del laboratorio, la prohibición de *bind mounts* y la necesidad de guardar datos que ninguna tienda puede reponer;
+- redactar [ADR-0014](adr/0014-postgresql-como-persistencia.md) y, junto con él, [ADR-0015](adr/0015-copia-de-respaldo-de-las-fuentes.md), primer uso de la base (copia de respaldo de cada fuente: 15 minutos fresca, 72 horas con aviso);
+- implementar el acceso con `psycopg` 3 y un pool, sin ORM, con migraciones numeradas en `postgres_database.py` y el adaptador `ResilientSourceSnapshotStore`, que deja de llamar a la base durante 30 s si no responde y sigue con la copia en memoria;
+- agregar el servicio `postgres:17-alpine` al compose del laboratorio con 96 MB y un volumen con nombre.
+
+**Validación:**
+
+- `test_postgres_snapshot_store.py` pasó contra un PostgreSQL 16.2 real levantado con `pgserver` en un entorno temporal, porque el equipo no tiene Docker.
+- Se comprobó que, tras reiniciar la API con las fuentes caídas, los precios de Steam y PlayStation salen de PostgreSQL, y que con la base caída la búsqueda responde sin esperar más de una vez.
+- No se verificó en ese momento que el contenedor arranque en 96 MB en el laboratorio ni que Dokploy acepte el volumen con nombre; quedó escrito en el ADR.
+
+**Alternativa descartada:**
+
+- Se descartó Redis solo porque no es adecuado como fuente de verdad de cuentas y dispositivos: más adelante habría hecho falta otra base.
+- Se descartó PostgreSQL con Redis porque no cabía con holgura en la memoria del laboratorio y eran dos servicios que operar.
+- Se descartaron MySQL (equivalente, sin `jsonb`) y SQLite (un solo escritor, no sirve con más de una instancia).
+
+### Registro 52 — Integración del inicio de sesión con Google
+
+**Fecha:** 2026-11-12
+**Herramienta:** Claude (Claude Code, aplicación de escritorio)
+
+**Consulta utilizada (resumen):**
+
+> ¿Cómo integramos el inicio de sesión con Google en DRIFT para que cada usuario registre sus dispositivos, sin guardar contraseñas propias?
+
+**Uso:**
+
+Se utilizó Claude para:
+
+- comparar cuatro alternativas para cumplir «registrar los dispositivos del usuario» de la ficha: Google (OpenID Connect), cuentas propias con contraseña, varios dispositivos solo en el navegador y enlace mágico por correo;
+- redactar [ADR-0017](adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) y actualizar [privacidad](seguridad/privacidad.md) (Ley 1581 de 2012) y el [modelo de amenazas](seguridad/modelo-amenazas.md);
+- implementar el flujo de código de autorización: `GET /auth/google/login` con `state` y `nonce` en cookies de 10 minutos, `GET /auth/google/callback` que cambia el código por el `id_token` directamente con Google, y una sesión de 30 días en una cookie `HttpOnly` y `SameSite=Lax`, de la que la base solo guarda la huella SHA-256;
+- agregar `GoogleIdentityProvider`, las rutas `/auth/me`, `/auth/logout` y `/devices`, las tablas `app_user`, `user_session` y `user_device`, la revisión del `Origin` en las peticiones que cambian datos y `DELETE /auth/me` para borrar la cuenta en cascada;
+- explicar los pasos en Google Cloud: crear el cliente OAuth tipo «Aplicación web» y registrar la URI de regreso `http://localhost:8000/auth/google/callback`.
+
+**Validación:**
+
+- `test_cuentas.py`: recorrido completo con un proveedor simulado; rechazo sin `state`, con un `state` ajeno, con código inválido y con Google caído; los casos de `id_token` que no cuadra; aislamiento de dispositivos entre usuarios; rechazo de otro origen; borrado en cascada y almacén caído.
+- Las pruebas del almacén de cuentas pasaron contra PostgreSQL 16.2 real.
+- El equipo hizo un inicio de sesión real con su cuenta de Google en `localhost` el mismo 12 de noviembre y funcionó. En el laboratorio quedó pendiente.
+- El Client ID y el secreto se guardaron en `deploy/.env`, que no se versiona; no se compartieron sus valores con la herramienta.
+
+**Alternativa descartada:**
+
+- Se descartaron las cuentas propias con contraseña: obligan a guardar contraseñas, verificar correos y defenderse de fuerza bruta.
+- Se descartó dejar los dispositivos solo en el navegador: no pasan de un navegador a otro y cierran el paso a favoritos y alertas.
+- Se descartó el enlace mágico porque DRIFT no tiene servicio de correo.
+- Se descartó verificar la firma del `id_token` con una librería criptográfica: el token llega directamente de Google por HTTPS y OpenID Connect permite omitirla en ese caso. Queda como condición de revisión del ADR.
+
+### Registro 53 — Búsqueda de una API para la tienda de Xbox
+
+**Fecha:** 2026-11-12
+**Herramienta:** Claude (Claude Code, aplicación de escritorio)
+
+**Consulta utilizada (resumen):**
+
+> La ficha pide comparar también la Xbox Store. Busca qué API podemos usar para obtener los precios de Xbox en Colombia.
+
+**Uso:**
+
+Se utilizó Claude para:
+
+- buscar cómo obtiene la tienda web de Microsoft sus resultados y precios. No se encontró una API pública con contrato para precios; se usaron los endpoints que llama la propia tienda: `displaycatalog.mp.microsoft.com` para el producto y su precio en pesos, sin llave, y el buscador de sugerencias `msstoreapiprod/api/autosuggest`;
+- implementar `XboxGameRepository` con timeout, un reintento, plazo total de 3 s y validación de cada respuesta, y envolverlo en la copia de respaldo (`StaleFallbackGameRepository`) como las demás fuentes;
+- corregir, esa misma noche, que el buscador de sugerencias devolvía pocos resultados y a veces solo complementos (buscar «persona» no traía Persona 5 Royal): se agregó en paralelo el buscador completo `storeedgefd.dsx.mp.microsoft.com`, con la mitad del plazo, y se combinan ambos;
+- excluir «Microsoft Store» de IsThereAnyDeal, porque DRIFT ya la consulta directamente y en pesos.
+
+**Validación:**
+
+- `test_xbox.py` (15 pruebas) cubre el precio en pesos con su enlace de compra, las ofertas, los juegos gratis, la conversión de dólares, los juegos solo de Windows como Microsoft Store, las respuestas inesperadas, el fallo de un buscador sin ocultar al otro y la caché.
+- El caso de Persona quedó como prueba (`test_base_games_hidden_behind_add_ons_are_found_by_the_full_search`), con respuestas simuladas de los dos buscadores.
+- No se pudo confirmar cuándo termina una oferta: la tienda no lo informa.
+
+**Alternativa descartada:**
+
+- Se descartó esperar una API oficial de precios: no hay una documentada para la tienda de Colombia.
+- Se descartó tomar el precio de Microsoft Store desde IsThereAnyDeal: el adaptador propio ya lo da en pesos de Colombia.
+- Se aceptó el riesgo de usar endpoints sin contrato publicado; quedó en las limitaciones del README y en las verificaciones pendientes de [arc42 §11.11](arc42/arc42-11-riesgos-y-deuda-tecnica.md).
