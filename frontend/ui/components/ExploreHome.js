@@ -17,7 +17,8 @@ import {
   SkeletonTiles,
   cover,
 } from "./ExploreParts";
-import SiteHeader, { compareUrl, useAccountSummary } from "./SiteHeader";
+import { gamePageUrl } from "../../domain/model/GameDetails";
+import SiteHeader, { useAccountSummary } from "./SiteHeader";
 import WaveBackdrop from "./WaveBackdrop";
 
 const SPOTLIGHT_GAMES = 8;
@@ -89,9 +90,9 @@ function Spotlight({ games }) {
 
       <Link
         key={game.id}
-        href={compareUrl(game.name)}
+        href={gamePageUrl(game)}
         className={styles.spotlightCard}
-        aria-label={`${game.name}: comparar precios`}
+        aria-label={`${game.name}: ver juego y precios`}
       >
         <span
           className={styles.spotlightArt}
@@ -165,7 +166,7 @@ function FavoritesShelf({ favorites }) {
 
       <div className={styles.favoriteGrid}>
         {favorites.slice(0, 3).map((favorite) => (
-          <Link key={favorite.gameId} href={compareUrl(favorite.name)} className={styles.favoriteCard}>
+          <Link key={favorite.gameId} href={gamePageUrl({ id: favorite.gameId, name: favorite.name })} className={styles.favoriteCard}>
             <span
               className={styles.favoriteArt}
               style={{ backgroundImage: cover(favorite.image) }}

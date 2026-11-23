@@ -10,7 +10,7 @@ import {
 } from "../../domain/model/Explore";
 
 import styles from "./Explore.module.css";
-import { compareUrl } from "./SiteHeader";
+import { gamePageUrl } from "../../domain/model/GameDetails";
 
 const FALLBACK = "linear-gradient(135deg, #3a1a5c, #1d2a7c)";
 
@@ -110,10 +110,10 @@ export function Carousel({ title, subtitle, children, action }) {
   );
 }
 
-/** Carátula vertical con el precio abajo; lleva a comparar precios. */
+/** Carátula vertical con el precio abajo; lleva a la página del juego. */
 export function PosterTile({ game }) {
   return (
-    <Link className={styles.posterTile} href={compareUrl(game.name)} title={`Comparar precios de ${game.name}`}>
+    <Link className={styles.posterTile} href={gamePageUrl(game)} title={`Ver ${game.name}`}>
       <span
         className={styles.posterTileArt}
         style={{ backgroundImage: cover(posterOf(game), game.header) }}

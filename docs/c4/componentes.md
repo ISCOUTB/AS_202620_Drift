@@ -19,7 +19,7 @@ flowchart TB
         direction TB
 
         subgraph ENTRADA["Adaptadores de entrada · infrastructure/api, main.py"]
-            ROUTES["Rutas de juegos y hardware<br/>[FastAPI]<br/>/games/search, /explore, /featured,<br/>/price-history, /compatibility,<br/>/recommendation, /stores, /hardware/*"]
+            ROUTES["Rutas de juegos y hardware<br/>[FastAPI]<br/>/games/search, /explore, /featured,<br/>/details, /price-history, /compatibility,<br/>/recommendation, /stores, /hardware/*"]
             ACCOUNT_ROUTES["Rutas de cuentas<br/>[FastAPI APIRouter]<br/>/auth/*, /devices, /favorites"]
             ADMIN_ROUTES["Rutas administrativas<br/>[FastAPI]<br/>/games/sync/playstation,<br/>/hardware/benchmarks/sync, /metrics"]
             SECURITY["Seguridad<br/>[security.py]<br/>límite de tasa, token, CORS,<br/>origen y cookie de sesión"]
@@ -30,6 +30,7 @@ flowchart TB
             SEARCH["SearchGames"]
             SHOWCASE["ListFeaturedGames, ExploreGames,<br/>ListStores"]
             HISTORY["GetPriceHistory"]
+            DETAILS["GetGameDetails<br/>ficha para la página del juego"]
             COMPAT["EstimateCompatibility,<br/>RecommendPurchase,<br/>ListHardwareCatalogue"]
             ACCOUNTS["Sessions, Devices, Favorites,<br/>CheckFavoriteAlerts"]
             SYNC["SyncPlayStationCatalog,<br/>SyncHardwareBenchmarks"]
@@ -49,7 +50,7 @@ flowchart TB
         end
 
         subgraph FUENTES["Adaptadores de salida a sistemas externos · infrastructure/external"]
-            A_STEAM["Steam<br/>SteamGameRepository, SteamGameRequirementsRepository,<br/>SteamFeaturedGamesSource, SteamGameExplorer,<br/>SteamStoreItems"]
+            A_STEAM["Steam<br/>SteamGameRepository, SteamGameRequirementsRepository,<br/>SteamFeaturedGamesSource, SteamGameExplorer,<br/>SteamStoreItems, SteamGameDetailsSource"]
             A_ITAD["IsThereAnyDeal<br/>ItadClient (cuota), ItadGameRepository,<br/>ItadPriceHistoryRepository"]
             A_CHEAP["CheapSharkGameRepository"]
             A_PSN["PlayStationGameCatalogSource"]
@@ -82,6 +83,7 @@ flowchart TB
     ROUTES --> SEARCH
     ROUTES --> SHOWCASE
     ROUTES --> HISTORY
+    ROUTES --> DETAILS
     ROUTES --> COMPAT
     ACCOUNT_ROUTES --> ACCOUNTS
     ADMIN_ROUTES --> SYNC
@@ -146,7 +148,7 @@ flowchart TB
     classDef external fill:#999999,stroke:#6b6b6b,color:#ffffff
     classDef note fill:#ffffff,stroke:#999999,color:#333333
 
-    class ROUTES,ACCOUNT_ROUTES,ADMIN_ROUTES,SECURITY,OBS,SEARCH,SHOWCASE,HISTORY,COMPAT,ACCOUNTS,SYNC,MODEL,SERVICES,PORTS,COMBINED,RESILIENT_GAME,STALE,REQS,A_STEAM,A_ITAD,A_CHEAP,A_PSN,A_XBOX,A_GOOGLE,A_FX,A_NOW,HTTP,SNAP,PG,MEM,BENCH,K1 component
+    class ROUTES,ACCOUNT_ROUTES,ADMIN_ROUTES,SECURITY,OBS,SEARCH,SHOWCASE,HISTORY,DETAILS,COMPAT,ACCOUNTS,SYNC,MODEL,SERVICES,PORTS,COMBINED,RESILIENT_GAME,STALE,REQS,A_STEAM,A_ITAD,A_CHEAP,A_PSN,A_XBOX,A_GOOGLE,A_FX,A_NOW,HTTP,SNAP,PG,MEM,BENCH,K1 component
     class WEB,ADMIN,K2 container
     class DB,K3 store
     class EXT external
@@ -162,6 +164,7 @@ flowchart TB
 | Observabilidad | `infrastructure/observability.py`, `infrastructure/code_fingerprint.py` | Logs estructurados en JSON y `SearchMetrics` (latencia, fuentes no disponibles, copias usadas, cuota de ITAD) que lee `/metrics`. `GET /health` devuelve `code_fingerprint`, la huella SHA-256 del código de `app/`, para saber qué commit está desplegado (`scripts/verificar_despliegue.py`). |
 | SearchGames | `application/usecases/search_games.py` | Busca en todas las tiendas por el puerto `GameRepository` y, si se piden plataformas, deja solo sus tiendas. |
 | ListFeaturedGames, ExploreGames, ListStores | `application/usecases/showcase.py` | Portada (más vendidos de Steam), página «Explorar» por género y lista de tiendas conectadas. |
+| GetGameDetails | `application/usecases/get_game_details.py`, `domain/ports/game_details_source.py`, `external/steam/steam_game_details_source.py` | Ficha de la página de cada juego: sinopsis, hasta 8 tráilers HLS y 12 capturas de Steam, con caché de una hora y solo medios HTTPS de `*.steamstatic.com`. Un juego sin identificador de Steam no tiene ficha (ADR-0025). |
 | GetPriceHistory | `application/usecases/get_price_history.py` | Historial del mejor precio en 12 meses, o el motivo por el que no hay (ADR-0016). |
 | EstimateCompatibility, RecommendPurchase, ListHardwareCatalogue | `application/usecases/estimate_compatibility.py`, `recommend_purchase.py`, `list_hardware_catalogue.py` | Comparan el PC con los requisitos (por puntaje o por niveles), recomiendan dónde comprar y en qué dispositivo jugar (ADR-0019) y listan las GPU y CPU conocidas. |
 | Sessions, Devices, Favorites | `application/usecases/accounts.py` | Iniciar y cerrar sesión, borrar la cuenta, administrar los dispositivos y los favoritos con su precio objetivo (ADR-0017, ADR-0020). |
@@ -198,7 +201,8 @@ flowchart TB
         end
 
         subgraph UI["Interfaz y raíz de composición · ui/components"]
-            HOME["DriftHome<br/>portada, búsqueda, resultados,<br/>filtro por plataforma, detalle"]
+            HOME["DriftHome<br/>portada, búsqueda, resultados,<br/>filtro por plataforma"]
+            GAME_PAGE["GamePage, MediaGallery,<br/>PurchaseOptions<br/>página de cada juego"]
             EXPLORE_UI["ExploreHome, ExploreGenre,<br/>ExploreParts"]
             HEADER["SiteHeader"]
             PANELS["PriceHistoryPanel, CompatibilityPanel,<br/>RecommendationPanel, StoresPanel"]
@@ -206,17 +210,17 @@ flowchart TB
         end
 
         subgraph APP["Aplicación · application"]
-            USECASES["Casos de uso<br/>searchGames, explore, showcase,<br/>getPriceHistory, estimateCompatibility,<br/>getRecommendation, listHardwareOptions, account"]
-            WEB_PORTS["Puertos<br/>GameSearchPort, PriceHistoryPort,<br/>GameCompatibilityPort, RecommendationPort,<br/>HardwareCatalogPort, PcProfilePort, AccountPort"]
+            USECASES["Casos de uso<br/>searchGames, explore, showcase, gamePage,<br/>getPriceHistory, estimateCompatibility,<br/>getRecommendation, listHardwareOptions, account"]
+            WEB_PORTS["Puertos<br/>GameSearchPort, GameDetailsPort, PriceHistoryPort,<br/>GameCompatibilityPort, RecommendationPort,<br/>HardwareCatalogPort, PcProfilePort, AccountPort"]
         end
 
         subgraph DOM["Dominio · domain/model"]
-            WEB_MODEL["Game, Store, PriceHistory, PcProfile,<br/>GpuCatalog, CpuCatalog, Recommendation,<br/>Account, Favorite, Explore"]
+            WEB_MODEL["Game, GameDetails, Store, PriceHistory, PcProfile,<br/>GpuCatalog, CpuCatalog, Recommendation,<br/>Account, Favorite, Explore"]
         end
 
         subgraph INFRA["Infraestructura"]
-            HTTP_ADAPTERS["Adaptadores HTTP · infrastructure/http<br/>FastApiGameRepository, FastApiExploreRepository,<br/>FastApiShowcaseRepository, FastApiPriceHistoryRepository,<br/>FastApiCompatibilityRepository, FastApiRecommendationRepository,<br/>FastApiHardwareCatalogRepository, FastApiAccountRepository"]
-            STORAGE["Adaptadores del navegador · infrastructure/storage<br/>BrowserPcProfileRepository,<br/>BrowserPlatformFilterRepository"]
+            HTTP_ADAPTERS["Adaptadores HTTP · infrastructure/http<br/>FastApiGameRepository, FastApiExploreRepository,<br/>FastApiShowcaseRepository, FastApiGameDetailsRepository,<br/>FastApiPriceHistoryRepository, FastApiCompatibilityRepository, FastApiRecommendationRepository,<br/>FastApiHardwareCatalogRepository, FastApiAccountRepository"]
+            STORAGE["Adaptadores del navegador · infrastructure/storage<br/>BrowserPcProfileRepository, BrowserPlatformFilterRepository,<br/>BrowserGameHandoffRepository"]
         end
     end
 
@@ -226,8 +230,10 @@ flowchart TB
     USER -->|"HTTPS"| PAGES
     PAGES --> HOME
     PAGES --> EXPLORE_UI
+    PAGES --> GAME_PAGE
+    GAME_PAGE --> PANELS
+    HOME -->|"pestaña Tiendas"| PANELS
     HOME --> HEADER
-    HOME --> PANELS
     HOME --> ACCOUNT_UI
     UI -->|"invoca"| USECASES
     UI -.->|"inyecta"| HTTP_ADAPTERS
@@ -252,7 +258,7 @@ flowchart TB
     classDef store fill:#2e7d32,stroke:#1b5e20,color:#ffffff
     classDef note fill:#ffffff,stroke:#999999,color:#333333
 
-    class PAGES,HOME,EXPLORE_UI,HEADER,PANELS,ACCOUNT_UI,USECASES,WEB_PORTS,WEB_MODEL,HTTP_ADAPTERS,STORAGE,K1 component
+    class PAGES,HOME,GAME_PAGE,EXPLORE_UI,HEADER,PANELS,ACCOUNT_UI,USECASES,WEB_PORTS,WEB_MODEL,HTTP_ADAPTERS,STORAGE,K1 component
     class USER,API,K2 container
     class LOCAL,K3 store
     class K4 note
@@ -260,11 +266,12 @@ flowchart TB
 
 | Componente | Archivos | Responsabilidad |
 |---|---|---|
-| Páginas | `frontend/app/` | Rutas `/`, `/explorar` y `/explorar/[genero]` del App Router. |
-| DriftHome | `ui/components/DriftHome.js` | Página principal: portada con los más vendidos, búsqueda, resultados, filtro «Tengo:» y detalle del juego. Es la raíz de composición de la búsqueda y del detalle. |
+| Páginas | `frontend/app/` | Rutas `/`, `/explorar`, `/explorar/[genero]` y `/juego/[id]` del App Router. |
+| DriftHome | `ui/components/DriftHome.js` | Página principal: portada con los más vendidos, búsqueda, resultados y filtro «Tengo:». Al abrir un resultado deja sus precios en `sessionStorage` y lleva a la página del juego. |
+| GamePage, MediaGallery, PurchaseOptions | `ui/components/GamePage.js`, `MediaGallery.js`, `PurchaseOptions.js` | Página de cada juego (ADR-0025): tráilers con `hls.js` y capturas, ficha de Steam, recomendación, tiendas, historial y compatibilidad. Es la raíz de composición del detalle. |
 | ExploreHome, ExploreGenre, ExploreParts | `ui/components/Explore*.js` | Página «Explorar»: géneros y juegos de cada género con su ficha de Steam. |
 | SiteHeader | `ui/components/SiteHeader.js` | Encabezado con el acceso a «Mi cuenta». |
-| Paneles del detalle | `PriceHistoryPanel.js`, `CompatibilityPanel.js`, `RecommendationPanel.js`, `StoresPanel.js` | Historial (cifras, gráfica, tabla), compatibilidad por componente, opción recomendada con su motivo y tiendas por plataforma. |
+| Paneles | `PriceHistoryPanel.js`, `CompatibilityPanel.js`, `RecommendationPanel.js`, `StoresPanel.js` | Historial (cifras, gráfica, tabla), compatibilidad por componente, opción recomendada con su motivo y tiendas por plataforma. |
 | AccountPanel, FavoritesPanel | `ui/components/AccountPanel.js`, `FavoritesPanel.js` | Botón de Google, dispositivos, cerrar sesión, borrar la cuenta; juegos guardados con su precio de hoy y su alerta. |
 | Casos de uso y puertos | `frontend/application/` | Validan antes de salir a la red y dependen de puertos, no de `fetch`. |
 | Modelo | `frontend/domain/model/` | Reglas que no dependen de la interfaz: plataforma de cada tienda, filtro, catálogos de hardware, cuándo aplica la compatibilidad o el historial. |

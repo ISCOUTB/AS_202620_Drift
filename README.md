@@ -66,6 +66,7 @@ Decisiones de arquitectura vigentes:
 | [ADR-0021](docs/adr/0021-alertas-de-precio.md) | Alertas de precio de los favoritos, revisadas al entrar |
 | [ADR-0022](docs/adr/0022-desplegar-solo-en-el-laboratorio.md) | Desplegar solo en el servidor del laboratorio |
 | [ADR-0024](docs/adr/0024-precios-de-colombia-y-de-referencia.md) | Separar los precios de Colombia de los precios de referencia |
+| [ADR-0025](docs/adr/0025-pagina-de-cada-juego.md) | Página propia para cada juego con la ficha y los tráilers de Steam |
 
 ADR-0013 a ADR-0022 se ratifican con [ADR-0023](docs/adr/0023-ratificar-decisiones-de-noviembre.md); [ADR-0024](docs/adr/0024-precios-de-colombia-y-de-referencia.md) separa los precios de Colombia de los de referencia. Índice completo y evolución en [arc42 §9](docs/arc42/arc42_9_Decisiones_Arquitectonicas.md).
 
@@ -91,7 +92,7 @@ AS_202620_Drift/
 │   ├── requirements.txt          versiones fijas (las instala el CI)
 │   └── requirements.lock         mismas versiones con hashes (las instala la imagen)
 ├── frontend/                     Next.js 16
-│   ├── app/                      páginas: /, /explorar, /explorar/[genero]
+│   ├── app/                      páginas: /, /explorar, /explorar/[genero], /juego/[id]
 │   ├── domain/  application/     modelo, casos de uso y puertos
 │   ├── infrastructure/           http/ (adaptadores de la API) y storage/ (localStorage)
 │   └── ui/components/            interfaz y raíz de composición
@@ -334,11 +335,12 @@ Todas las variables son opcionales, salvo `DRIFT_DB_PASSWORD` para levantar el c
 | `DRIFT_STEAM_BACKOFF_BASE_SECONDS` | `0.25` | Espera base antes de reintentar |
 | `DRIFT_STEAM_BACKOFF_MAX_SECONDS` | `2.0` | Espera máxima antes de reintentar |
 | `DRIFT_STEAM_MAX_RETRY_AFTER_SECONDS` | `2.0` | Máximo que se respeta del `Retry-After` de Steam |
+| `DRIFT_STEAM_DETAILS_TIMEOUT_SECONDS` | `3.0` | Timeout de la ficha del juego (sinopsis y tráilers) en Steam; una sola llamada, con caché de una hora (ADR-0025) |
 | `DRIFT_STEAM_TOTAL_DEADLINE_SECONDS` | `4.0` | Plazo total de una búsqueda en Steam, reintentos incluidos (ADR-0013) |
 | `DRIFT_CHEAPSHARK_TIMEOUT_SECONDS`, `DRIFT_XBOX_TIMEOUT_SECONDS`, `DRIFT_EXCHANGE_TIMEOUT_SECONDS` | `3.0` | Timeout de cada llamada a CheapShark, a la tienda de Xbox y a la API de tasa de cambio |
 | `DRIFT_CHEAPSHARK_TOTAL_DEADLINE_SECONDS`, `DRIFT_XBOX_TOTAL_DEADLINE_SECONDS` | `3.0` | Plazo total por búsqueda en CheapShark y en Xbox |
 | `DRIFT_ADMIN_TOKEN` | vacía | **Secreta.** Token para `POST /games/sync/playstation`, `POST /hardware/benchmarks/sync` y `/metrics` (`Authorization: Bearer …`). Vacía = esas operaciones quedan deshabilitadas (ADR-0011) |
-| `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en las rutas que salen a fuentes externas: búsqueda, Explorar, historial, compatibilidad, recomendación, regreso de Google y alertas de favoritos; `0` lo desactiva (ADR-0012) |
+| `DRIFT_RATE_LIMIT_PER_MINUTE` | `60` | Peticiones por minuto y por cliente en las rutas que salen a fuentes externas: búsqueda, Explorar, ficha del juego, historial, compatibilidad, recomendación, regreso de Google y alertas de favoritos; `0` lo desactiva (ADR-0012) |
 | `DRIFT_TRUST_FORWARDED_FOR` | `false` | Usa la última IP de `X-Forwarded-For` para el límite; solo detrás de un proxy de confianza (Traefik) |
 | `DRIFT_DB_PASSWORD` | sin valor | **Secreta.** Contraseña de PostgreSQL en el compose del laboratorio. Obligatoria allí; debe ser segura para una URL (ADR-0014) |
 | `DRIFT_DATABASE_URL` | vacía | **Secreta.** Conexión a PostgreSQL. El compose la arma solo. Vacía = las copias de respaldo viven en memoria |
@@ -381,7 +383,7 @@ En el laboratorio van con el prefijo `/api`, por ejemplo https://drift.iscoutb.d
 
 ## Alcance actual
 
-DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC, con PlayStation Store y con la tienda de Xbox, muestra el descuento que anuncia cada tienda y abre su página de compra en una pestaña nueva. Al abrir un juego de PC muestra cómo se movió su mejor precio en los últimos 12 meses. Al abrir un juego recomienda dónde comprarlo y en cuál dispositivo jugarlo: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más, y sin contar los PC que no alcanzan los requisitos mínimos (ADR-0019). Quien inicia sesión con Google puede registrar sus dispositivos (varios PC y consolas) y usarlos desde cualquier navegador, y guardar juegos en favoritos con un precio objetivo. Al entrar, DRIFT revisa el precio de hoy de sus favoritos en las tiendas de PC y avisa en la página cuáles llegaron a ese precio o bajaron 5 % o más (ADR-0020 y ADR-0021; no envía correos y no revisa los juegos que solo están en consola). La portada muestra los juegos más vendidos del momento en Steam, generales y por categoría; la página «Explorar» los recorre por género (más vendidos, en oferta y gratis), y la pestaña «Tiendas» lista todas las tiendas conectadas con su enlace. El usuario puede elegir las plataformas que tiene (PC, PlayStation, Xbox) y ver solo esas tiendas; la elección se recuerda en su navegador. Los juegos que solo existen en una tienda de consola también aparecen. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
+DRIFT busca juegos en Steam, compara su precio con el de otras tiendas de PC, con PlayStation Store y con la tienda de Xbox, muestra el descuento que anuncia cada tienda y abre su página de compra en una pestaña nueva. Cada juego tiene su propia página (`/juego/<id>`), como en la tienda: arriba sus tráilers y capturas de Steam con la sinopsis, el desarrollador y los géneros; al bajar, las tiendas con sus precios, el historial y la compatibilidad con tu PC (ADR-0025). Los tráilers se descargan directamente de Steam, no a través de DRIFT. En un juego de PC se ve cómo se movió su mejor precio en los últimos 12 meses. Al abrir un juego recomienda dónde comprarlo y en cuál dispositivo jugarlo: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más, y sin contar los PC que no alcanzan los requisitos mínimos (ADR-0019). Quien inicia sesión con Google puede registrar sus dispositivos (varios PC y consolas) y usarlos desde cualquier navegador, y guardar juegos en favoritos con un precio objetivo. Al entrar, DRIFT revisa el precio de hoy de sus favoritos en las tiendas de PC y avisa en la página cuáles llegaron a ese precio o bajaron 5 % o más (ADR-0020 y ADR-0021; no envía correos y no revisa los juegos que solo están en consola). La portada muestra los juegos más vendidos del momento en Steam, generales y por categoría; la página «Explorar» los recorre por género (más vendidos, en oferta y gratis), y la pestaña «Tiendas» lista todas las tiendas conectadas con su enlace. El usuario puede elegir las plataformas que tiene (PC, PlayStation, Xbox) y ver solo esas tiendas; la elección se recuerda en su navegador. Los juegos que solo existen en una tienda de consola también aparecen. Una fuente nueva se integra con un adaptador que cumpla el puerto `GameRepository`, sin tocar el dominio.
 
 La compatibilidad de PC usa los requisitos reales de cada juego en Steam y el equipo que el usuario guarda en su navegador. Compara memoria, procesador, tarjeta gráfica y espacio libre; la gráfica y el procesador se comparan por benchmark cuando hay datos y por niveles cuando no.
 

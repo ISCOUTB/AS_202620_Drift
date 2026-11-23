@@ -179,7 +179,7 @@ function FavoriteCard({ favorite, status, checking, busy, onSearch, onRemove, on
           className={styles.primary}
           onClick={() => onSearch(favorite)}
         >
-          Ver todas las tiendas
+          Ver el juego y sus tiendas
         </button>
 
         <button

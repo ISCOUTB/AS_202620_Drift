@@ -163,6 +163,83 @@ paths:
                         example: source_unavailable
 
 
+  /games/{game_id}/details:
+    get:
+      tags:
+        - Juegos
+      summary: Ficha de un juego para su página
+      description: >-
+        Sinopsis, tráilers, capturas, géneros, desarrollador y fecha de
+        lanzamiento, según la ficha de Steam del juego. Solo los juegos con
+        identificador de Steam tienen ficha; los demás responden 404. Los
+        tráilers son transmisiones HLS (y DASH si existe) que el navegador
+        descarga directamente de la CDN de Steam. Todas las direcciones son
+        HTTPS de `*.steamstatic.com`.
+      operationId: getGameDetails
+
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          description: Identificador del juego tal como lo entrega la búsqueda.
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,80}$"
+          example: "2909400"
+
+      responses:
+        "200":
+          description: Ficha del juego.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameDetails"
+
+        "404":
+          description: El juego no tiene ficha de Steam o Steam no lo conoce.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                        example: Steam
+                      reason:
+                        type: string
+                        example: not_found
+
+        "422":
+          description: Identificador inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+        "503":
+          description: Steam no respondió.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                        example: Steam
+                      reason:
+                        type: string
+                        example: source_unavailable
+
+
   /games/sync/playstation:
     post:
       tags:
@@ -2172,3 +2249,83 @@ components:
           type: integer
         is_free:
           type: boolean
+
+    GameDetails:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - header_image
+        - background_image
+        - release_date
+        - coming_soon
+        - developers
+        - publishers
+        - genres
+        - trailers
+        - screenshots
+        - source
+      properties:
+        id:
+          type: string
+          example: "2909400"
+        name:
+          type: string
+          example: FINAL FANTASY VII REBIRTH
+        description:
+          type: [string, "null"]
+          description: Sinopsis corta, en texto plano (hasta 700 caracteres).
+        header_image:
+          type: [string, "null"]
+        background_image:
+          type: [string, "null"]
+        release_date:
+          type: [string, "null"]
+          description: Fecha tal como la escribe Steam.
+          example: 23 ENE 2025
+        coming_soon:
+          type: boolean
+        developers:
+          type: array
+          items:
+            type: string
+        publishers:
+          type: array
+          items:
+            type: string
+        genres:
+          type: array
+          items:
+            type: string
+        trailers:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            required: [name, thumbnail, hls, dash]
+            properties:
+              name:
+                type: string
+              thumbnail:
+                type: string
+              hls:
+                type: string
+                description: Lista de reproducción HLS (.m3u8).
+              dash:
+                type: [string, "null"]
+                description: Manifiesto DASH (.mpd), si existe.
+        screenshots:
+          type: array
+          maxItems: 12
+          items:
+            type: object
+            required: [thumbnail, full]
+            properties:
+              thumbnail:
+                type: string
+              full:
+                type: string
+        source:
+          type: string
+          example: Steam
