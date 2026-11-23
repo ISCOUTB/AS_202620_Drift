@@ -4,13 +4,20 @@ from time import perf_counter
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request
-from typing import Dict, List, Literal
+from typing import Annotated, Dict, List, Literal, Union
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.routing import Match
 from typing import Optional
 
-from pydantic import BaseModel, Field, StrictInt, field_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    StrictFloat,
+    StrictInt,
+    field_validator,
+)
 
 from app.application.usecases.accounts import Devices, Favorites, Sessions
 from app.application.usecases.favorite_alerts import CheckFavoriteAlerts
@@ -72,6 +79,7 @@ from app.infrastructure.external.exchange.open_exchange_rate_provider import (
     OpenExchangeRateProvider,
 )
 
+from app.infrastructure.code_fingerprint import code_fingerprint
 from app.infrastructure.external.isthereanydeal.itad_client import ItadClient
 from app.infrastructure.external.isthereanydeal.itad_game_repository import (
     ItadGameRepository,
@@ -279,12 +287,23 @@ app.add_middleware(
 )
 
 
+def _json_integer(value):
+    # JSON Schema acepta 16.0 como entero, pero no un booleano ni un texto.
+    if isinstance(value, (bool, str)):
+        raise ValueError("Debe ser un número entero.")
+
+    return value
+
+
+JsonInt = Annotated[int, BeforeValidator(_json_integer)]
+
+
 class CompatibilityRequest(BaseModel):
-    ram_gb: StrictInt
-    gpu_score: StrictInt
-    storage_gb: Optional[StrictInt] = None
+    ram_gb: JsonInt
+    gpu_score: JsonInt
+    storage_gb: Optional[JsonInt] = None
     gpu_name: Optional[str] = Field(default=None, max_length=120)
-    cpu_score: Optional[StrictInt] = None
+    cpu_score: Optional[JsonInt] = None
     cpu_name: Optional[str] = Field(default=None, max_length=120)
 
 
@@ -297,8 +316,8 @@ class RecommendationDevice(BaseModel):
 
 class RecommendationRequest(BaseModel):
     # Precios que el usuario tiene en pantalla, por tienda, en pesos.
-    prices: Dict[str, float] = Field(max_length=60)
-    discounts: Dict[str, int] = Field(default_factory=dict, max_length=60)
+    prices: Dict[str, Union[StrictInt, StrictFloat]] = Field(max_length=60)
+    discounts: Dict[str, JsonInt] = Field(default_factory=dict, max_length=60)
     devices: List[RecommendationDevice] = Field(
         default_factory=list,
         max_length=10,
@@ -537,7 +556,9 @@ def root():
 @app.get("/health")
 def health():
     return {
-        "status": "ok"
+        "status": "ok",
+        # Permite saber qué commit está desplegado: scripts/verificar_despliegue.py.
+        "code_fingerprint": code_fingerprint(),
     }
 
 

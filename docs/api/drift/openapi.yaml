@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: DRIFT API
-  version: 1.8.0
+  version: 1.9.0
   description: |
     Contrato HTTP de la API de DRIFT.
     Permite consultar el estado del servicio, buscar videojuegos, ver la
@@ -1237,6 +1237,13 @@ components:
           type: string
           example: ok
 
+        code_fingerprint:
+          type: string
+          description: |
+            Huella SHA-256 del código Python de la API desplegada. Con
+            `scripts/verificar_despliegue.py` se traduce al commit de `master`.
+          example: 9f2c4e1ab7d03c55
+
 
 
     SyncError:
@@ -1740,6 +1747,10 @@ components:
           type: object
           description: Precio en pesos que la persona tiene en pantalla, por tienda (máximo 60).
           maxProperties: 60
+          propertyNames:
+            minLength: 1
+            maxLength: 60
+            pattern: '\S'
           additionalProperties:
             type: number
             minimum: 0
@@ -1753,30 +1764,53 @@ components:
           type: array
           maxItems: 10
           items:
-            type: object
-            required:
-              - name
-              - kind
-            properties:
-              id:
-                type:
-                  - string
-                  - "null"
-                maxLength: 80
-              name:
-                type: string
-                minLength: 1
-                maxLength: 40
-              kind:
-                type: string
-                enum:
-                  - pc
-                  - playstation
-                  - xbox
-              specs:
-                oneOf:
-                  - $ref: "#/components/schemas/CompatibilityRequest"
-                  - type: "null"
+            oneOf:
+              - type: object
+                description: Un PC lleva su equipo.
+                required:
+                  - name
+                  - kind
+                  - specs
+                properties:
+                  id:
+                    type:
+                      - string
+                      - "null"
+                    maxLength: 80
+                  name:
+                    type: string
+                    minLength: 1
+                    maxLength: 40
+                    pattern: '\S'
+                  kind:
+                    type: string
+                    enum:
+                      - pc
+                  specs:
+                    $ref: "#/components/schemas/PcSpecs"
+              - type: object
+                description: Una consola no lleva componentes de PC.
+                required:
+                  - name
+                  - kind
+                properties:
+                  id:
+                    type:
+                      - string
+                      - "null"
+                    maxLength: 80
+                  name:
+                    type: string
+                    minLength: 1
+                    maxLength: 40
+                    pattern: '\S'
+                  kind:
+                    type: string
+                    enum:
+                      - playstation
+                      - xbox
+                  specs:
+                    type: "null"
 
 
     RecommendationOption:
@@ -1885,8 +1919,11 @@ components:
       properties:
         ram_gb:
           type: integer
+          minimum: 1
+          maximum: 1024
         gpu_score:
           type: integer
+          minimum: 1
         gpu_name:
           type:
             - string
@@ -1901,10 +1938,13 @@ components:
           type:
             - integer
             - "null"
+          minimum: 1
         storage_gb:
           type:
             - integer
             - "null"
+          minimum: 1
+          maximum: 100000
 
 
     DeviceRequest:
