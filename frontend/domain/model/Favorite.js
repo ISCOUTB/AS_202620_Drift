@@ -1,3 +1,5 @@
+import { sortPricesForPurchase } from "./Game";
+
 /** Juegos favoritos del usuario, libres de dependencias de interfaz o red. */
 
 export function createFavorite({
@@ -76,13 +78,9 @@ export function parseTargetPrice(text) {
 }
 
 function bestOffer(prices = {}) {
-  return Object.entries(prices).reduce(
-    (best, [store, price]) =>
-      best === null || Number(price) < best.price
-        ? { store, price: Number(price) }
-        : best,
-    null,
-  );
+  const [best] = sortPricesForPurchase(prices);
+
+  return best ? { store: best[0], price: Number(best[1]) } : null;
 }
 
 /** Lo que se guarda de un juego: su mejor precio de ahora es la referencia. */

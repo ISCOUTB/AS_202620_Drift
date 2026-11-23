@@ -21,8 +21,24 @@ _CONSOLE_STORES = {
 }
 
 
+# Tiendas consultadas directamente para Colombia. Las demás tiendas de PC
+# llegan por IsThereAnyDeal o CheapShark con su precio de Estados Unidos, y
+# algunas no venden el juego en Colombia (ADR-0024).
+_COLOMBIA_PRICE_STORES = {"Steam", "PlayStation", "Xbox", "Microsoft Store"}
+
+
 def platform_of_store(store: str) -> str:
     return _CONSOLE_STORES.get(store, PC)
+
+
+def has_colombia_price(store: str) -> bool:
+    return store in _COLOMBIA_PRICE_STORES
+
+
+def purchase_order(store: str, price: float) -> tuple:
+    """Clave para ordenar: primero los precios de Colombia, luego por precio."""
+
+    return (not has_colombia_price(store), price, store)
 
 
 def platforms_of_stores(stores: Iterable[str]) -> List[str]:

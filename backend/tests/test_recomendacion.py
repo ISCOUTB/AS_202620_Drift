@@ -25,7 +25,7 @@ from app.domain.services.recommendation import (
 
 client = TestClient(main.app)
 
-PRICES = {"Steam": 100_000, "GOG": 90_000, "PlayStation": 120_000, "Xbox": 95_000}
+PRICES = {"Steam": 100_000, "Microsoft Store": 90_000, "PlayStation": 120_000, "Xbox": 95_000}
 
 
 def pc(experience, name="Mi PC"):
@@ -40,11 +40,11 @@ SERIES = DeviceVerdict("xbox", "Series S", "xbox", CONSOLE)
 
 
 def test_without_devices_the_cheapest_store_wins():
-    answer = recommend(PRICES, {"GOG": 10})
+    answer = recommend(PRICES, {"Microsoft Store": 10})
 
     assert answer.uses_devices is False
     assert (answer.best.store, answer.best.price, answer.best.discount) == (
-        "GOG",
+        "Microsoft Store",
         90_000,
         10,
     )
@@ -57,11 +57,24 @@ def test_without_devices_the_cheapest_store_wins():
     ]
 
 
+def test_a_reference_price_never_beats_a_colombian_price():
+    answer = recommend({"Steam": 100_000, "GOG": 40_000})
+
+    assert answer.best.store == "Steam"
+    assert answer.reason == ONLY_OPTION
+
+
+def test_a_reference_price_is_used_when_no_colombian_price_exists():
+    answer = recommend({"GOG": 40_000, "Fanatical": 45_000})
+
+    assert answer.best.store == "GOG"
+
+
 def test_each_device_gets_the_cheapest_store_of_its_platform():
     answer = recommend(PRICES, devices=[pc(RECOMMENDED), PS5])
 
     assert answer.uses_devices is True
-    assert answer.best.store == "GOG"
+    assert answer.best.store == "Microsoft Store"
     assert answer.best.device.name == "Mi PC"
     assert answer.reason == CHEAPEST
     assert answer.price_difference == 30_000
@@ -85,14 +98,14 @@ def test_a_better_experience_wins_when_it_costs_a_little_more():
     assert answer.best.store == "Xbox"
     assert answer.reason == BETTER_EXPERIENCE
     assert answer.price_difference == 5_000
-    assert [option.store for option in answer.alternatives] == ["GOG"]
+    assert [option.store for option in answer.alternatives] == ["Microsoft Store"]
 
 
 def test_a_better_experience_does_not_win_when_it_costs_much_more():
     # PlayStation cuesta 33 % más.
     answer = recommend(PRICES, devices=[pc(MINIMUM), PS5])
 
-    assert answer.best.store == "GOG"
+    assert answer.best.store == "Microsoft Store"
     assert answer.reason == CHEAPEST
 
 
@@ -103,7 +116,7 @@ def test_between_two_pcs_the_one_that_runs_it_better_is_recommended():
     )
 
     assert answer.best.device.name == "Torre"
-    assert answer.best.store == "GOG"
+    assert answer.best.store == "Microsoft Store"
 
 
 def test_a_device_whose_store_does_not_sell_the_game_is_left_out():
@@ -293,6 +306,8 @@ def test_recommendation_endpoint_without_devices():
     [
         {},
         {"prices": {"Steam": -1}},
+        {"prices": {"Steam": False}},
+        {"prices": {"Steam": 10}, "discounts": {"Steam": False}},
         {"prices": {" ": 10}},
         {"prices": {"Steam": 10}, "devices": [{"name": "X", "kind": "switch"}]},
         # Un PC sin su equipo y una consola con componentes de PC.

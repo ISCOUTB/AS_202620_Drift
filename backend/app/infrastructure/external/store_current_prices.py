@@ -23,6 +23,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Set
 
 from app.domain.ports.current_price_source import CurrentPriceSource
 from app.domain.ports.exchange_rate_provider import ExchangeRateProvider
+from app.domain.services.platforms import purchase_order
 from app.domain.services.price_alerts import CurrentPrice
 from app.infrastructure.external.isthereanydeal.itad_client import (
     SOURCE_NAME as ITAD_SOURCE,
@@ -55,8 +56,9 @@ def _cheapest(offers: Dict[str, float]) -> Optional[CurrentPrice]:
     if not offers:
         return None
 
-    # Orden fijo: con el mismo precio gana siempre la misma tienda.
-    store = min(sorted(offers), key=lambda name: offers[name])
+    # Primero los precios de Colombia (ADR-0024); con el mismo precio gana
+    # siempre la misma tienda.
+    store = min(offers, key=lambda name: purchase_order(name, offers[name]))
 
     return CurrentPrice(store=store, price=offers[store])
 

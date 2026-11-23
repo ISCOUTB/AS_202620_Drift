@@ -37,6 +37,8 @@ import {
   describeAge,
   describeCachedSources,
   filterByPlatforms,
+  hasColombiaPrice,
+  sortPricesForPurchase,
 } from "../../domain/model/Game";
 import {
   ANONYMOUS_ACCOUNT,
@@ -205,25 +207,8 @@ function formatPrice(price) {
 }
 
 
-function getBestPrice(prices = {}) {
-  const entries = Object.entries(prices);
-
-  return entries.reduce((bestPrice, currentPrice) => {
-    if (
-      bestPrice === null ||
-      Number(currentPrice[1]) < Number(bestPrice[1])
-    ) {
-      return currentPrice;
-    }
-
-    return bestPrice;
-  }, null);
-}
-
 function getSortedPrices(prices = {}) {
-  return Object.entries(prices).sort(
-    (first, second) => Number(first[1]) - Number(second[1])
-  );
+  return sortPricesForPurchase(prices);
 }
 
 function getAvailabilityLabel(availablePlatforms) {
@@ -324,6 +309,12 @@ function PurchaseOption({
           </small>
         )}
 
+        {!hasColombiaPrice(platform) && (
+          <small className={styles.storeHint}>
+            Precio de EE. UU.; confirma que se venda en Colombia
+          </small>
+        )}
+
         {cachedAt && (
           <small className={styles.cachedHint}>
             Precio guardado {describeAge(cachedAt)}
@@ -421,7 +412,11 @@ function ResultCard({ game, isSelected, onSelect, compatibility }) {
                 )}
               </div>
 
-              <span className={styles.bestTag}>Más barato</span>
+              <span className={styles.bestTag}>
+                {hasColombiaPrice(bestPrice[0])
+                  ? "Más barato"
+                  : "Referencia EE. UU."}
+              </span>
             </div>
 
             <ul className={styles.priceList}>
@@ -1615,7 +1610,7 @@ export default function DriftHome() {
                       <h2>{selectedGame.name}</h2>
 
                       <p className={styles.selectedGameDescription}>
-                        Ordenadas de menor a mayor precio. Elige una tienda
+                        Primero los precios de Colombia y después los de EE. UU., cada grupo de menor a mayor. Elige una tienda
                         para abrir su página de compra en otra pestaña.
                       </p>
 
@@ -1681,7 +1676,8 @@ export default function DriftHome() {
                   <div className={styles.purchaseOptions}>
                     {selectedPrices.map(
                       ([platform, price], index) => {
-                        const isBestPrice = index === 0;
+                        const isBestPrice =
+                          index === 0 && hasColombiaPrice(platform);
 
                         return (
                           <PurchaseOption
@@ -2001,15 +1997,16 @@ export default function DriftHome() {
                 alojamiento (el servidor de la Universidad Tecnológica de
                 Bolívar) registran tu dirección IP
                 y las búsquedas que haces, solo para operar y diagnosticar el
-                servicio. Sin sesión, el perfil de tu PC se guarda únicamente
-                en tu navegador.
+                servicio. El texto de las búsquedas se conserva hasta 72 horas,
+                sin asociarlo a ti, como copia de respaldo de las tiendas. Sin
+                sesión, el perfil de tu PC se guarda únicamente en tu navegador.
               </p>
               <p>
                 Si inicias sesión con Google, DRIFT guarda tu nombre, tu
                 correo y tu foto de perfil, los dispositivos que registres y
                 los juegos que guardes en favoritos, para mostrarlos cuando
-                vuelvas. Usa una sola cookie, necesaria
-                para mantener tu sesión. Puedes borrar tu cuenta y todos esos
+                vuelvas. Solo usa las cookies necesarias para iniciar y
+                mantener tu sesión. Puedes borrar tu cuenta y todos esos
                 datos desde «Mi cuenta». Al usar el sitio aceptas este
                 tratamiento, conforme a la Ley 1581 de 2012.
               </p>

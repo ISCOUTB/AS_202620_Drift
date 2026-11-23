@@ -5,6 +5,7 @@ import {
   describeExperience,
   describeReason,
 } from "../../domain/model/Recommendation";
+import { hasColombiaPrice } from "../../domain/model/Game";
 
 import styles from "./RecommendationPanel.module.css";
 
@@ -87,6 +88,13 @@ export default function RecommendationPanel({
                   {best.device?.kind === "pc"
                     ? `${best.device.name} ${describeExperience(best.experience)}.`
                     : "Es la versión hecha para esa consola."}
+                </p>
+              )}
+
+              {!hasColombiaPrice(best.store) && (
+                <p className={styles.note}>
+                  Es el precio de Estados Unidos: confirma en la tienda que se
+                  venda y se active en Colombia.
                 </p>
               )}
             </div>
