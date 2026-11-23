@@ -27,6 +27,7 @@ from app.infrastructure.external.store_current_prices import (
 from app.application.usecases.estimate_compatibility import (
     EstimateCompatibility,
 )
+from app.application.usecases.get_game_details import GetGameDetails
 from app.application.usecases.get_price_history import GetPriceHistory
 from app.application.usecases.list_hardware_catalogue import (
     ListHardwareCatalogue,
@@ -99,6 +100,9 @@ from app.infrastructure.external.steam.steam_game_explorer import (
     SteamGameExplorer,
 )
 from app.infrastructure.external.steam.steam_store_items import SteamStoreItems
+from app.infrastructure.external.steam.steam_game_details_source import (
+    SteamGameDetailsSource,
+)
 from app.infrastructure.external.steam.steam_game_repository import (
     SteamGameRepository,
 )
@@ -234,6 +238,8 @@ LIMITED_GET_PATHS = (
     "/games/search",
     "/games/explore",
     "/price-history",
+    # La ficha del juego (sinopsis, tráilers) se pide a Steam.
+    "/details",
     # Cada inicio de sesión hace una llamada a Google.
     "/auth/google/callback",
     # Revisar los favoritos consulta Steam e IsThereAnyDeal.
@@ -398,6 +404,9 @@ list_featured_games = ListFeaturedGames(
     SteamFeaturedGamesSource(store_items=steam_store_items)
 )
 explore_games = ExploreGames(SteamGameExplorer(steam_store_items))
+
+# Página de cada juego: sinopsis, tráilers y capturas de su ficha de Steam.
+get_game_details = GetGameDetails(SteamGameDetailsSource())
 list_stores = ListStores(pc_stores, pc_stores_name)
 
 playstation_with_backup = StaleFallbackGameRepository(
@@ -964,6 +973,70 @@ def price_history_endpoint(
         ),
         "points": [_price_point(point) for point in history.points],
     }
+
+
+def _game_details_json(details):
+    return {
+        "id": details.game_id,
+        "name": details.name,
+        "description": details.description,
+        "header_image": details.header_image,
+        "background_image": details.background_image,
+        "release_date": details.release_date,
+        "coming_soon": details.coming_soon,
+        "developers": list(details.developers),
+        "publishers": list(details.publishers),
+        "genres": list(details.genres),
+        "trailers": [
+            {
+                "name": trailer.name,
+                "thumbnail": trailer.thumbnail,
+                "hls": trailer.hls,
+                "dash": trailer.dash,
+            }
+            for trailer in details.trailers
+        ],
+        "screenshots": [
+            {"thumbnail": shot.thumbnail, "full": shot.full}
+            for shot in details.screenshots
+        ],
+        "source": details.source,
+    }
+
+
+@app.get(
+    "/games/{game_id}/details",
+    responses={
+        404: {"description": "El juego no tiene ficha de Steam."},
+        503: {"description": "Steam no respondió."},
+    },
+)
+def game_details_endpoint(
+    game_id: str = Path(..., pattern=r"^[A-Za-z0-9_-]{1,80}$"),
+):
+    """Ficha del juego para su página: sinopsis, tráilers y capturas."""
+
+    try:
+        details = get_game_details.execute(game_id)
+    except (httpx.HTTPError, ExternalSourceError) as error:
+        log_event(
+            logger,
+            "game_details_failed",
+            reason=getattr(error, "reason", "error"),
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail={"source": "Steam", "reason": "source_unavailable"},
+        ) from error
+
+    if details is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"source": "Steam", "reason": "not_found"},
+        )
+
+    return _game_details_json(details)
 
 
 @app.post(

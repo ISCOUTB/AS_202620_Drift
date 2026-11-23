@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -15,15 +16,8 @@ import {
   logout,
   removeDevice,
   removeFavorite,
-  saveFavorite,
 } from "../../application/usecases/account";
 import { estimateCompatibility } from "../../application/usecases/estimateCompatibility";
-import { getPriceHistory } from "../../application/usecases/getPriceHistory";
-import { getRecommendation } from "../../application/usecases/getRecommendation";
-import {
-  listGraphicsCards,
-  listProcessors,
-} from "../../application/usecases/listHardwareOptions";
 import { searchGames } from "../../application/usecases/searchGames";
 import {
   getFeaturedGames,
@@ -32,44 +26,30 @@ import {
 
 import {
   PLATFORMS,
-  cachedAtForStore,
   canEstimatePcCompatibility,
-  describeAge,
   describeCachedSources,
   filterByPlatforms,
   hasColombiaPrice,
   sortPricesForPurchase,
 } from "../../domain/model/Game";
+import { gamePageUrl, hasGameDetails } from "../../domain/model/GameDetails";
 import {
   ANONYMOUS_ACCOUNT,
   pcProfileOfDevice,
 } from "../../domain/model/Account";
-import { findFavorite, priceChangeSince } from "../../domain/model/Favorite";
-import { canHavePriceHistory } from "../../domain/model/PriceHistory";
-import {
-  devicesForRecommendation,
-  recommendationKey,
-} from "../../domain/model/Recommendation";
 
 import { fastApiAccountRepository } from "../../infrastructure/http/FastApiAccountRepository";
 import { fastApiCompatibilityRepository } from "../../infrastructure/http/FastApiCompatibilityRepository";
 import { fastApiGameRepository } from "../../infrastructure/http/FastApiGameRepository";
-import { fastApiPriceHistoryRepository } from "../../infrastructure/http/FastApiPriceHistoryRepository";
-import { fastApiRecommendationRepository } from "../../infrastructure/http/FastApiRecommendationRepository";
 import { fastApiShowcaseRepository } from "../../infrastructure/http/FastApiShowcaseRepository";
-import {
-  fastApiCpuCatalogRepository,
-  fastApiGpuCatalogRepository,
-} from "../../infrastructure/http/FastApiHardwareCatalogRepository";
+import { browserGameHandoffRepository } from "../../infrastructure/storage/BrowserGameHandoffRepository";
 import { browserPcProfileRepository } from "../../infrastructure/storage/BrowserPcProfileRepository";
 import { browserPlatformFilterRepository } from "../../infrastructure/storage/BrowserPlatformFilterRepository";
 
 import styles from "./DriftHome.module.css";
 import AccountPanel, { AccountButton } from "./AccountPanel";
-import CompatibilityPanel from "./CompatibilityPanel";
 import FavoritesPanel from "./FavoritesPanel";
-import PriceHistoryPanel from "./PriceHistoryPanel";
-import RecommendationPanel from "./RecommendationPanel";
+import { formatPrice } from "./PurchaseOptions";
 import StoresPanel from "./StoresPanel";
 import WaveBackdrop from "./WaveBackdrop";
 
@@ -195,18 +175,6 @@ const COMPATIBILITY_BADGES = {
 };
 
 
-function formatPrice(price) {
-  if (typeof price !== "number") {
-    return "Precio por confirmar";
-  }
-
-  return `$${price.toLocaleString("es-CO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-
 function getSortedPrices(prices = {}) {
   return sortPricesForPurchase(prices);
 }
@@ -258,19 +226,19 @@ function getPosterBackground(game) {
 }
 
 
-function PosterCard({ game, onSearch }) {
+function PosterCard({ game, onOpen }) {
   return (
     <button
       type="button"
       className={styles.posterCard}
-      onClick={() => onSearch(game.name)}
-      title={`Comparar precios de ${game.name}`}
+      onClick={() => onOpen(game)}
+      title={`Ver ${game.name}`}
     >
       <span
         className={styles.posterArt}
         style={{ backgroundImage: getPosterBackground(game) }}
       >
-        <span className={styles.posterAction}>Comparar</span>
+        <span className={styles.posterAction}>Ver juego</span>
       </span>
 
       <strong>{game.name}</strong>
@@ -281,86 +249,7 @@ function PosterCard({ game, onSearch }) {
 }
 
 
-/** Precio en una tienda; si se conoce su página de compra, es un enlace a ella. */
-function PurchaseOption({
-  platform,
-  price,
-  link,
-  isBestPrice,
-  cachedAt,
-  discount,
-}) {
-  const className = `${styles.purchaseOption} ${
-    isBestPrice ? styles.bestPurchaseOption : ""
-  } ${link ? styles.purchaseLink : ""}`;
-
-  const content = (
-    <>
-      <span className={styles.purchasePlatform}>
-        {platform}
-
-        {link && (
-          <small className={styles.purchaseHint}>Comprar ↗</small>
-        )}
-
-        {platform === "PlayStation" && (
-          <small className={styles.storeHint}>
-            Cobra en dólares; valor aproximado
-          </small>
-        )}
-
-        {!hasColombiaPrice(platform) && (
-          <small className={styles.storeHint}>
-            Precio de EE. UU.; confirma que se venda en Colombia
-          </small>
-        )}
-
-        {cachedAt && (
-          <small className={styles.cachedHint}>
-            Precio guardado {describeAge(cachedAt)}
-          </small>
-        )}
-      </span>
-
-      <div className={styles.purchasePriceContainer}>
-        <span className={styles.priceStack}>
-          {discount > 0 && (
-            <span className={styles.discountBadge}>-{discount}%</span>
-          )}
-
-          <strong className={styles.purchasePrice}>
-            {formatPrice(price)}
-          </strong>
-        </span>
-
-        {isBestPrice && (
-          <span className={styles.bestPriceBadge}>
-            Más barato
-          </span>
-        )}
-      </div>
-    </>
-  );
-
-  if (!link) {
-    return <div className={className}>{content}</div>;
-  }
-
-  return (
-    <a
-      className={className}
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={`Abrir ${platform} en una pestaña nueva`}
-    >
-      {content}
-    </a>
-  );
-}
-
-
-function ResultCard({ game, isSelected, onSelect, compatibility }) {
+function ResultCard({ game, onOpen, compatibility }) {
   const prices = getSortedPrices(game.prices);
   const bestPrice = prices[0] || null;
   const visiblePrices = prices.slice(0, CARD_PRICE_LIMIT);
@@ -372,11 +261,7 @@ function ResultCard({ game, isSelected, onSelect, compatibility }) {
       : null;
 
   return (
-    <article
-      className={`${styles.resultCard} ${
-        isSelected ? styles.resultCardSelected : ""
-      }`}
-    >
+    <article className={styles.resultCard}>
       <div
         className={styles.resultArt}
         style={{ backgroundImage: getCoverBackground(game) }}
@@ -461,13 +346,13 @@ function ResultCard({ game, isSelected, onSelect, compatibility }) {
           </p>
         )}
 
-        <button
-          type="button"
+        <Link
+          href={gamePageUrl(game)}
           className={styles.resultAction}
-          onClick={() => onSelect(game)}
+          onClick={() => onOpen(game)}
         >
-          Ver opciones y compatibilidad →
-        </button>
+          Ver juego, tiendas y compatibilidad →
+        </Link>
       </div>
     </article>
   );
@@ -566,7 +451,7 @@ function QuickSidebar({ games, onPick }) {
         <ul className={styles.quickList}>
           {games.map((game) => (
             <li key={game.id}>
-              <button type="button" onClick={() => onPick(game.name)}>
+              <button type="button" onClick={() => onPick(game)}>
                 <span
                   className={styles.quickThumb}
                   style={{ backgroundImage: getPosterBackground(game) }}
@@ -709,19 +594,9 @@ export default function DriftHome() {
     useState("");
 
 
-  const [selectedGame, setSelectedGame] =
-    useState(null);
-
   // Equipo del usuario, guardado en su navegador.
   const [pcProfile, setPcProfile] =
     useState(null);
-
-  // Tarjetas gráficas que se pueden elegir en «Mi PC».
-  const [gpuOptions, setGpuOptions] =
-    useState([]);
-
-  const [cpuOptions, setCpuOptions] =
-    useState([]);
 
   // Resultado de compatibilidad por id de juego.
   const [compatibilityByGame, setCompatibilityByGame] =
@@ -747,6 +622,8 @@ export default function DriftHome() {
   const [favoriteBusy, setFavoriteBusy] =
     useState(false);
 
+  const router = useRouter();
+
   // Precio de hoy y alertas de los favoritos (ADR-0021).
   const [favoriteAlerts, setFavoriteAlerts] =
     useState(null);
@@ -762,14 +639,6 @@ export default function DriftHome() {
 
   const [loginNotice, setLoginNotice] =
     useState("");
-
-  // Historial de precios por id de juego; se pide al abrir el detalle.
-  const [historyByGame, setHistoryByGame] =
-    useState({});
-
-  // Recomendación del juego abierto: { key, state, data }.
-  const [recommendation, setRecommendation] =
-    useState(null);
 
   // Plataformas que tiene el usuario; vacío significa «todas».
   const [platformFilter, setPlatformFilter] =
@@ -788,7 +657,6 @@ export default function DriftHome() {
     useState(0);
 
   const posterRowRef = useRef(null);
-  const selectedPanelRef = useRef(null);
   const catalogRef = useRef(null);
 
   // Más vendidos del momento, por categoría y en general; llegan de la API.
@@ -862,16 +730,6 @@ export default function DriftHome() {
 
     return () => clearInterval(timer);
   }, []);
-
-
-  useEffect(() => {
-    if (selectedGame) {
-      selectedPanelRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-  }, [selectedGame]);
 
 
   const refreshDevices = async () => {
@@ -955,28 +813,11 @@ export default function DriftHome() {
   }, []);
 
 
+  // «Mi PC» se edita en la página de cada juego; aquí solo se lee para las
+  // insignias de compatibilidad de los resultados.
   useEffect(() => {
     setPcProfile(browserPcProfileRepository.load());
     setPlatformFilter(browserPlatformFilterRepository.load());
-
-    let cancelled = false;
-
-    // Estas listas nunca rechazan: ante un fallo devuelven la lista incluida.
-    void listGraphicsCards(fastApiGpuCatalogRepository).then((options) => {
-      if (!cancelled) {
-        setGpuOptions(options);
-      }
-    });
-
-    void listProcessors(fastApiCpuCatalogRepository).then((options) => {
-      if (!cancelled) {
-        setCpuOptions(options);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
 
@@ -1029,119 +870,10 @@ export default function DriftHome() {
   }, [visibleGames, pcProfile]);
 
 
-  // El historial se consulta una sola vez por juego, al abrir su detalle.
-  useEffect(() => {
-    if (
-      !selectedGame ||
-      !canHavePriceHistory(selectedGame) ||
-      historyByGame[selectedGame.id]
-    ) {
-      return;
-    }
-
-    const gameId = selectedGame.id;
-
-    const store = (entry) => {
-      setHistoryByGame((current) => ({
-        ...current,
-        [gameId]: entry,
-      }));
-    };
-
-    store({ state: "loading" });
-
-    getPriceHistory(gameId, fastApiPriceHistoryRepository)
-      .then((data) => store({ state: "done", data }))
-      .catch(() => store({ state: "error" }));
-  }, [selectedGame, historyByGame]);
-
-
-  // La recomendación se recalcula al abrir un juego o cambiar de dispositivos.
-  useEffect(() => {
-    if (!selectedGame || Object.keys(selectedGame.prices).length === 0) {
-      setRecommendation(null);
-      return undefined;
-    }
-
-    const ownDevices = devicesForRecommendation({
-      accountDevices: account.authenticated ? devices : [],
-      pcProfile,
-      platformFilter,
-    });
-
-    const key = recommendationKey(selectedGame, ownDevices);
-
-    let cancelled = false;
-
-    setRecommendation((current) =>
-      current?.key === key ? current : { key, state: "loading" },
-    );
-
-    getRecommendation(
-      selectedGame,
-      ownDevices,
-      fastApiRecommendationRepository,
-    )
-      .then((data) => {
-        if (!cancelled) {
-          setRecommendation({ key, state: "done", data });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setRecommendation({ key, state: "error" });
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedGame, account, devices, pcProfile, platformFilter]);
-
-
-  // Un juego elegido fuera de los primeros resultados se comprueba al abrirlo.
-  useEffect(() => {
-    if (
-      !pcProfile ||
-      !selectedGame ||
-      !canEstimatePcCompatibility(selectedGame) ||
-      compatibilityByGame[selectedGame.id]
-    ) {
-      return;
-    }
-
-    const gameId = selectedGame.id;
-
-    const store = (entry) => {
-      setCompatibilityByGame((current) => ({
-        ...current,
-        [gameId]: entry,
-      }));
-    };
-
-    store({ state: "loading" });
-
-    estimateCompatibility(
-      gameId,
-      pcProfile,
-      fastApiCompatibilityRepository,
-    )
-      .then((data) => store({ state: "done", data }))
-      .catch((compatibilityError) =>
-        store({
-          state: "error",
-          message: compatibilityError.message,
-        }),
-      );
-  }, [selectedGame, pcProfile, compatibilityByGame]);
-
-
   const runSearch = async (term) => {
     setLoading(true);
     setError("");
     setActiveTab("Resultados");
-
-    setSelectedGame(null);
 
     try {
       const results = await searchGames(
@@ -1213,13 +945,20 @@ export default function DriftHome() {
   }, []);
 
 
-  const selectGameForCompatibility = (game) => {
-    setSelectedGame(game);
+  // La búsqueda entrega el juego a su página para no consultar de nuevo las tiendas.
+  const openGame = (game) => {
+    browserGameHandoffRepository.give(game);
   };
 
 
-  const closeSelectedGame = () => {
-    setSelectedGame(null);
+  // Portada y panel lateral: los juegos de Steam abren su página; los de la
+  // lista incluida, que no tienen identificador de Steam, se buscan.
+  const openSuggestion = (game) => {
+    if (hasGameDetails(game.id)) {
+      router.push(gamePageUrl(game));
+    } else {
+      searchSuggestion(game.name);
+    }
   };
 
 
@@ -1233,16 +972,12 @@ export default function DriftHome() {
 
     browserPlatformFilterRepository.save(next);
     setPlatformFilter(next);
-
-    // El detalle abierto mostraba tiendas que el filtro puede haber quitado.
-    setSelectedGame(null);
   };
 
 
   const applyPlatforms = (platforms) => {
     browserPlatformFilterRepository.save(platforms);
     setPlatformFilter(platforms);
-    setSelectedGame(null);
   };
 
 
@@ -1297,25 +1032,6 @@ export default function DriftHome() {
   };
 
 
-  const toggleFavorite = async (game) => {
-    setFavoriteBusy(true);
-
-    try {
-      if (findFavorite(favorites, game)) {
-        await removeFavorite(game.id, fastApiAccountRepository);
-      } else {
-        await saveFavorite(game, fastApiAccountRepository);
-      }
-
-      await refreshFavorites();
-    } catch (error_) {
-      setFavoritesError(error_.message);
-    } finally {
-      setFavoriteBusy(false);
-    }
-  };
-
-
   const handleRemoveFavorite = async (favorite) => {
     setFavoriteBusy(true);
 
@@ -1332,7 +1048,6 @@ export default function DriftHome() {
 
   const openFavorites = () => {
     setActiveTab("Favoritos");
-    setSelectedGame(null);
     setError("");
     setAlertsDismissed(true);
 
@@ -1349,10 +1064,9 @@ export default function DriftHome() {
   };
 
 
-  // Busca el favorito de nuevo: los resultados traen sus precios de hoy.
-  const searchFavorite = (favorite) => {
-    setQuery(favorite.name);
-    void runSearch(favorite.name);
+  // La página del favorito trae sus precios de hoy en todas las tiendas.
+  const openFavorite = (favorite) => {
+    router.push(gamePageUrl({ id: favorite.gameId, name: favorite.name }));
   };
 
 
@@ -1371,13 +1085,6 @@ export default function DriftHome() {
   const clearPlatformFilter = () => {
     browserPlatformFilterRepository.save([]);
     setPlatformFilter([]);
-    setSelectedGame(null);
-  };
-
-
-  const savePcProfile = (profile) => {
-    browserPcProfileRepository.save(profile);
-    setPcProfile(profile);
   };
 
 
@@ -1397,7 +1104,6 @@ export default function DriftHome() {
 
     setActiveTab("Sugeridos");
     setSelectedCategory("Todo");
-    setSelectedGame(null);
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1405,7 +1111,6 @@ export default function DriftHome() {
 
   const openStores = () => {
     setActiveTab("Tiendas");
-    setSelectedGame(null);
     setError("");
 
     if (!storeDirectory) {
@@ -1413,16 +1118,10 @@ export default function DriftHome() {
     }
   };
 
-  const selectedPrices = getSortedPrices(
-    selectedGame?.prices
-  );
-
   const showSuggestions = activeTab === "Sugeridos";
   const showStores = activeTab === "Tiendas";
   const showFavorites = activeTab === "Favoritos" && account.authenticated;
 
-  const selectedFavorite = findFavorite(favorites, selectedGame);
-  const selectedPriceChange = priceChangeSince(selectedFavorite, selectedGame);
   const showSearch = activeTab === "Resultados";
   const showLoading = showSearch && loading;
   const showResults = showSearch && !loading && games.length > 0;
@@ -1458,7 +1157,7 @@ export default function DriftHome() {
           {!sidebarHidden && (
             <QuickSidebar
               games={popularGames.slice(0, QUICK_LIST_GAMES)}
-              onPick={searchSuggestion}
+              onPick={openSuggestion}
             />
           )}
 
@@ -1571,13 +1270,11 @@ export default function DriftHome() {
                   <button
                     type="button"
                     className={styles.heroCta}
-                    onClick={() =>
-                      searchSuggestion(featuredGame.name)
-                    }
+                    onClick={() => openSuggestion(featuredGame)}
                   >
                     <small>{featuredGame.name}</small>
 
-                    <span>Comparar precios</span>
+                    <span>Ver juego</span>
                   </button>
                 </div>
               </section>
@@ -1595,159 +1292,6 @@ export default function DriftHome() {
                 <p className={styles.notice}>
                   {error}
                 </p>
-              )}
-
-
-              {selectedGame && (
-                <section
-                  className={styles.selectedGamePanel}
-                  ref={selectedPanelRef}
-                >
-                  <div className={styles.selectedGameHeader}>
-                    <div>
-                      <p className={styles.purchaseEyebrow}>OPCIONES DE COMPRA</p>
-
-                      <h2>{selectedGame.name}</h2>
-
-                      <p className={styles.selectedGameDescription}>
-                        Primero los precios de Colombia y después los de EE. UU., cada grupo de menor a mayor. Elige una tienda
-                        para abrir su página de compra en otra pestaña.
-                      </p>
-
-                      {account.authenticated && (
-                        <div className={styles.favoriteLine}>
-                          <button
-                            type="button"
-                            className={`${styles.favoriteButton} ${
-                              selectedFavorite ? styles.favoriteOn : ""
-                            }`}
-                            aria-pressed={Boolean(selectedFavorite)}
-                            disabled={favoriteBusy}
-                            onClick={() => toggleFavorite(selectedGame)}
-                          >
-                            {selectedFavorite
-                              ? "★ En favoritos"
-                              : "☆ Guardar en favoritos"}
-                          </button>
-
-                          {selectedPriceChange && (
-                            <span
-                              className={
-                                selectedPriceChange.direction === "down"
-                                  ? styles.favoriteDown
-                                  : styles.favoriteUp
-                              }
-                            >
-                              {selectedPriceChange.direction === "down"
-                                ? "Bajó"
-                                : "Subió"}{" "}
-                              {formatPrice(selectedPriceChange.amount)} desde
-                              que lo guardaste.
-                            </span>
-                          )}
-
-                          {favoritesError && (
-                            <span className={styles.favoriteUp} role="alert">
-                              {favoritesError}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      className={styles.closeSelection}
-                      onClick={closeSelectedGame}
-                      aria-label="Cerrar detalles del juego"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <RecommendationPanel
-                    entry={recommendation}
-                    links={selectedGame.links}
-                    canSignIn={
-                      account.loginAvailable && !account.authenticated
-                    }
-                  />
-
-                  <div className={styles.purchaseOptions}>
-                    {selectedPrices.map(
-                      ([platform, price], index) => {
-                        const isBestPrice =
-                          index === 0 && hasColombiaPrice(platform);
-
-                        return (
-                          <PurchaseOption
-                            key={platform}
-                            platform={platform}
-                            price={price}
-                            link={selectedGame.links?.[platform]}
-                            isBestPrice={isBestPrice}
-                            cachedAt={cachedAtForStore(
-                              selectedGame,
-                              platform,
-                            )}
-                            discount={
-                              selectedGame.discounts?.[platform]
-                            }
-                          />
-                        );
-                      },
-                    )}
-
-                    {selectedPrices.length === 0 && (
-                      <p className={styles.noPurchaseOptions}>
-                        No hay precios disponibles en este momento.
-                      </p>
-                    )}
-                  </div>
-
-                  {selectedGame.unavailableSources?.length > 0 && (
-                    <p className={styles.unavailableNotice}>
-                      No se pudo consultar:{" "}
-                      {selectedGame.unavailableSources.join(", ")}.
-                    </p>
-                  )}
-
-                  {describeCachedSources(selectedGame).length > 0 && (
-                    <p className={styles.unavailableNotice}>
-                      Estas fuentes no respondieron y se muestra su último
-                      precio guardado:{" "}
-                      {describeCachedSources(selectedGame).join(", ")}.
-                    </p>
-                  )}
-
-                  {canHavePriceHistory(selectedGame) && (
-                    <>
-                      <div className={styles.compatibilityDivider} />
-
-                      <PriceHistoryPanel
-                        entry={historyByGame[selectedGame.id]}
-                      />
-                    </>
-                  )}
-
-                  <div className={styles.compatibilityDivider} />
-
-                  {canEstimatePcCompatibility(selectedGame) ? (
-                    <CompatibilityPanel
-                      profile={pcProfile}
-                      compatibility={compatibilityByGame[selectedGame.id]}
-                      gpuOptions={gpuOptions}
-                      cpuOptions={cpuOptions}
-                      onSaveProfile={savePcProfile}
-                    />
-                  ) : (
-                    <p className={styles.consoleNotice}>
-                      {selectedGame.platforms.includes("PC")
-                        ? "No tenemos los requisitos de PC de esta edición, así que no podemos estimar si corre en tu equipo."
-                        : `Esta edición se vende para ${selectedGame.platforms.join(" y ")}: funciona en la consola, sin requisitos de PC que revisar.`}
-                    </p>
-                  )}
-                </section>
               )}
 
 
@@ -1812,7 +1356,7 @@ export default function DriftHome() {
                         <PosterCard
                           key={game.id}
                           game={game}
-                          onSearch={searchSuggestion}
+                          onOpen={openSuggestion}
                         />
                       ))}
                     </div>
@@ -1839,7 +1383,7 @@ export default function DriftHome() {
                   onSetTarget={handleSetTarget}
                   error={favoritesError}
                   busy={favoriteBusy}
-                  onSearch={searchFavorite}
+                  onSearch={openFavorite}
                   onRemove={handleRemoveFavorite}
                 />
               )}
@@ -1933,15 +1477,10 @@ export default function DriftHome() {
                             ...game,
                             availability,
                           }}
-                          isSelected={
-                            selectedGame?.id === game.id
-                          }
                           compatibility={
                             compatibilityByGame[game.id]
                           }
-                          onSelect={
-                            selectGameForCompatibility
-                          }
+                          onOpen={openGame}
                         />
                       );
                     })}

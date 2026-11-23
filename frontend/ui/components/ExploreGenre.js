@@ -23,7 +23,8 @@ import { fastApiExploreRepository } from "../../infrastructure/http/FastApiExplo
 import driftStyles from "./DriftHome.module.css";
 import styles from "./Explore.module.css";
 import { GenreTabs, PriceTag, cover } from "./ExploreParts";
-import SiteHeader, { compareUrl, useAccountSummary } from "./SiteHeader";
+import { gamePageUrl } from "../../domain/model/GameDetails";
+import SiteHeader, { useAccountSummary } from "./SiteHeader";
 import WaveBackdrop from "./WaveBackdrop";
 
 function FilterGroup({ title, children, defaultOpen = true }) {
@@ -148,13 +149,13 @@ function GameRow({ game }) {
 
   return (
     <article className={styles.gameRow}>
-      <Link href={compareUrl(game.name)} className={styles.gameRowPoster} aria-label={`Comparar precios de ${game.name}`}>
+      <Link href={gamePageUrl(game)} className={styles.gameRowPoster} aria-label={`Ver ${game.name}`}>
         <span style={{ backgroundImage: cover(posterOf(game), game.header) }} />
       </Link>
 
       <div className={styles.gameRowInfo}>
         <h3>
-          <Link href={compareUrl(game.name)}>{game.name}</Link>
+          <Link href={gamePageUrl(game)}>{game.name}</Link>
         </h3>
 
         {game.description && <p className={styles.gameRowText}>{game.description}</p>}
@@ -207,8 +208,8 @@ function GameRow({ game }) {
 
         <PriceTag game={game} />
 
-        <Link href={compareUrl(game.name)} className={styles.compareButton}>
-          Comparar precios
+        <Link href={gamePageUrl(game)} className={styles.compareButton}>
+          Ver juego y precios
         </Link>
       </div>
     </article>

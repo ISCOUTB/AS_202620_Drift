@@ -1307,3 +1307,36 @@ Se utilizó Claude para:
 
 - Se descartó reemplazar las vistas del repositorio por las derivadas del código: las del repositorio tienen tablas, leyenda y tabla de fallos que las otras no tenían.
 - Se descartó dejar las tiendas en el nivel 1 junto al integrador: el profesor pidió que solo apareciera el integrador. Se dejó escrito que en C4 estricto un componente no va en el contexto y que la portada, «Explorar», el historial y las alertas llaman a las tiendas fuera de `CombinedGameRepository`.
+
+### Registro 55 — Página propia para cada juego, con tráilers de Steam
+
+**Fecha:** 2026-11-23
+**Herramienta:** Claude (Claude Code, aplicación de escritorio)
+
+**Consulta utilizada:**
+
+> Quiero que cuando se entre a un juego haga lo mismo que cuando se le da a explorar, una pantalla diferente, no todo viviendo en la misma página. Que te salga su tráiler, información del juego como su sinopsis y sus respectivos tráilers, algo como la imagen que te pasé (la página de Steam), no es necesario las reseñas, y que al bajar se muestre su histórico de precios, la parte de compatibilidad de DRIFT y las tiendas con sus precios.
+
+Antes de implementar, Claude preguntó cuatro decisiones y el equipo eligió: reproducir los tráilers con `hls.js` sin pasarse del consumo del servidor (límite del laboratorio: 1000 MB), abrir la misma página para los juegos sin ficha de Steam, buscar los precios por el nombre cuando se abre un enlace directo y llevar a la página desde la búsqueda, la portada, Explorar y los favoritos.
+
+**Uso:**
+
+Se utilizó Claude para:
+
+- comprobar en Steam real que appdetails entrega sinopsis, tráilers y capturas, que los tráilers solo vienen en HLS y DASH y que su CDN permite cargarlos desde otro dominio;
+- implementar `GET /games/{id}/details` (caso de uso `GetGameDetails`, puerto `GameDetailsSource`, adaptador `SteamGameDetailsSource`), su contrato en `openapi.yaml` y `backend/tests/test_ficha_del_juego.py`;
+- implementar la página `/juego/[id]` (`GamePage`, `MediaGallery`, `PurchaseOptions`), mover a ella el detalle que vivía en `DriftHome` y cambiar los enlaces de la búsqueda, la portada, Explorar y los favoritos;
+- redactar [ADR-0025](adr/0025-pagina-de-cada-juego.md) y actualizar el C4 de componentes, arc42 §9 y el README.
+
+**Validación:**
+
+- Backend: 483 pruebas aprobadas y 20 omitidas (sin base de datos). La ruta nueva pasó Schemathesis contra el contrato con la API en el puerto 8010.
+- `next build` sin errores; `npm audit --omit=dev` sin vulnerabilidades con `hls.js` 1.7.4.
+- En el navegador integrado (Chrome): tráiler reproducido con el HLS propio del navegador y forzando `hls.js` (con audio y video), cambio a capturas, llegada desde la búsqueda sin repetirla, desde la portada y desde Explorar, un juego sin ficha de Steam con enlace directo, un juego inexistente y la vista de celular.
+- No se probó en Safari ni Firefox, ni en el laboratorio. El historial se vio vacío en local porque el entorno de prueba no tenía la llave de IsThereAnyDeal.
+
+**Alternativa descartada:**
+
+- Se descartó la versión `hls.js/light`, que pesa menos: los tráilers de Steam traen el audio en una pista aparte y esa versión no la reproduce.
+- Se descartó pasar el video por la API: consumiría memoria y ancho de banda del laboratorio.
+- Se descartó volver a buscar los precios al abrir un juego desde la búsqueda: la página usa los que ya se mostraron (`sessionStorage`, 10 minutos).
