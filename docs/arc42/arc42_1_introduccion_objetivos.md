@@ -49,3 +49,21 @@ Los principales interesados de DRIFT son:
 | **Equipo de desarrollo** | Mantener y evolucionar el sistema, incorporando nuevas plataformas, fuentes de información y funcionalidades sin afectar significativamente los componentes existentes. |
 | **Plataformas o tiendas digitales** | Proporcionar información relacionada con precios, descuentos, disponibilidad y ofertas de los videojuegos. |
 | **Proveedor de información de videojuegos** | Proporcionar información necesaria sobre los videojuegos, incluyendo aquella relacionada con sus características y requisitos de funcionamiento. |
+
+
+## 1.4 Alcance entregado (actualización de noviembre de 2026)
+
+Las secciones 1.1 a 1.3 describen la intención del proyecto en agosto. Esta tabla dice qué quedó implementado en `master` a la entrega final y qué no, para que el alcance recortado quede declarado y no se infiera de la intención inicial.
+
+| Funcionalidad de 1.1 | Estado en `master` | Dónde | Decisión |
+|---|---|---|---|
+| Comparar precios entre plataformas | **Entregada:** Steam, más de 30 tiendas de PC (IsThereAnyDeal o CheapShark), PlayStation Store y tienda de Xbox, en pesos. Los precios de Colombia (Steam, PlayStation, Xbox) se distinguen de los de referencia de EE. UU. convertidos (ADR-0024) | [C4 nivel 3](../c4/componentes.md), `backend/app/infrastructure/external/` | ADR-0008, ADR-0016, ADR-0024 |
+| Consultar descuentos e historial de ofertas | **Entregada** para PC: descuento por tienda e historial de 12 meses del mejor precio. **No hay historial de consolas.** | `GET /games/{id}/price-history` | ADR-0016 |
+| Consultar información de los videojuegos | **Entregada:** portada con los más vendidos y página «Explorar» por género, con fichas de Steam | `/games/featured`, `/games/explore` | — |
+| Identificar la opción de compra más conveniente | **Entregada:** recomendación de tienda y dispositivo | `POST /games/{id}/recommendation` | ADR-0019 |
+| Consultar plataformas disponibles | **Entregada:** plataformas por tienda y filtro «Tengo:» | `domain/services/platforms.py` | — |
+| Estimar compatibilidad en PC | **Entregada** para juegos con identificador de Steam, por puntaje de benchmark o por niveles | `POST /games/{id}/compatibility` | ADR-0018 |
+| Mantener la información cuando una fuente falla | **Entregada:** plazo por fuente, aviso en `unavailable_sources` y copia de respaldo de hasta 72 h en `cached_sources` | `CombinedGameRepository`, `StaleFallbackGameRepository` | ADR-0008, ADR-0015 |
+| *(nueva)* Cuentas, dispositivos, favoritos y alertas | **Entregada** con inicio de sesión de Google; alertas solo al entrar y solo tiendas de PC; **sin correo** | `/auth/*`, `/devices`, `/favorites` | ADR-0017, ADR-0020, ADR-0021 |
+
+**Lo que no se hizo y queda declarado:** historial de precios de consolas; avisos por correo o en segundo plano; compatibilidad de juegos que no están en Steam; pruebas automatizadas del frontend; cumplir E1 en el despliegue (p95 de 9,05 s frente a 3 s, [arc42 §10](arc42_10_Requisitos_Calidad.md)); copias de seguridad de la base de datos; probar en el laboratorio el inicio de sesión real y el compose con PostgreSQL ([§11.11](arc42-11-riesgos-y-deuda-tecnica.md)).

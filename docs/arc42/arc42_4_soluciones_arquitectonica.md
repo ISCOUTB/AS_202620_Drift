@@ -26,3 +26,15 @@ Equipo de 4 integrantes (ver Sección 2.1), desarrollo incremental: se prioriza 
 Esta estrategia responde directamente a las restricciones de la Sección 2: dependencia de múltiples fuentes externas con distintos formatos y niveles de acceso (2.3), equipo y plazos académicos reducidos (2.1), y ausencia de control sobre la disponibilidad de las fuentes externas (2.2).
  
 Los detalles estructurales de esta estrategia (componentes, puertos y adaptadores) se documentan en la Sección 5 (Vista de bloques de construcción).
+
+## 4.5 Evolución de la estrategia hasta la entrega final
+
+La estrategia de fondo no cambió: hexagonal, un solo backend y comunicación síncrona. Lo que cambió es cómo se cumplen los objetivos de calidad:
+
+| Objetivo | Estrategia vigente | ADR |
+|---|---|---|
+| Mantenibilidad | Un adaptador por fuente detrás de `GameRepository`; Xbox e IsThereAnyDeal se agregaron sin tocar el dominio. `test_architecture.py` y `scripts/validar_docs.py` vigilan la regla de dependencias en el CI. | ADR-0002, ADR-0016 |
+| Disponibilidad | Plazo por fuente, catálogo local para Steam y copia de respaldo por fuente; la base de datos no puede tumbar la búsqueda. | ADR-0008, ADR-0009, ADR-0013, ADR-0014, ADR-0015 |
+| Rendimiento | Fuentes en paralelo con hilos y cachés de 60 s. **En el despliegue no alcanza E1** (§10); la causa sigue en estudio (§11.10). | ADR-0008, ADR-0013 |
+| Seguridad y privacidad | Token administrativo, límite de tasa, sesión con Google guardada como huella, comprobación del origen y minimización de datos. | ADR-0011, ADR-0012, ADR-0017 |
+| Despliegue y costo | Un solo entorno, el laboratorio, con los tres contenedores en 480 MB. | ADR-0022 |

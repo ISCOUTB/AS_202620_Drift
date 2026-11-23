@@ -73,3 +73,19 @@ DRIFT requiere intercambiar información con diferentes fuentes externas para cu
 | **Administrador** | Información y acciones relacionadas con la supervisión y mantenimiento del sistema. |
 
 Estas interfaces representan el límite entre DRIFT y los elementos externos que proporcionan o consumen información.
+
+
+## 3.4 Contexto vigente (actualización de noviembre de 2026)
+
+Las secciones 3.1 a 3.3 nombran las fuentes por su categoría («tiendas digitales», «proveedor de información»). Esta tabla concreta qué sistema externo cumple cada papel en el código actual; el diagrama está en el [C4 nivel 1](../c4/contexto.md).
+
+| Papel de 3.1 | Sistema concreto | Interfaz | Adaptador |
+|---|---|---|---|
+| Jugador / usuario | Persona con o sin sesión | HTTPS, página web | `frontend/` |
+| Administrador del sistema | Integrante del equipo con el token administrativo | HTTPS + JSON, `Authorization: Bearer` | `main.py` (rutas administrativas, ADR-0011) |
+| Tiendas digitales | Steam, IsThereAnyDeal (o CheapShark sin llave), PlayStation Store, tienda de Xbox | HTTPS + JSON | `backend/app/infrastructure/external/` |
+| Proveedor de información de videojuegos | Steam (requisitos, fichas, más vendidos) y la copia privada de puntajes 3DMark | HTTPS + JSON | `external/steam/`, `json_hardware_benchmark_repository.py` |
+| *(nuevo)* Proveedor de identidad | Google (OpenID Connect) | HTTPS + JSON, OAuth 2.0 | `external/google/` (ADR-0017) |
+| *(nuevo)* Tasa de cambio | open.er-api.com | HTTPS + JSON | `external/exchange/` |
+
+El contrato de la interfaz propia de DRIFT (24 rutas) está en [`docs/api/drift/openapi.yaml`](../api/drift/openapi.yaml), versión 1.8.0, y se prueba con Schemathesis en el CI.
