@@ -249,4 +249,4 @@ Verificado contra el código ([ADR-0008](../adr/0008-persistencia-ejecucion-y-de
 | `SingleFlightCache` | `backend/app/infrastructure/external/single_flight_cache.py` | Caché de 60 s sin lock durante la E/S; la usan Steam y CheapShark. |
 | `CombinedGameRepository` | `backend/app/infrastructure/persistence/` | Combina fuentes con plazo de 3 s por fuente secundaria y aviso en `unavailable_sources`. |
 
-No existe ningún bloque de persistencia en base de datos: el catálogo y las cachés son en memoria.
+Desde noviembre de 2026 existe un bloque de persistencia en PostgreSQL para cuentas, dispositivos, favoritos, copias de respaldo y puntajes de hardware ([ADR-0014](../adr/0014-postgresql-como-persistencia.md)); está detallado en el [C4 nivel 3](../c4/componentes.md). El catálogo de PlayStation y las cachés de 60 s siguen en memoria.

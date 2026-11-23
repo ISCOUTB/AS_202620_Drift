@@ -1,117 +1,107 @@
 # Privacidad: datos personales que trata DRIFT y con qué base
 
-- **Commit de referencia:** `06fe18c` (merge del PR #49, 1 de noviembre de 2026)
+- **Estado que describe:** `master` en `a0e18f9` (16 de noviembre de 2026), con cuentas de Google, PostgreSQL, favoritos y alertas. Reemplaza la versión de S13, que partía de un sistema sin cuentas ni base de datos (commit de referencia `06fe18c`).
 - **Dueño:** JerryDBM
 - **Marco aplicado:** Ley 1581 de 2012 de Colombia (protección de datos personales) y su decreto reglamentario 1377 de 2013, hoy compilado en el Decreto 1074 de 2015. Esta sección es la interpretación del equipo para un proyecto académico; no es una opinión jurídica.
-- **Relacionado con:** [modelo de amenazas](modelo-amenazas.md), [arc42 §8.16](../arc42/arc42_8_conceptos_transversales.md) y [arc42 §11.9](../arc42/arc42-11-riesgos-y-deuda-tecnica.md)
+- **Relacionado con:** [modelo de amenazas](modelo-amenazas.md), [arc42 §8.16](../arc42/arc42_8_conceptos_transversales.md), [arc42 §11.9](../arc42/arc42-11-riesgos-y-deuda-tecnica.md), [ADR-0014](../adr/0014-postgresql-como-persistencia.md), [ADR-0017](../adr/0017-inicio-de-sesion-con-google-y-dispositivos.md), [ADR-0020](../adr/0020-juegos-favoritos.md) y [ADR-0021](../adr/0021-alertas-de-precio.md)
 
 ## 1. Conclusión
 
-DRIFT **sí trata datos personales**, aunque pocos: no tiene cuentas, formularios de registro, cookies ni analítica. El dato personal que trata es la **dirección IP** del visitante y, junto con ella en los registros de acceso, **lo que buscó**. El perfil del PC que el usuario guarda no lo identifica y no se conserva en el servidor.
+DRIFT **trata datos personales en dos niveles**:
+
+- **Quien usa el sitio sin iniciar sesión** deja su **dirección IP** y, junto con ella en los registros de acceso, **lo que buscó**. Su perfil de PC se queda en su navegador.
+- **Quien inicia sesión con Google es identificable.** DRIFT guarda en PostgreSQL su nombre, su correo, la dirección de su foto, sus dispositivos, sus favoritos y la huella de su sesión.
+
+DRIFT no pide contraseñas, no guarda los tokens de Google, no trata datos de pago y no usa cookies de analítica ni de publicidad.
 
 ## 2. Contraste con el modelo de datos
 
-Antes de concluir se revisó qué datos guarda o recibe el sistema, no solo lo que dice la documentación.
+Se revisó qué datos guarda o recibe el sistema, no solo lo que dice la documentación.
 
-- **Búsqueda de campos personales en el código** (excluye `docs/`):
-  ```
-  git grep -nIE '(email|correo|telefono|teléfono|cedula|cédula|documento|direccion|dirección|nombre_completo)' HEAD -- . ':!docs'
-  ```
-  Solo aparecen la palabra «dirección» en comentarios (direcciones URL de los catálogos de hardware) y «documento» en `correcciones.md`. **No hay** campos de nombre, correo, teléfono, documento de identidad ni dirección física.
-- **Modelos del backend:** `Game`, `NormalizedGame`, `GameRequirements` y `HardwareBenchmark` describen videojuegos y hardware, no personas. `CompatibilityRequest` recibe solo números y nombres de componentes (RAM, puntaje y nombre de GPU y CPU, almacenamiento).
-- **Modelo del frontend:** `PcProfile` (RAM, GPU, CPU, almacenamiento) se guarda en `localStorage` con la clave `drift.pcProfile` (`BrowserPcProfileRepository.js`).
-- **Persistencia:** no hay base de datos (ADR-0008, ADR-0010). Todo lo que vive en el servidor está en la memoria del proceso y se pierde al reiniciar.
-- **Lo que sí aparece al revisar la ejecución:**
+- **Esquema de PostgreSQL** (`backend/app/infrastructure/persistence/postgres_database.py`): `app_user`, `user_session`, `user_device`, `user_favorite`, `source_snapshot`, `hardware_benchmark_set` y `hardware_benchmark`. Las cuatro primeras están ligadas a una persona; las de sesión, dispositivos y favoritos se borran en cascada con su cuenta (`ON DELETE CASCADE`).
+- **`source_snapshot`** guarda el texto de las búsquedas y la respuesta de cada tienda. No tiene columna de IP, sesión ni usuario.
+- **Modelo de cuentas:** `backend/app/domain/model/account.py`.
+- **Modelo del frontend:** sin sesión, `PcProfile` se guarda en `localStorage` con la clave `drift.pcProfile` (`BrowserPcProfileRepository.js`).
+- **Lo que aparece al revisar la ejecución:**
   - la IP del cliente en el limitador de tasa (ADR-0012) y en el evento `admin_catalog_sync_requested` (ADR-0011);
   - la IP y la URL completa (con `?q=`) en el registro de acceso de uvicorn, que está activo por defecto (`backend/Dockerfile`);
   - los registros que guardan las plataformas de despliegue.
 
 ## 3. Inventario de datos
 
-| Dato | ¿Es dato personal? | Dónde está | Para qué | Cuánto tiempo | Quién lo ve |
-|---|---|---|---|---|---|
-| **Dirección IP** del visitante | **Sí.** Combinada con los registros del proveedor de internet, puede identificar a una persona. | (a) Memoria del limitador de tasa. (b) Registro de acceso de uvicorn y registros de Traefik (Dokploy). (c) Evento `admin_catalog_sync_requested`. | Seguridad: limitar el abuso (A3) y auditar operaciones administrativas (A10). Operación: diagnosticar fallos. | (a) Como máximo 60 s, solo en memoria. (b) y (c) Según la retención de cada plataforma. DRIFT no los exporta ni los copia a otro lugar. | El equipo DRIFT y los proveedores de alojamiento como encargados. |
-| **Término de búsqueda** | **Sí, cuando va junto a la IP** en el registro de acceso (la URL incluye `?q=`). Por sí solo, no. | Registro de acceso de uvicorn y de las plataformas. Los registros propios de DRIFT **no** guardan la consulta, solo su longitud. | Operación de la búsqueda. | Según la retención de cada plataforma. | El equipo y los proveedores. |
-| **Perfil del PC** (RAM, GPU, CPU, almacenamiento) | **No:** describe un equipo y no identifica a nadie. | `localStorage` del navegador del usuario. Viaja en el cuerpo de `POST /games/{id}/compatibility` en cada consulta. | Estimar la compatibilidad. | En el navegador, hasta que el usuario borre los datos del sitio. En el servidor, solo mientras dura la petición: no se guarda ni se registra. | Solo el usuario, en su navegador. |
-| Datos de videojuegos, precios y requisitos | No | Memoria del backend (cachés) | Funcionalidad principal | TTL de cada caché (arc42 §8.14) | Público |
+| Dato | ¿Es dato personal? | De quién | Dónde está | Para qué | Cuánto tiempo | Quién lo ve |
+|---|---|---|---|---|---|---|
+| **Dirección IP** | **Sí.** Combinada con los registros del proveedor de internet, puede identificar a una persona. | Todo visitante | Memoria del limitador; registro de acceso de uvicorn y de Traefik (Dokploy); evento `admin_catalog_sync_requested` | Limitar el abuso (A3), auditar operaciones administrativas (A10) y diagnosticar fallos | Limitador: máximo 60 s, en memoria. Registros: según la retención de cada plataforma | El equipo y el alojamiento como encargado |
+| **Término de búsqueda en el registro de acceso** | **Sí, cuando va junto a la IP** | Todo visitante | Registro de acceso de uvicorn y de las plataformas. Los registros propios de DRIFT solo guardan su longitud | Operar la búsqueda | Según la retención de cada plataforma | El equipo y el alojamiento |
+| **Término de búsqueda en la copia de respaldo** | No por sí solo: se guarda sin IP, sesión ni usuario | Todo visitante | PostgreSQL (`source_snapshot`) | Responder cuando una fuente falla (ADR-0015) | 72 horas | El equipo |
+| **Perfil del PC sin sesión** | No: describe un equipo | Todo visitante | `localStorage`. Viaja en el cuerpo de `POST /games/{id}/compatibility` y no se guarda en el servidor | Estimar la compatibilidad | Hasta que el usuario borre los datos del sitio | Solo el usuario |
+| **Identificador de Google, correo, nombre y dirección de la foto** | **Sí** | Quien inicia sesión | PostgreSQL (`app_user`) | Reconocer a la persona cuando vuelve | Hasta que borre su cuenta | La persona y el equipo |
+| **Huella de la sesión y su vencimiento** | **Sí, ligada a la cuenta.** Solo se guarda su SHA-256 | Quien inicia sesión | PostgreSQL (`user_session`) | Mantener la sesión | 30 días o hasta cerrar sesión | Nadie la usa directamente |
+| **Dispositivos**: nombre, tipo y, en un PC, sus componentes | **Sí, por estar ligados a la cuenta** | Quien inicia sesión | PostgreSQL (`user_device`) | Filtrar tiendas, estimar compatibilidad y recomendar | Hasta que los borre o borre su cuenta | La persona y el equipo |
+| **Favoritos**: juego, imagen, precio y tienda al guardarlo, y precio objetivo | **Sí, por estar ligados a la cuenta** | Quien inicia sesión | PostgreSQL (`user_favorite`) | Mostrar su lista y avisar cambios de precio | Hasta que los quite o borre su cuenta | La persona y el equipo |
+| **Cookies** `drift_session`, `drift_login_state` y `drift_login_nonce` | Identifican una sesión o un intento de inicio | Quien inicia sesión | Navegador | Mantener la sesión y proteger el inicio de sesión | Sesión: 30 días. Las otras dos: 10 minutos | La persona y la API |
+| Datos de videojuegos, precios y requisitos | No | — | Memoria y PostgreSQL | Funcionalidad principal | TTL de cada caché (arc42 §8.14) | Público |
 
-**No se tratan:** nombres, correos, teléfonos, documentos de identidad, direcciones físicas, datos de pago, cuentas de usuario, cookies, identificadores de publicidad ni herramientas de analítica. Tampoco datos sensibles (art. 5) ni datos de menores (art. 7).
+**No se tratan:** contraseñas, tokens de Google, teléfonos, documentos de identidad, direcciones físicas, datos de pago, identificadores de publicidad ni herramientas de analítica. No se recogen datos sensibles (art. 5). DRIFT no verifica la edad de quien inicia sesión y no está dirigido a menores (art. 7).
 
 ## 4. Base del tratamiento
 
-- **Regla general (Ley 1581, art. 9):** el tratamiento requiere la autorización previa, expresa e informada del titular. El Decreto 1377 de 2013 (art. 7) admite obtenerla mediante **conductas inequívocas** del titular. Así se plantea para DRIFT: el visitante que usa el sitio después de ver el aviso de privacidad autoriza el tratamiento mínimo descrito arriba.
-- **Finalidades informadas:** prestar la búsqueda y la estimación de compatibilidad, proteger el servicio contra el abuso y diagnosticar fallos. Ninguna otra. La IP no se usa para perfilar, ni para publicidad, ni se cede a terceros.
+- **Regla general (Ley 1581, art. 9):** el tratamiento requiere la autorización previa, expresa e informada del titular. El Decreto 1377 de 2013 (art. 7) admite obtenerla mediante **conductas inequívocas**.
+  - **Sin sesión:** quien usa el sitio después de ver el aviso autoriza el tratamiento mínimo descrito.
+  - **Con sesión:** la persona decide iniciar sesión y Google le muestra qué datos comparte.
+- **Finalidades informadas:** prestar la búsqueda, la compatibilidad, la recomendación, los favoritos y las alertas; proteger el servicio contra el abuso y diagnosticar fallos. Ninguna otra.
 - **Principios aplicados (Ley 1581, art. 4):**
-  - **Finalidad y libertad:** solo para lo dicho y con autorización.
-  - **Necesidad y minimización:** no hay cuentas; los registros propios no guardan la consulta; el limitador olvida la IP a los 60 s.
-  - **Seguridad:** HTTPS, sin base de datos y operaciones administrativas con token.
-  - **Acceso restringido:** solo el equipo y los encargados del alojamiento.
-- **Encargados del tratamiento:** el servidor del laboratorio de la universidad (Dokploy). Desde el 13 de noviembre de 2026 DRIFT ya no usa Microsoft Azure ni Vercel ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)), así que el alojamiento ya no implica una transferencia internacional. Las fuentes de precios y Google (si la persona inicia sesión) reciben solo lo que se describe en las secciones 3 y 8.
-- **Derechos del titular (consultar, actualizar, suprimir):** DRIFT no puede asociar una IP con una persona concreta, ni tiene cuentas donde consultar datos. Una solicitud se atiende a través del canal de contacto del aviso de privacidad, en la medida en que sea posible localizar los registros.
+  - **Finalidad y libertad:** solo para lo dicho; usar DRIFT no exige cuenta.
+  - **Necesidad y minimización:** solo se piden los permisos `openid`, `email` y `profile`. Los registros propios no guardan la consulta y el limitador olvida la IP a los 60 s.
+  - **Seguridad:** HTTPS, cookies `HttpOnly` y `SameSite=Lax`, huella de sesión en lugar del identificador y operaciones administrativas con token.
+  - **Acceso restringido:** solo el equipo y el encargado del alojamiento.
+- **Encargado del tratamiento:** el servidor del laboratorio de la universidad (Dokploy). Desde el 13 de noviembre de 2026 DRIFT ya no usa Microsoft Azure ni Vercel ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)).
+- **Terceros:**
+  - **Google**, como proveedor de identidad: sabe que la persona inició sesión en DRIFT.
+  - **Steam, CheapShark, PlayStation, IsThereAnyDeal y la tienda de Xbox** reciben el texto de las búsquedas. No reciben la IP ni la identidad del visitante.
+  - Para las alertas de precio (ADR-0021), Steam e IsThereAnyDeal reciben los identificadores de los juegos favoritos, sin decir de quién son.
+
+### Derechos del titular
+
+| Derecho | Cómo se ejerce |
+|---|---|
+| **Consultar** | «Mi cuenta» muestra el nombre, el correo y los dispositivos; la pestaña «Favoritos», los juegos guardados |
+| **Actualizar** | El nombre, el correo y la foto se actualizan desde Google en cada inicio de sesión; dispositivos y favoritos se editan en DRIFT |
+| **Suprimir** | «Eliminar mi cuenta» (`DELETE /auth/me`) borra la cuenta, sus sesiones, sus dispositivos y sus favoritos |
+| **Sin cuenta** | Una solicitud se atiende por el canal del aviso, en la medida en que se puedan localizar los registros: DRIFT no puede asociar por sí solo una IP con una persona |
+
+Una copia de seguridad de PostgreSQL contiene estos datos personales: se guarda fuera del repositorio y una cuenta borrada puede seguir en una copia anterior hasta que esa copia se elimine.
 
 ## 5. Medidas de protección
 
 | Medida | Dónde |
 |---|---|
-| No hay base de datos ni datos de usuario en el servidor | ADR-0008, ADR-0010 |
-| El perfil del PC se queda en el navegador del usuario | `BrowserPcProfileRepository.js` |
-| Los registros propios no guardan la consulta, solo su longitud | `main.py` (`search_completed`, `search_failed`), prueba `test_logs_report_retries_and_failures_without_the_user_query` |
+| Solo se guarda la huella SHA-256 del identificador de sesión | `test_only_the_hash_of_the_session_token_is_stored` |
+| Cookies `HttpOnly`, `SameSite=Lax` y, por HTTPS, `Secure` | ADR-0017 |
+| Comprobación del `Origin` en toda petición que cambia datos | `test_changes_from_another_site_are_refused`, `test_favorite_changes_from_another_site_are_refused` |
+| Cada usuario solo accede a sus dispositivos y favoritos | `test_one_user_cannot_touch_the_devices_of_another`, `test_one_user_does_not_see_the_favorites_of_another` |
+| Borrar la cuenta borra sus datos en cascada | `postgres_database.py`, `test_deleting_an_account_removes_its_favorites` |
+| CORS con credenciales solo para orígenes configurados | `test_cors_allows_credentials_only_for_the_configured_origin` |
+| Sin sesión, el perfil del PC se queda en el navegador | `BrowserPcProfileRepository.js` |
+| Los registros propios no guardan la consulta, solo su longitud | `main.py`, `test_logs_report_retries_and_failures_without_the_user_query` |
 | El limitador guarda la IP solo en memoria y como máximo 60 s | `SlidingWindowRateLimiter`, ADR-0012 |
 | Las operaciones administrativas y `/metrics` exigen token | ADR-0011 |
-| HTTPS: lo termina el proxy Traefik del laboratorio (no se configura en el repositorio) | Publicación por Traefik, `deploy/compose.lab.yaml` |
-| CORS sin credenciales y sin cookies | ADR-0012 |
+| HTTPS: lo termina el proxy Traefik del laboratorio | `deploy/compose.lab.yaml` |
 
 ## 6. Pendientes
 
 | # | Pendiente | Dueño | Estado |
 |---|---|---|---|
-| P1 | Publicar el aviso de privacidad (§7) en el pie de página del frontend, con un canal de contacto del equipo | JerryDBM | **Hecha:** enlace «Privacidad» en el pie (`DriftHome.js`); el contacto son los *issues* del repositorio |
-| P2 | Decidir si se desactiva el registro de acceso de uvicorn (`--no-access-log`) para no guardar la URL con la consulta. Los registros estructurados de DRIFT ya cubren la operación; las plataformas seguirán registrando la IP. | JerryDBM | Pendiente |
+| P1 | Publicar el aviso de privacidad en el pie de página, con un canal de contacto | JerryDBM | **Hecha:** enlace «Privacidad» en el pie (`DriftHome.js`); el contacto son los *issues* del repositorio |
+| P2 | Decidir si se desactiva el registro de acceso de uvicorn (`--no-access-log`) para no guardar la URL con la consulta | JerryDBM | Pendiente |
+| P3 | Copias de seguridad de PostgreSQL | Equipo | **Parcial:** procedimiento en [verificaciones pendientes](../evidencias/verificaciones-pendientes-google-y-laboratorio.md), sección 3; todavía no se ha ejecutado en el laboratorio |
+| P4 | Registrar la fecha en que la persona aceptó el tratamiento | Equipo | Pendiente |
+| P5 | Probar con una cuenta real en el laboratorio el borrado de la cuenta (casillas G1 a G10 de la misma guía) | Equipo | Pendiente |
 
 ## 7. Texto del aviso de privacidad (publicado en el pie de página)
 
-> **Privacidad.** DRIFT no pide registro ni usa cookies. Para funcionar y protegerse contra el abuso, el servicio y su proveedor de alojamiento (el servidor de la Universidad Tecnológica de Bolívar) registran tu dirección IP y las búsquedas que haces, solo para operar y diagnosticar el servicio. El perfil de tu PC se guarda únicamente en tu navegador. Al usar el sitio aceptas este tratamiento, conforme a la Ley 1581 de 2012. Consultas sobre tus datos: abre un caso en el repositorio del proyecto (https://github.com/ISCOUTB/AS_202620_Drift/issues).
-
-## 8. Cambio propuesto: cuentas con Google y base de datos (12 de noviembre de 2026)
-
-> Esta sección describe cambios que todavía no están en `master` (ADR-0014 a ADR-0017). Cuando se integren, las secciones 1 a 7 dejan de ser exactas en lo que aquí se indica y deben reescribirse.
-
-**Qué cambia en la conclusión.** DRIFT pasa a tener cuentas. Quien inicia sesión con Google es identificable: DRIFT guarda su nombre y su correo. Quien no inicia sesión sigue como antes.
-
-**Datos nuevos que se tratan**
-
-| Dato | De quién | Dónde se guarda | Para qué | Cuánto tiempo |
-|---|---|---|---|---|
-| Identificador de la cuenta de Google, correo, nombre y dirección de la foto | Quien inicia sesión | PostgreSQL (`app_user`) | Reconocer a la persona cuando vuelve | Hasta que borre su cuenta |
-| Dispositivos: nombre que les pone, tipo y, en un PC, sus componentes | Quien inicia sesión | PostgreSQL (`user_device`) | Filtrar tiendas y estimar compatibilidad | Hasta que los borre o borre su cuenta |
-| Juegos favoritos: identificador y nombre del juego, su imagen, el precio y la tienda al guardarlo, y el precio objetivo si lo pone (ADR-0020, ADR-0021) | Quien inicia sesión | PostgreSQL (`user_favorite`) | Mostrarle su lista y si el precio cambió | Hasta que los quite o borre su cuenta |
-| Huella de la sesión y su vencimiento | Quien inicia sesión | PostgreSQL (`user_session`) | Mantener la sesión | 30 días o hasta cerrar sesión |
-| Búsquedas hechas en DRIFT (texto de la búsqueda y la respuesta de cada tienda) | Cualquier visitante | PostgreSQL (`source_snapshot`) | Copia de respaldo de las fuentes | 72 horas |
-
-La tabla `source_snapshot` **no guarda quién buscó**: no tiene IP, sesión ni usuario. Aun así, el texto de una búsqueda queda en la base hasta 72 horas, y antes no se conservaba en el servidor fuera de los registros de acceso.
-
-**Lo que deja de ser cierto de las secciones anteriores**
-
-- «No tiene cuentas, formularios de registro, cookies» (sección 1) y «No se tratan: nombres, correos, […] cuentas de usuario, cookies» (sección 3).
-- «CORS sin credenciales y sin cookies» (sección 5): ahora hay tres cookies propias, todas necesarias para el inicio de sesión (`drift_session`, y por 10 minutos `drift_login_state` y `drift_login_nonce`). No hay cookies de analítica ni de publicidad.
-- «DRIFT no puede asociar una IP con una persona concreta, ni tiene cuentas donde consultar datos» (sección 4): con cuentas, los derechos del titular sí se pueden atender directamente.
-
-**Base del tratamiento y derechos**
-
-- **Autorización:** la persona decide iniciar sesión y Google le muestra qué datos comparte. El aviso de la página lo explica antes.
-- **Minimización:** solo se piden los permisos `openid`, `email` y `profile`. No se guardan contraseñas ni los tokens de Google.
-- **Consultar:** «Mi cuenta» muestra el nombre, el correo y los dispositivos guardados; la pestaña «Favoritos», los juegos guardados.
-- **Suprimir:** «Eliminar mi cuenta» (`DELETE /auth/me`) borra la cuenta, sus sesiones, sus dispositivos y sus favoritos.
-- **Actualizar:** el nombre, el correo y la foto se actualizan desde Google en cada inicio de sesión.
-
-**Terceros nuevos**
-
-- **Google**, como proveedor de identidad: sabe que la persona inició sesión en DRIFT.
-- **IsThereAnyDeal** y la **tienda de Xbox** (Microsoft): reciben el texto de las búsquedas, igual que Steam, CheapShark y PlayStation. No reciben la IP ni la identidad del visitante.
-- Para las alertas de precio (ADR-0021), Steam e IsThereAnyDeal reciben los identificadores de los juegos favoritos, sin decir de quién son.
-
-**Pendientes**
-
-- No hay copias de seguridad del volumen de PostgreSQL ni un procedimiento para restaurarlo.
-- No se registra la fecha en que la persona aceptó el tratamiento.
-- El texto de la sección 7 ya no coincide con el aviso publicado en el pie de página, que se actualizó junto con este cambio.
+> **Privacidad.** Puedes usar DRIFT sin registrarte. Para funcionar y protegerse contra el abuso, el servicio y sus proveedores de alojamiento (el servidor de la Universidad Tecnológica de Bolívar) registran tu dirección IP y las búsquedas que haces, solo para operar y diagnosticar el servicio. El texto de las búsquedas se conserva hasta 72 horas, sin asociarlo a ti, como copia de respaldo de las tiendas. Sin sesión, el perfil de tu PC se guarda únicamente en tu navegador.
+>
+> Si inicias sesión con Google, DRIFT guarda tu nombre, tu correo y tu foto de perfil, los dispositivos que registres y los juegos que guardes en favoritos, para mostrarlos cuando vuelvas. Solo usa las cookies necesarias para iniciar y mantener tu sesión. Puedes borrar tu cuenta y todos esos datos desde «Mi cuenta». Al usar el sitio aceptas este tratamiento, conforme a la Ley 1581 de 2012.
+>
+> Consultas sobre tus datos: abre un caso en el repositorio del proyecto (https://github.com/ISCOUTB/AS_202620_Drift/issues).

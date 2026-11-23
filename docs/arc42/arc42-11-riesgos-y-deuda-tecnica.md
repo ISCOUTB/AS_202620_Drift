@@ -194,3 +194,21 @@ Revisión de lo que quedó sin verificar al añadir el inicio de sesión, los fa
 | S14-P9 | Algunas carátulas de la portada no cargaban (Call of Duty: Modern Warfare 4, AION 2, Phantom Blade Zero, entre otras). | Resuelto | En los juegos recientes Steam guarda las imágenes en carpetas con un código; la ruta armada con el identificador daba 404 (7 de 12 de los más vendidos). La portada pide ahora las rutas reales a `IStoreBrowseService/GetItems`. Si ese servicio falla, usa las armadas como antes. En el navegador, las 106 imágenes de la portada y de «Explorar» cargaron. |
 | S14-P10 | Antes de esta revisión, las pruebas y schemathesis se corrieron en local con FastAPI 0.135, no con la 0.162 de `requirements.txt`. | Resuelto | Con la 0.162, la corrección del `Allow` de los 405 no veía las rutas de cuentas (el router incluido se guarda como `_IncludedRouter`). Se corrigió y todo se volvió a correr con las versiones del proyecto: 454 pruebas y el contrato completo. |
 | S14-P11 | Azure y Vercel seguían desplegando una versión sin base de datos ni cuentas. | Resuelto | Se retiraron del repositorio ([ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md)): workflow, `infra/azure/`, `backend/startup.sh` y `deployment/vercel/`. Quedan por borrar a mano los secretos `AZUREAPPSERVICE_*` de GitHub, los recursos de Azure y los proyectos de Vercel. |
+
+## 11.12 Seguimiento de la evaluación del 17 de noviembre de 2026
+
+| ID | Señalamiento o hallazgo | Estado | Evidencia o motivo |
+|---|---|---|---|
+| S15-1 | Faltan los señalamientos de la revisión entre pares | **Pendiente** | §11.10 sigue vacía: no se registra ninguno hasta tener su texto real |
+| S15-2 | La privacidad afirmaba que no había cuentas ni base de datos | Resuelto | [Privacidad](../seguridad/privacidad.md) reescrita sobre `a0e18f9` |
+| S15-3 | El modelo de amenazas no integraba cuentas, favoritos ni alertas | Resuelto | [Modelo de amenazas](../seguridad/modelo-amenazas.md), sección 6, A12 a A25 |
+| S15-4 | E1 debe repetirse sobre un commit desplegado identificable | **Pendiente de desplegar** | `/health` publica la huella del código y `scripts/verificar_despliegue.py` la traduce a un commit. La medición se repite después de desplegar |
+| S15-5 | Falta evidencia pública del Quality Gate | Resuelto para `a0e18f9` | [Evidencia de SonarCloud](../evidencias/calidad-sonarcloud.md); actualizar con el commit final |
+| S15-6 | ADR-0013 a ADR-0022 seguían como propuestos | **Pendiente del visto bueno** | [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md) los ratifica sin editarlos |
+| S15-7 | Cadena de trazabilidad de las funciones nuevas | Resuelto | Filas F1 a F5 de [aspectos](../aspectos.md) |
+| S15-8 | DRIFT recomendaba tiendas donde el juego no se activa en Colombia | Mitigado | [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md). GOG y Epic siguen como referencia aunque tengan precio para Colombia |
+| S15-9 | Vulnerabilidad moderada en `next` 16.4.3 | Resuelto | `next` 16.4.6; `npm audit` sin hallazgos |
+| S15-10 | Sin copias de seguridad de PostgreSQL | **Parcial** | Procedimiento escrito en la [guía](../evidencias/verificaciones-pendientes-google-y-laboratorio.md), sección 3; sin ejecutar |
+| S15-11 | Las casillas de Google y del laboratorio siguen sin marcar | **Pendiente** | Necesitan una cuenta real y acceso al servidor |
+
+R-03 y DT-02 quedan mitigados para los datos de usuario con PostgreSQL (ADR-0014). El catálogo de PlayStation y las cachés de 60 s siguen en memoria por decisión.

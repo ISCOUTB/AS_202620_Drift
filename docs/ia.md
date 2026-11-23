@@ -1093,3 +1093,28 @@ Las cifras de `s14-e1-medicion.md` salen de los JSON de `docs/evidencias/s14-res
 - No se escribió el registro de IA de la medición local en nombre de otra persona: solo quien la hizo sabe qué aceptó y qué rechazó.
 - No se redactaron señalamientos de la revisión entre pares: no están en los issues ni en los pull requests del repositorio, y la IA no debe inventarlos. §11.10 los declara pendientes en lugar de dejar una plantilla sin llenar.
 
+---
+
+### Registro 48 — Correcciones tras la evaluación de S13 y S14
+
+**Fecha:** 2026-11-22
+**Herramienta:** Claude (Claude Code)
+
+**Consulta utilizada:**
+
+> Revisar la evaluación del 17 de noviembre contra el estado del proyecto y hacer en local las correcciones. Si un ADR cambia, crear uno nuevo que lo mencione.
+
+**Uso:**
+
+Se utilizó Claude para contrastar la evaluación con `master`, separar los precios de Colombia de los de referencia (ADR-0024), publicar la huella del código en `/health`, corregir dos diferencias entre la recomendación y su contrato que detectó Schemathesis, actualizar `next` a 16.4.6, reescribir privacidad, completar el modelo de amenazas, añadir las filas F1 a F5 de aspectos, ampliar el glosario y arc42, y redactar ADR-0023.
+
+**Validación:**
+
+La suite del backend pasa sin base de datos (462 aprobadas, 20 omitidas por requerir PostgreSQL), las 28 pruebas de contrato pasan contra la API local, el frontend compila y `npm audit` no reporta vulnerabilidades. Las garantías de arc42 §8.17 se contrastaron con el esquema y el repositorio de PostgreSQL. La regla de precios parte de la comparación con las páginas oficiales del 12 de octubre de 2026.
+
+**Alternativa descartada:**
+
+- Se rechazó editar ADR-0013 a ADR-0022 para cambiar su estado: por decisión del equipo, un cambio va en un ADR nuevo.
+- Se rechazó añadir al contrato un campo con el origen del precio: ADR-0010 trata el modelo público como la decisión más cara de revertir.
+- Se rechazó publicar el commit en `/health` con una variable manual, porque quedaría desactualizada en el siguiente despliegue sin que nadie lo note.
+- No se redactaron señalamientos de la revisión entre pares, no se marcaron las casillas de Google y del laboratorio, y no se escribió el registro de IA del trabajo del 13 al 16 de noviembre: solo quien lo hizo o lo recibió tiene esa información.

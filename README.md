@@ -265,7 +265,7 @@ python -m pytest tests -q --ignore=tests/test_contract.py
 
 Las pruebas del adaptador de PostgreSQL (`tests/test_postgres_snapshot_store.py`) necesitan una base de datos que se pueda vaciar, indicada en `DRIFT_TEST_DATABASE_URL`. Sin esa variable se omiten; el CI las corre con un PostgreSQL de servicio.
 
-Última validación local (13 de noviembre de 2026, Python 3.12): **432 pruebas aprobadas** sin base de datos y **452** con un PostgreSQL de prueba. Las 6 de contrato no se repitieron en esa fecha: su última corrida fue el 1 de noviembre de 2026, antes de añadir `cached_sources`, `discounts`, `platforms` y la fuente de Xbox. Tardan varios minutos porque consultan las fuentes reales.
+Última validación local (22 de noviembre de 2026, Python 3.14): **462 pruebas aprobadas y 20 omitidas** sin base de datos (las omitidas necesitan `DRIFT_TEST_DATABASE_URL` y corren en CI), más **28 de contrato** con la API encendida. Las de contrato tardan unos 40 minutos porque consultan las fuentes reales.
 
 ### Experimento E6 (degradación de una fuente)
 
@@ -389,7 +389,7 @@ Todas las variables son opcionales, salvo `DRIFT_DB_PASSWORD` para levantar el c
 
 | Ruta | Qué muestra |
 |---|---|
-| `/health` | Estado de la API |
+| `/health` | Estado de la API y huella del código desplegado. `python scripts/verificar_despliegue.py` la traduce al commit de `master` |
 | `POST /hardware/benchmarks/sync` | Requiere `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`. Vuelve a cargar los puntajes de gráficas y procesadores desde su copia privada (ADR-0018) |
 | `/metrics` | Requiere `Authorization: Bearer <DRIFT_ADMIN_TOKEN>`. Latencia de búsqueda (promedio y p95 de las últimas 100), búsquedas con una fuente no disponible y búsquedas respondidas con una copia de respaldo, por fuente, y el uso de la cuota de IsThereAnyDeal |
 
@@ -422,7 +422,7 @@ La compatibilidad de PC usa los requisitos reales de cada juego en Steam y el eq
 Limitaciones conocidas:
 
 - **Historial de precios:** cubre 12 meses y solo las tiendas de PC. Steam entra con precios de Colombia, calculados con su precio normal de hoy y el descuento de cada fecha; si ese precio normal cambió en el periodo, los valores antiguos quedan desviados. Las demás tiendas son precios de Estados Unidos convertidos a pesos con la tasa de hoy. No hay historial de consolas (ADR-0016).
-- **Precios de IsThereAnyDeal y de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia. Los precios de Steam sí son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
+- **Precios de IsThereAnyDeal y de CheapShark:** son los de Estados Unidos, convertidos a pesos. Algunas tiendas cobran otro precio en Colombia y otras no venden el juego en Colombia, así que se muestran como **referencia** y no ganan «Más barato» frente a un precio de Colombia ([ADR-0024](docs/adr/0024-precios-de-colombia-y-de-referencia.md)). Los precios de Steam y Xbox son los de Colombia, y los de PlayStation coinciden con su tienda, aunque esta cobra en dólares.
 - **Persistencia:** las copias de respaldo de las fuentes se guardan en PostgreSQL en el laboratorio (ADR-0014). El catálogo de PlayStation, las cachés de 60 s y las métricas siguen en memoria y se pierden al reiniciar. Sin `DRIFT_DATABASE_URL` (desarrollo local, CI) las copias viven en memoria.
 - **Copia de respaldo:** un precio puede tener hasta 15 minutos sin aviso y hasta 72 horas con aviso. Un juego que nadie ha buscado no tiene copia: si su fuente cae, se muestra como no disponible (ADR-0015).
 - **Tienda de Xbox:** se consulta con los endpoints que usa la propia tienda web de Microsoft, que no tienen contrato publicado ni soporte oficial y pueden cambiar sin aviso. Se consultan a la vez sus dos buscadores, porque el de sugerencias devuelve pocos resultados y a veces solo complementos, y el de búsqueda completa rellena con juegos que no tienen que ver. No informa cuándo termina una oferta. Un juego que se vende a la vez para Xbox y para PC queda solo como Xbox.

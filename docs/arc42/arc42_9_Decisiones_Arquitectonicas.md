@@ -25,6 +25,8 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 | [ADR-0020](../adr/0020-juegos-favoritos.md) | Juegos favoritos en PostgreSQL, con el precio al guardarlos como referencia; sin revisión en segundo plano | Propuesto | Secciones 5 y 8; privacidad, sección 8 |
 | [ADR-0021](../adr/0021-alertas-de-precio.md) | Alertas de precio de los favoritos revisadas al entrar, solo tiendas de PC, con caché de una hora; sin correo ni procesos en segundo plano | Propuesto | Secciones 5, 6 y 8; modelo de amenazas A3 (límite de tasa); modifica ADR-0020 |
 | [ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md) | Desplegar solo en el servidor del laboratorio; se retiran Azure App Service y Vercel | Propuesto | Secciones 2, 7, 8 y 11; sustituye a ADR-0005 y ADR-0006; cierra S13-R1 y la amenaza A8 de Azure |
+| [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md) | Ratifica ADR-0013 a ADR-0022 sin editarlos: al aceptarse, esos diez quedan aceptados | Propuesto | Estado de las decisiones de noviembre |
+| [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md) | Los precios de Estados Unidos son referencia y no ganan a un precio de Colombia; modifica a ADR-0019 y ADR-0021 | Propuesto | Secciones 8 y 11; privacidad no afectada; aspecto F5 |
 
 ## 9.2 Resumen
 
