@@ -4,7 +4,8 @@ conveniente considerando precio, compatibilidad y rendimiento»).
 
 La regla es corta para que se le pueda explicar al usuario (ADR-0019):
 
-1. Por cada dispositivo se toma la tienda más barata de su plataforma.
+1. Por cada dispositivo se toma la tienda más barata de su plataforma,
+   prefiriendo las que tienen precio de Colombia (ADR-0024).
 2. Se descartan los dispositivos donde el juego no se vende o cuyo PC no
    alcanza los requisitos mínimos.
 3. Gana la opción más barata, salvo que otra dé mejor experiencia por un
@@ -16,7 +17,13 @@ Sin dispositivos no hay compatibilidad que considerar: gana el precio.
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional
 
-from app.domain.services.platforms import PC, PLAYSTATION, XBOX, platform_of_store
+from app.domain.services.platforms import (
+    PC,
+    PLAYSTATION,
+    XBOX,
+    platform_of_store,
+    purchase_order,
+)
 
 # Experiencia que se espera del juego en un dispositivo.
 RECOMMENDED = "recommended"  # el PC alcanza los requisitos recomendados
@@ -97,7 +104,10 @@ def _cheapest_by_platform(
         platform = platform_of_store(store)
         current = cheapest.get(platform)
 
-        if current is None or prices[store] < current.price:
+        # Un precio de referencia nunca le gana a uno de Colombia (ADR-0024).
+        if current is None or purchase_order(store, prices[store]) < purchase_order(
+            current.store, current.price
+        ):
             cheapest[platform] = Option(
                 store=store,
                 price=prices[store],

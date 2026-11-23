@@ -216,7 +216,7 @@ def steam(prices):
     return lookup
 
 
-def test_the_cheapest_store_wins_between_steam_and_the_other_pc_stores():
+def test_steam_wins_over_reference_prices_of_the_other_pc_stores():
     itad = FakeItad(
         lookup={"app/620": ITAD_PORTAL},
         prices=[
@@ -230,7 +230,7 @@ def test_the_cheapest_store_wins_between_steam_and_the_other_pc_stores():
 
     prices = source.best_prices(["620", f"itad-{ITAD_HADES}", "PPSA01-ABC"])
 
-    assert prices["620"] == CurrentPrice("GOG", 16_000)
+    assert prices["620"] == CurrentPrice("Steam", 24_500)
     assert prices[f"itad-{ITAD_HADES}"] == CurrentPrice("Humble Store", 40_000)
     assert "PPSA01-ABC" not in prices
 

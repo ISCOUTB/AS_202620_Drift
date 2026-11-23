@@ -124,15 +124,15 @@ export function describeReason(recommendation, formatPrice) {
 
   if (priceDifference > 0) {
     return usesDevices
-      ? `Es la más barata entre tus dispositivos: ahorras ${formatPrice(priceDifference)} frente a la siguiente.`
-      : `Es la más barata: ${formatPrice(priceDifference)} menos que en ${
+      ? `Es la mejor opción por precio entre tus dispositivos: ahorras ${formatPrice(priceDifference)} frente a la siguiente.`
+      : `Es la mejor opción por precio: ${formatPrice(priceDifference)} menos que en ${
           recommendation.alternatives[0]?.platform ?? "otra plataforma"
         }.`;
   }
 
   return recommended?.price === 0
     ? "Es gratis."
-    : "Es el precio más bajo disponible.";
+    : "Es la mejor opción por precio.";
 }
 
 const EXCLUDED_TEXT = {

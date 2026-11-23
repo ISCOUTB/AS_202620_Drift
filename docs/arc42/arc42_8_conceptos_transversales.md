@@ -270,7 +270,9 @@ Esta sección responde, para cada operación real de DRIFT, qué garantía de co
 | Consistencia entre fuentes distintas | Que los datos de Steam, CheapShark y PlayStation de un mismo resultado correspondan al mismo instante. **DRIFT no la ofrece.** |
 | Consistencia entre instancias o réplicas | Que dos instancias respondan lo mismo. **DRIFT no la ofrece:** cada proceso tiene sus propias cachés y su propio catálogo, sin almacén compartido (ADR-0008). Con una sola instancia no hay diferencia observable; si el despliegue escala a más instancias o procesos, cada uno difiere hasta su TTL. |
 
-Contexto verificado: toda la información vive en memoria del proceso (`SingleFlightCache`, `InMemoryPlayStationCatalog`, `OpenExchangeRateProvider`); no existe base de datos, broker ni caché compartida. El `Dockerfile` arranca un único proceso `uvicorn`; `startup.sh` arranca `gunicorn` sin fijar el número de procesos.
+> **Actualización de noviembre de 2026.** Esta sección describe el sistema de S12. Las operaciones sobre PostgreSQL añadidas después están en [§8.17](#817-consistencia-de-los-datos-persistidos-noviembre-de-2026).
+
+Contexto verificado en S12: toda la información vive en memoria del proceso (`SingleFlightCache`, `InMemoryPlayStationCatalog`, `OpenExchangeRateProvider`); no existe base de datos, broker ni caché compartida. El `Dockerfile` arranca un único proceso `uvicorn`; `startup.sh` arranca `gunicorn` sin fijar el número de procesos.
 
 ### Matriz (1/2): qué se protege, dónde y con qué garantía
 
@@ -429,4 +431,21 @@ Los eventos se escriben en el log JSON estructurado (`observability.py`), sin la
 
 ### Lo que esta arquitectura no cubre
 
-No hay usuarios autenticados ni roles: el token administrativo es un único secreto del equipo. No hay WAF ni protección contra ataques volumétricos de red, que son responsabilidad de cada plataforma. El limitador y las cachés viven en un proceso (ADR-0008). Estos límites se declaran como riesgos aceptados en [§11.9](arc42-11-riesgos-y-deuda-tecnica.md).
+Esta sección describe la seguridad de S13. Las cuentas con Google se añadieron después: sus amenazas y mitigaciones están en la sección 6 del [modelo de amenazas](../seguridad/modelo-amenazas.md). No hay roles: el token administrativo es un único secreto del equipo. No hay WAF ni protección contra ataques volumétricos de red, que son responsabilidad de cada plataforma. El limitador y las cachés viven en un proceso (ADR-0008). Estos límites se declaran como riesgos aceptados en [§11.9](arc42-11-riesgos-y-deuda-tecnica.md).
+
+## 8.17 Consistencia de los datos persistidos (noviembre de 2026)
+
+PostgreSQL ([ADR-0014](../adr/0014-postgresql-como-persistencia.md)) añade las primeras escrituras de datos propios de las personas. Cada operación es una sola sentencia en modo `autocommit`, y por eso es atómica sin una transacción explícita. Las migraciones sí usan una transacción (`postgres_database.py`).
+
+| Operación | Datos | Garantía | Dónde se cumple |
+|---|---|---|---|
+| Iniciar sesión | `app_user` | **Fuerte y atómica:** `INSERT ... ON CONFLICT (google_subject) DO UPDATE`; una persona no se duplica | `postgres_account_repository.py` |
+| Guardar un dispositivo | `user_device` | **Fuerte y atómica**, filtrada por dueño | `postgres_account_repository.py`, `test_devices_belong_to_their_owner` |
+| Guardar un favorito | `user_favorite` | **Fuerte e idempotente:** la clave `(user_id, game_id)` hace que repetir la operación lo reemplace | `postgres_account_repository.py`, `test_saving_a_favorite_again_replaces_it` |
+| Borrar una cuenta | Cuenta, sesiones, dispositivos y favoritos | **Atómica:** un solo `DELETE` con `ON DELETE CASCADE` | `postgres_database.py`, `test_deleting_an_account_removes_its_favorites` |
+| Copia de respaldo de una fuente | `source_snapshot` | **Eventual:** si PostgreSQL falla, la copia queda en memoria, el almacén se pausa y la búsqueda responde igual | `resilient_source_snapshot_store.py` |
+| Precio de una alerta | Precio de hoy | **Frescura acotada:** hasta una hora en caché | `store_current_prices.py` |
+
+**Invalidación tras una escritura.** Cuentas, dispositivos y favoritos se leen siempre de PostgreSQL y no tienen caché, así que una escritura se ve en la lectura siguiente. Las copias de respaldo se reemplazan al llegar una respuesta nueva y dejan de usarse a las 72 horas.
+
+**Lo que no se garantiza.** No hay réplicas ni restauración probada: la copia de seguridad aún no se ha ejecutado (amenaza A18).

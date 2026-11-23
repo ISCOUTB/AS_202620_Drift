@@ -38,6 +38,32 @@ export function platformOfStore(store) {
   return "PC";
 }
 
+/**
+ * Tiendas consultadas directamente para Colombia. Las demás tiendas de PC
+ * entregan su precio de Estados Unidos, y algunas no venden el juego en
+ * Colombia: se muestran como referencia (ADR-0024).
+ */
+const COLOMBIA_PRICE_STORES = new Set([
+  "Steam",
+  "PlayStation",
+  "Xbox",
+  "Microsoft Store",
+]);
+
+export function hasColombiaPrice(store) {
+  return COLOMBIA_PRICE_STORES.has(store);
+}
+
+/** `[tienda, precio]`: primero los precios de Colombia, luego por precio. */
+export function sortPricesForPurchase(prices = {}) {
+  return Object.entries(prices).sort(
+    ([firstStore, firstPrice], [secondStore, secondPrice]) =>
+      Number(hasColombiaPrice(secondStore)) -
+        Number(hasColombiaPrice(firstStore)) ||
+      Number(firstPrice) - Number(secondPrice),
+  );
+}
+
 function platformsOfStores(stores) {
   const found = new Set(stores.map(platformOfStore));
 

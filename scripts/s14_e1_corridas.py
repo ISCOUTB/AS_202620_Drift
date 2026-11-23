@@ -6,6 +6,7 @@ para que venzan la caché de búsqueda (60 s) y la ventana del límite de tasa
 corrida falla: seguir solo aumentaría la carga sobre un servicio con problemas.
 
     python scripts/s14_e1_corridas.py
+    python scripts/s14_e1_corridas.py docs/evidencias/e1-commit-final
 """
 
 import json
@@ -16,7 +17,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 SCRIPT = RAIZ / "scripts" / "k6_s14_e1_busqueda.js"
-RESULTADOS = RAIZ / "docs" / "evidencias" / "s14-resultados"
+RESULTADOS = RAIZ / (sys.argv[1] if len(sys.argv) > 1 else "docs/evidencias/s14-resultados")
 
 REPETICIONES = 3
 MODOS = ("distintas", "misma")

@@ -91,6 +91,30 @@ docker compose -p drift-prueba --env-file deploy/.env -f deploy/compose.lab.yaml
 
 Para limpiar: `docker compose -p drift-prueba down -v` (borra también el volumen de prueba).
 
+## 3. Copia de seguridad de PostgreSQL (A18)
+
+La copia contiene datos personales: **no se sube al repositorio** (`*.dump` está en `.gitignore`) y se guarda solo donde el equipo pueda controlar quién la ve. Este procedimiento todavía no se ha ejecutado. `<app>` es el nombre del proyecto de Compose en Dokploy.
+
+Crear la copia, desde el servidor:
+
+```bash
+docker compose -p <app> -f deploy/compose.lab.yaml exec -T postgres pg_dump -U drift -d drift -Fc > drift-AAAA-MM-DD.dump
+```
+
+Restaurarla, primero en un entorno de prueba:
+
+```bash
+docker compose -p drift-prueba -f deploy/compose.lab.yaml exec -T postgres pg_restore -U drift -d drift --clean --if-exists < drift-AAAA-MM-DD.dump
+```
+
+| # | Paso | Resultado esperado | ✔ |
+|---|---|---|---|
+| B1 | Crear la copia | Archivo de más de 0 bytes, sin errores | ☐ |
+| B2 | Restaurarla en `drift-prueba` | Termina sin errores | ☐ |
+| B3 | Contar filas de `app_user` y `user_favorite` en ambas bases | Los mismos totales | ☐ |
+
+Si una persona borra su cuenta, sus datos siguen en las copias anteriores hasta que se eliminen: conservar solo las necesarias.
+
 ## Dónde dejar el resultado
 
 Anota fecha, commit y casillas en este archivo, y actualiza la fila correspondiente de [arc42 §11.11](../arc42/arc42-11-riesgos-y-deuda-tecnica.md). Si algo falla, deja el mensaje de error sin secretos.
