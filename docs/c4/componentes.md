@@ -4,7 +4,7 @@
 
 ## Vista vigente
 
-Revisada el 22 de noviembre de 2026 contra `master` en `6bbf83e` (incluye el PR #66). Cada componente corresponde a archivos que existen en el repositorio, y cada flecha a un `import` real o a una inyección hecha en la raíz de composición (`backend/app/main.py`). Incluye las decisiones de ADR-0013 a ADR-0024.
+Revisada el 23 de noviembre de 2026 contra `master` en `b841450` (el código no cambió desde `6bbf83e`). Cada componente corresponde a archivos que existen en el repositorio, y cada flecha a un `import` real o a una inyección hecha en la raíz de composición (`backend/app/main.py`). Incluye las decisiones de ADR-0013 a ADR-0024.
 
 ### Componentes de la API
 
@@ -42,7 +42,7 @@ flowchart TB
         end
 
         subgraph COMPOSICION["Adaptadores de composición · infrastructure/persistence"]
-            COMBINED["CombinedGameRepository<br/>consulta las fuentes a la vez<br/>con plazo y une los precios"]
+            COMBINED["Integrador de búsqueda<br/>CombinedGameRepository ×3<br/>consulta las fuentes a la vez<br/>con plazo y une los precios"]
             RESILIENT_GAME["ResilientGameRepository<br/>Steam con catálogo local<br/>de respaldo"]
             STALE["StaleFallbackGameRepository<br/>copia de respaldo por fuente"]
             REQS["FallbackGameRequirementsRepository<br/>requisitos curados, luego Steam"]
@@ -123,6 +123,10 @@ flowchart TB
     A_PSN --> HTTP
     A_XBOX --> HTTP
     A_FX --> HTTP
+    A_ITAD -->|"convierte a pesos"| A_FX
+    A_CHEAP -->|"convierte a pesos"| A_FX
+    A_PSN -->|"convierte a pesos"| A_FX
+    A_XBOX -->|"convierte a pesos"| A_FX
     HTTP -->|"HTTPS + JSON"| EXT
     A_GOOGLE -->|"HTTPS + JSON, OIDC"| EXT
     BENCH -.->|"HTTPS + JSON"| EXT
@@ -164,7 +168,7 @@ flowchart TB
 | CheckFavoriteAlerts | `application/usecases/favorite_alerts.py`, `domain/services/price_alerts.py` | Precio de hoy de los favoritos y cuáles llegaron a su objetivo o bajaron 5 % (ADR-0021). |
 | SyncPlayStationCatalog, SyncHardwareBenchmarks | `application/usecases/sync_*.py` | Cargas pedidas por el equipo; rechazan una respuesta vacía para no borrar lo guardado. |
 | Dominio | `domain/model/`, `domain/services/`, `domain/ports/` | Entidades, reglas puras y los 15 puertos. No importa nada fuera de `domain/`. `platforms.py` distingue las tiendas con precio de Colombia (Steam, PlayStation, Xbox) de las de referencia (precios de EE. UU. convertidos), y la recomendación y las alertas prefieren las primeras (ADR-0024). |
-| CombinedGameRepository | `persistence/combined_game_repository.py` | Lanza cada fuente secundaria en un hilo, aplica el plazo (`DRIFT_SOURCE_TIMEOUT_SECONDS`) y une los precios por identificador de Steam o por nombre normalizado. Se anida tres veces en `main.py` para combinar las cuatro fuentes. |
+| CombinedGameRepository (integrador de búsqueda) | `persistence/combined_game_repository.py` | Es el integrador de búsqueda que muestran los niveles 1 y 2; su despliegue completo está [abajo](#integrador-de-búsqueda-desplegado). Lanza cada fuente secundaria en un hilo, aplica el plazo (`DRIFT_SOURCE_TIMEOUT_SECONDS`) y une los precios por identificador de Steam o por nombre normalizado. Se anida tres veces en `main.py` para combinar las cuatro fuentes. |
 | ResilientGameRepository | `persistence/resilient_game_repository.py`, `persistence/in_memory_game_repository.py` | Si Steam falla del todo, responde con el catálogo local curado. |
 | StaleFallbackGameRepository | `persistence/stale_fallback_game_repository.py` | Envuelve cada fuente: copia fresca 15 minutos sin llamar a la fuente; si falla, copia de hasta 72 horas marcada en `cached_sources` (ADR-0015). |
 | FallbackGameRequirementsRepository | `persistence/fallback_game_requirements_repository.py` | Requisitos curados por el equipo y, para el resto, los de Steam. |
@@ -266,6 +270,79 @@ flowchart TB
 | Modelo | `frontend/domain/model/` | Reglas que no dependen de la interfaz: plataforma de cada tienda, filtro, catálogos de hardware, cuándo aplica la compatibilidad o el historial. |
 | Adaptadores HTTP | `frontend/infrastructure/http/` | Una llamada a la API por puerto; los de cuentas envían la cookie de sesión (`credentials: "include"`). |
 | Adaptadores del navegador | `frontend/infrastructure/storage/` | Perfil del PC y plataformas elegidas en `localStorage`. |
+
+### Integrador de búsqueda desplegado
+
+Los niveles [1](contexto.md) y [2](contenedores.md) muestran el integrador de búsqueda como una sola caja, sin las tiendas. Aquí se despliega tal como lo arma `backend/app/main.py`: tres `CombinedGameRepository` anidados detrás del puerto `GameRepository`, que `SearchGames` usa sin saber cuántas tiendas hay. Cada uno lanza su fuente secundaria en un hilo antes de consultar la principal, así que las cuatro fuentes se consultan a la vez.
+
+```mermaid
+flowchart TB
+    ROUTE["GET /games/search<br/>[Rutas de juegos]"]
+    SEARCH["SearchGames<br/>[Caso de uso]<br/>filtra por plataforma"]
+
+    subgraph IB["Integrador de búsqueda · puerto GameRepository"]
+        direction TB
+        C3["CombinedGameRepository<br/>secundaria: Xbox"]
+        C2["CombinedGameRepository<br/>secundaria: PlayStation"]
+        C1["CombinedGameRepository<br/>principal: Steam<br/>secundaria: tiendas de PC"]
+        RG["ResilientGameRepository<br/>si Steam falla sin copia,<br/>catálogo local"]
+        SFX["StaleFallbackGameRepository<br/>«Xbox»"]
+        SFP["StaleFallbackGameRepository<br/>«PlayStation»"]
+        SFI["StaleFallbackGameRepository<br/>«IsThereAnyDeal» o «CheapShark»"]
+        SFS["StaleFallbackGameRepository<br/>«Steam»"]
+        LOC["InMemoryGameRepository<br/>catálogo local curado"]
+        SNAP["ResilientSourceSnapshotStore<br/>copia fresca 15 min,<br/>respaldo hasta 72 h"]
+        MERGE["Unión de resultados<br/>mismo id de Steam o<br/>nombre normalizado"]
+    end
+
+    A_XBOX["XboxGameRepository"]
+    A_PSN["InMemoryPlayStationCatalog<br/>+ PlayStationGameCatalogSource"]
+    A_PC["ItadGameRepository<br/>o CheapSharkGameRepository"]
+    A_STEAM["SteamGameRepository"]
+    DB[("Base de datos<br/>[PostgreSQL 17]<br/>source_snapshot")]
+    EXT["Tiendas<br/>Steam, IsThereAnyDeal o CheapShark,<br/>PlayStation Store, tienda de Xbox"]
+
+    ROUTE --> SEARCH --> C3
+    C3 --> C2 --> C1 --> RG
+    C3 -->|"hilo, plazo 3 s"| SFX
+    C2 -->|"hilo, plazo 3 s"| SFP
+    C1 -->|"hilo, plazo 3 s"| SFI
+    RG --> SFS
+    RG -.->|"último recurso"| LOC
+    SFX --> A_XBOX
+    SFP --> A_PSN
+    SFI --> A_PC
+    SFS --> A_STEAM
+    SFX & SFP & SFI & SFS -->|"SourceSnapshotStore"| SNAP
+    SNAP -->|"SQL"| DB
+    C1 & C2 & C3 --> MERGE
+    A_XBOX & A_PSN & A_PC & A_STEAM -->|"HTTPS + JSON"| EXT
+
+    classDef component fill:#85bbf0,stroke:#5d82a8,color:#000000
+    classDef key fill:#f5a623,stroke:#b9770e,color:#000000
+    classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
+    classDef store fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#ffffff
+
+    class C1,C2,C3 key
+    class RG,SFX,SFP,SFI,SFS,LOC,SNAP,MERGE,A_XBOX,A_PSN,A_PC,A_STEAM component
+    class ROUTE,SEARCH container
+    class DB store
+    class EXT external
+```
+
+Las cajas naranjas son los tres `CombinedGameRepository` que forman el integrador; las azules claras, sus piezas y adaptadores. El plazo de las fuentes secundarias es `DRIFT_SOURCE_TIMEOUT_SECONDS` (3 s); Steam tiene su propio plazo total de 4 s (ADR-0013).
+
+| Situación de una tienda | Qué hace el integrador | Dónde |
+|---|---|---|
+| Hay una copia de menos de 15 min | Responde con la copia sin llamar a la tienda | `StaleFallbackGameRepository` |
+| Responde a tiempo | Usa la respuesta y guarda una copia nueva en PostgreSQL y en memoria | `StaleFallbackGameRepository`, `ResilientSourceSnapshotStore` |
+| Falla o pasa su plazo, con copia de menos de 72 h | Usa la copia y la marca en `cached_sources` con su fecha | `StaleFallbackGameRepository.last_known`, `CombinedGameRepository` |
+| Falla o pasa su plazo, sin copia | La marca en `unavailable_sources` y sigue con las demás | `CombinedGameRepository` |
+| Falla Steam sin copia | Responde con el catálogo local y marca Steam como no disponible | `ResilientGameRepository` |
+| La base de datos no responde | Las copias se leen y escriben solo en memoria durante 30 s | `ResilientSourceSnapshotStore` |
+
+Fuera del integrador, la portada y «Explorar» van directo a Steam, el historial a IsThereAnyDeal y las alertas de favoritos a Steam e IsThereAnyDeal (diagrama de componentes de la API). En los niveles 1 y 2 esas llamadas quedan dentro de la caja del integrador.
 
 ### Recorrido de una búsqueda
 

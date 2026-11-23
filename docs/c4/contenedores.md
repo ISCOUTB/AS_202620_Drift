@@ -4,9 +4,11 @@
 
 ## Vista vigente
 
-Revisada el 22 de noviembre de 2026 contra `master` en `6bbf83e` (incluye el PR #66) y contra [`deploy/compose.lab.yaml`](../../deploy/compose.lab.yaml). Incluye las decisiones de [ADR-0014](../adr/0014-postgresql-como-persistencia.md) a [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md).
+Revisada el 23 de noviembre de 2026 contra `master` en `b841450` (el código no cambió desde `6bbf83e`) y contra [`deploy/compose.lab.yaml`](../../deploy/compose.lab.yaml). Incluye las decisiones de [ADR-0014](../adr/0014-postgresql-como-persistencia.md) a [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md).
 
 DRIFT tiene **tres contenedores propios**, que se despliegan juntos con Docker Compose en el servidor del laboratorio: la página web, la API y la base de datos. A ellos se suma el almacén del navegador del usuario, que DRIFT usa pero no ejecuta. No hay colas, brokers ni microservicios: toda la comunicación es síncrona (ADR-0008).
+
+Como en el [nivel 1](contexto.md), las tiendas no se dibujan: las representa el **integrador de búsqueda**, que vive dentro de la API. Se despliega con cada tienda en el [nivel 3](componentes.md#integrador-de-búsqueda-desplegado).
 
 ```mermaid
 flowchart LR
@@ -15,17 +17,15 @@ flowchart LR
 
     subgraph DRIFT["DRIFT [Sistema de software]"]
         WEB["Página web<br/>[Contenedor: Next.js 16 / React 19]<br/>Portada, búsqueda, filtros, Explorar,<br/>historial, compatibilidad,<br/>recomendación, favoritos y Mi cuenta"]
-        API["API<br/>[Contenedor: Python 3.12, FastAPI, uvicorn]<br/>Casos de uso, adaptadores de fuentes,<br/>seguridad y cachés en memoria"]
+        subgraph APIC["API [Contenedor: Python 3.12, FastAPI, uvicorn]"]
+            API["Rutas y casos de uso<br/>Seguridad, cuentas, compatibilidad,<br/>recomendación y cachés en memoria"]
+            IB["Integrador de búsqueda<br/>[Componente clave]<br/>Consulta todas las tiendas a la vez<br/>(Steam 4 s, las demás 3 s) y une<br/>los resultados; copia de respaldo"]
+        end
         DB[("Base de datos<br/>[Contenedor: PostgreSQL 17]<br/>Copias de respaldo, cuentas, sesiones,<br/>dispositivos, favoritos y puntajes")]
     end
 
     LOCAL[("Almacén del navegador<br/>[localStorage]<br/>Perfil del PC y filtro<br/>de plataformas")]
 
-    STEAM["Steam<br/>[Sistema externo]"]
-    ITAD["IsThereAnyDeal<br/>[Sistema externo]"]
-    CHEAP["CheapShark<br/>[Sistema externo]"]
-    PSN["PlayStation Store<br/>[Sistema externo]"]
-    XBOX["Tienda de Xbox<br/>[Sistema externo]"]
     GOOGLE["Google<br/>[Sistema externo]"]
     FX["open.er-api.com<br/>[Sistema externo]"]
     COPY["Copia privada de puntajes<br/>[Sistema externo]"]
@@ -36,11 +36,8 @@ flowchart LR
     ADMIN -->|"Operaciones administrativas<br/>[HTTPS + JSON, Bearer token]"| API
     API -->|"Lee y escribe<br/>[SQL, psycopg 3, TCP 5432,<br/>red interna del compose]"| DB
 
-    API -->|"Busca y lee precios<br/>[HTTPS + JSON, plazo total 4 s]"| STEAM
-    API -->|"Precios e historial<br/>[HTTPS + JSON, API key, plazo 3 s]"| ITAD
-    API -.->|"Precios sin llave de ITAD<br/>[HTTPS + JSON, plazo 3 s]"| CHEAP
-    API -->|"Busca precios<br/>[HTTPS + JSON, plazo 3 s]"| PSN
-    API -->|"Busca precios<br/>[HTTPS + JSON, plazo 3 s]"| XBOX
+    API -->|"Busca juegos, precios,<br/>historial y requisitos"| IB
+    IB -->|"Copias de respaldo<br/>[SQL, tabla source_snapshot]"| DB
     API -.->|"Canjea el código<br/>[HTTPS + JSON, OIDC]"| GOOGLE
     USER -.->|"Inicia sesión<br/>[HTTPS]"| GOOGLE
     API -->|"Tasa de cambio<br/>[HTTPS + JSON, caché 12 h]"| FX
@@ -52,6 +49,7 @@ flowchart LR
         K2["Contenedor de DRIFT"]
         K3[("Almacén de datos")]
         K4["Sistema externo"]
+        K6["Integrador de búsqueda"]
         K5["── siempre · - - - solo en algunos casos"]
     end
 
@@ -60,22 +58,24 @@ flowchart LR
     classDef person fill:#08427b,stroke:#052e56,color:#ffffff
     classDef external fill:#999999,stroke:#6b6b6b,color:#ffffff
     classDef note fill:#ffffff,stroke:#999999,color:#333333
+    classDef key fill:#f5a623,stroke:#b9770e,color:#000000
 
     class WEB,API,K2 own
     class DB,LOCAL,K3 store
     class USER,ADMIN,K1 person
-    class STEAM,ITAD,CHEAP,PSN,XBOX,GOOGLE,FX,COPY,K4 external
+    class GOOGLE,FX,COPY,K4 external
+    class IB,K6 key
     class K5 note
 ```
 
-Todas las flechas hacia sistemas externos salen de la API y son HTTPS con JSON. El navegador del usuario descarga la página web y después llama directamente a la API (`NEXT_PUBLIC_DRIFT_API_URL=/api`): la página web no reenvía peticiones a la API desde su servidor. En el laboratorio, Traefik (infraestructura de Dokploy, no un contenedor de DRIFT) publica `https://drift.iscoutb.dev/` hacia la página web y `/api` hacia la API, quitando el prefijo; ver [arc42 §7](../arc42/arc42_7_vista_despliegue.md).
+Todas las flechas hacia sistemas externos salen de la API y son HTTPS con JSON; las de las tiendas salen del integrador, dentro de la API. El navegador del usuario descarga la página web y después llama directamente a la API (`NEXT_PUBLIC_DRIFT_API_URL=/api`): la página web no reenvía peticiones a la API desde su servidor. En el laboratorio, Traefik (infraestructura de Dokploy, no un contenedor de DRIFT) publica `https://drift.iscoutb.dev/` hacia la página web y `/api` hacia la API, quitando el prefijo; ver [arc42 §7](../arc42/arc42_7_vista_despliegue.md).
 
 ### Contenedores
 
 | Contenedor | Tecnología | Responsabilidad | Qué guarda | Código |
 |---|---|---|---|---|
 | **Página web** | Next.js 16 (React 19), Node 22; 192 MB, 0,5 CPU | Interfaz: portada con los más vendidos, búsqueda, filtro por plataforma, página «Explorar» por género, detalle con precios e historial, compatibilidad, recomendación, tiendas, favoritos y «Mi cuenta». Organizada en dominio, aplicación, infraestructura e interfaz. | Nada en el servidor. | `frontend/` |
-| **API** | Python 3.12, FastAPI 0.162, uvicorn, httpx, psycopg 3; 1 proceso, 192 MB, 0,5 CPU | Expone las 24 rutas HTTP del [contrato OpenAPI](../api/drift/openapi.yaml), ejecuta los casos de uso y habla con todas las fuentes externas mediante adaptadores. Aplica el límite de tasa, el token administrativo, CORS y la sesión. | En memoria: cachés de 60 s por fuente, catálogo de PlayStation, métricas y un segundo respaldo de las copias. Se pierde al reiniciar. | `backend/app/` |
+| **API** | Python 3.12, FastAPI 0.162, uvicorn, httpx, psycopg 3; 1 proceso, 192 MB, 0,5 CPU | Expone las 24 rutas HTTP del [contrato OpenAPI](../api/drift/openapi.yaml), ejecuta los casos de uso y habla con todas las fuentes externas mediante adaptadores. Aplica el límite de tasa, el token administrativo, CORS y la sesión. | En memoria: cachés por fuente (60 s en las búsquedas de cada tienda; 15 min en «Explorar»; 1 h en la portada, el historial y las alertas; 24 h en los requisitos de Steam, el directorio de tiendas y la equivalencia de juegos de IsThereAnyDeal), catálogo de PlayStation, métricas y un segundo respaldo de las copias. Se pierde al reiniciar. | `backend/app/` |
 | **Base de datos** | PostgreSQL 17 (alpine); 96 MB, 0,25 CPU; volumen `drift_pgdata` | Lo que debe sobrevivir a un reinicio. Solo la API la alcanza, por la red interna del compose; no se publica en Traefik. | Tablas `source_snapshot` (copias de respaldo, 72 h), `app_user`, `user_session`, `user_device`, `user_favorite`, `hardware_benchmark_set` y `hardware_benchmark`; migraciones en `schema_migrations`. | `backend/app/infrastructure/persistence/postgres_*.py` |
 | **Almacén del navegador** | `localStorage` | Lo que el usuario conserva en su propio navegador, con o sin sesión. | Perfil del PC (`drift.pcProfile`) y plataformas elegidas (`drift.platformFilter`). | `frontend/infrastructure/storage/` |
 
