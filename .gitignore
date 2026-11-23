@@ -19,3 +19,6 @@ backend/coverage.xml
 # Copias locales de puntajes de graficas y procesadores: no se publican (ver scripts/actualizar_benchmarks.py).
 backend/app/infrastructure/persistence/data/gpu_benchmarks.json
 backend/app/infrastructure/persistence/data/cpu_benchmarks.json
+
+# Copias de seguridad de PostgreSQL: contienen datos personales.
+*.dump
