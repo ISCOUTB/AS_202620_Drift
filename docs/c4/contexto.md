@@ -1,6 +1,6 @@
 # C4 — Nivel 1: diagrama de contexto de DRIFT
 
-> **Vista vigente.** Revisada el 22 de noviembre de 2026 contra `master` en `a0e18f9` (PR #62 y #65 integrados). Describe el sistema que está en la rama principal, no planes. Las versiones anteriores quedan en el historial de git de este archivo.
+> **Vista vigente.** Revisada el 22 de noviembre de 2026 contra `master` en `6bbf83e` (PR #62, #65 y #66 integrados). Describe el sistema que está en la rama principal, no planes. Las versiones anteriores quedan en el historial de git de este archivo.
 
 ## Objetivo
 
@@ -66,7 +66,7 @@ Las cajas azul oscuro son personas, la azul es DRIFT y las grises son sistemas e
 | Integrante del equipo | Persona | Con el token administrativo sincroniza el catálogo de PlayStation, recarga los puntajes de hardware y lee las métricas (ADR-0011, ADR-0018). | `backend/app/main.py` (`/games/sync/playstation`, `/hardware/benchmarks/sync`, `/metrics`) |
 | DRIFT | Sistema en alcance | Página web, API y base de datos. Su interior está en el [nivel 2](contenedores.md). | `frontend/`, `backend/`, `deploy/compose.lab.yaml` |
 | Steam | Sistema externo | Fuente principal: búsqueda, precio en pesos de Colombia, requisitos de PC, precio regional para el historial, los más vendidos de la portada y la página «Explorar». | `backend/app/infrastructure/external/steam/` |
-| IsThereAnyDeal | Sistema externo | Precios de las demás tiendas de PC y el historial de 12 meses. Exige llave (`DRIFT_ITAD_API_KEY`) y limita las llamadas; DRIFT se fija un tope de 900 cada 5 minutos (ADR-0016). | `backend/app/infrastructure/external/isthereanydeal/` |
+| IsThereAnyDeal | Sistema externo | Precios de referencia (de Estados Unidos, convertidos a pesos) de las demás tiendas de PC y el historial de 12 meses (ADR-0024). Exige llave (`DRIFT_ITAD_API_KEY`) y limita las llamadas; DRIFT se fija un tope de 900 cada 5 minutos (ADR-0016). | `backend/app/infrastructure/external/isthereanydeal/` |
 | CheapShark | Sistema externo | Tiendas de PC cuando no hay llave de IsThereAnyDeal. No ofrece historial. | `backend/app/infrastructure/external/cheapshark/` |
 | PlayStation Store | Sistema externo | Precio de la versión de PlayStation en la tienda de Colombia, que cobra en dólares. | `backend/app/infrastructure/external/playstation/` |
 | Tienda de Xbox | Sistema externo | Precio en pesos de la versión de Xbox. Son los buscadores y el catálogo de la tienda web de Microsoft, sin contrato publicado. | `backend/app/infrastructure/external/xbox/` |

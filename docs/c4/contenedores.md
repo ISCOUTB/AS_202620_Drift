@@ -4,7 +4,7 @@
 
 ## Vista vigente
 
-Revisada el 22 de noviembre de 2026 contra `master` en `a0e18f9` y contra [`deploy/compose.lab.yaml`](../../deploy/compose.lab.yaml). Incluye las decisiones de [ADR-0014](../adr/0014-postgresql-como-persistencia.md) a [ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md).
+Revisada el 22 de noviembre de 2026 contra `master` en `6bbf83e` (incluye el PR #66) y contra [`deploy/compose.lab.yaml`](../../deploy/compose.lab.yaml). Incluye las decisiones de [ADR-0014](../adr/0014-postgresql-como-persistencia.md) a [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md).
 
 DRIFT tiene **tres contenedores propios**, que se despliegan juntos con Docker Compose en el servidor del laboratorio: la página web, la API y la base de datos. A ellos se suma el almacén del navegador del usuario, que DRIFT usa pero no ejecuta. No hay colas, brokers ni microservicios: toda la comunicación es síncrona (ADR-0008).
 
@@ -100,7 +100,7 @@ Todas las flechas hacia sistemas externos salen de la API y son HTTPS con JSON. 
 
 ### Lo que esta vista no comprueba
 
-Esta vista se contrastó con el código y con `deploy/compose.lab.yaml`, no con el servidor en ejecución. El equipo tiene pendiente registrar en [verificaciones pendientes](../evidencias/verificaciones-pendientes-google-y-laboratorio.md) que el contenedor de PostgreSQL arranca en el laboratorio dentro de 96 MB con el volumen con nombre, y el inicio de sesión con Google en el dominio institucional. Hasta entonces, el arranque de la base solo está probado en un equipo de desarrollo (PostgreSQL 16.2) y en el CI (PostgreSQL 17 de servicio).
+Esta vista se contrastó con el código y con `deploy/compose.lab.yaml`, no con el servidor en ejecución. Para atar el servidor a un commit, `GET /api/health` devuelve `code_fingerprint` y `scripts/verificar_despliegue.py` la compara con la del código local. El equipo tiene pendiente registrar en [verificaciones pendientes](../evidencias/verificaciones-pendientes-google-y-laboratorio.md) que el contenedor de PostgreSQL arranca en el laboratorio dentro de 96 MB con el volumen con nombre, y el inicio de sesión con Google en el dominio institucional. Hasta entonces, el arranque de la base solo está probado en un equipo de desarrollo (PostgreSQL 16.2) y en el CI (PostgreSQL 17 de servicio).
 
 
 ---

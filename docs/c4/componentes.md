@@ -4,7 +4,7 @@
 
 ## Vista vigente
 
-Revisada el 22 de noviembre de 2026 contra `master` en `a0e18f9`. Cada componente corresponde a archivos que existen en el repositorio, y cada flecha a un `import` real o a una inyección hecha en la raíz de composición (`backend/app/main.py`). Incluye las decisiones de ADR-0013 a ADR-0022.
+Revisada el 22 de noviembre de 2026 contra `master` en `6bbf83e` (incluye el PR #66). Cada componente corresponde a archivos que existen en el repositorio, y cada flecha a un `import` real o a una inyección hecha en la raíz de composición (`backend/app/main.py`). Incluye las decisiones de ADR-0013 a ADR-0024.
 
 ### Componentes de la API
 
@@ -23,7 +23,7 @@ flowchart TB
             ACCOUNT_ROUTES["Rutas de cuentas<br/>[FastAPI APIRouter]<br/>/auth/*, /devices, /favorites"]
             ADMIN_ROUTES["Rutas administrativas<br/>[FastAPI]<br/>/games/sync/playstation,<br/>/hardware/benchmarks/sync, /metrics"]
             SECURITY["Seguridad<br/>[security.py]<br/>límite de tasa, token, CORS,<br/>origen y cookie de sesión"]
-            OBS["Observabilidad<br/>[observability.py]<br/>logs JSON y SearchMetrics"]
+            OBS["Observabilidad<br/>[observability.py, code_fingerprint.py]<br/>logs JSON, SearchMetrics y huella<br/>del código desplegado"]
         end
 
         subgraph CASOS["Casos de uso · application/usecases"]
@@ -155,7 +155,7 @@ flowchart TB
 | Rutas de cuentas | `infrastructure/api/account_routes.py` | `/auth/google/login`, `/auth/google/callback`, `/auth/me` (GET y DELETE), `/auth/logout`, `/devices`, `/favorites`, `/favorites/alerts` y `/favorites/{id}/target`. Sin cliente de Google configurado responden 404 en el inicio de sesión y el resto de DRIFT sigue igual. |
 | Rutas administrativas | `backend/app/main.py` | `POST /games/sync/playstation`, `POST /hardware/benchmarks/sync` y `GET /metrics`, con `Authorization: Bearer` (ADR-0011). |
 | Seguridad | `infrastructure/api/security.py`, `account_routes.py` | `SlidingWindowRateLimiter` por cliente (ADR-0012), `require_admin_token`, CORS acotado, comprobación del `Origin` y cookie de sesión (ADR-0017). |
-| Observabilidad | `infrastructure/observability.py` | Logs estructurados en JSON y `SearchMetrics` (latencia, fuentes no disponibles, copias usadas, cuota de ITAD) que lee `/metrics`. |
+| Observabilidad | `infrastructure/observability.py`, `infrastructure/code_fingerprint.py` | Logs estructurados en JSON y `SearchMetrics` (latencia, fuentes no disponibles, copias usadas, cuota de ITAD) que lee `/metrics`. `GET /health` devuelve `code_fingerprint`, la huella SHA-256 del código de `app/`, para saber qué commit está desplegado (`scripts/verificar_despliegue.py`). |
 | SearchGames | `application/usecases/search_games.py` | Busca en todas las tiendas por el puerto `GameRepository` y, si se piden plataformas, deja solo sus tiendas. |
 | ListFeaturedGames, ExploreGames, ListStores | `application/usecases/showcase.py` | Portada (más vendidos de Steam), página «Explorar» por género y lista de tiendas conectadas. |
 | GetPriceHistory | `application/usecases/get_price_history.py` | Historial del mejor precio en 12 meses, o el motivo por el que no hay (ADR-0016). |
@@ -163,7 +163,7 @@ flowchart TB
 | Sessions, Devices, Favorites | `application/usecases/accounts.py` | Iniciar y cerrar sesión, borrar la cuenta, administrar los dispositivos y los favoritos con su precio objetivo (ADR-0017, ADR-0020). |
 | CheckFavoriteAlerts | `application/usecases/favorite_alerts.py`, `domain/services/price_alerts.py` | Precio de hoy de los favoritos y cuáles llegaron a su objetivo o bajaron 5 % (ADR-0021). |
 | SyncPlayStationCatalog, SyncHardwareBenchmarks | `application/usecases/sync_*.py` | Cargas pedidas por el equipo; rechazan una respuesta vacía para no borrar lo guardado. |
-| Dominio | `domain/model/`, `domain/services/`, `domain/ports/` | Entidades, reglas puras y los 15 puertos. No importa nada fuera de `domain/`. |
+| Dominio | `domain/model/`, `domain/services/`, `domain/ports/` | Entidades, reglas puras y los 15 puertos. No importa nada fuera de `domain/`. `platforms.py` distingue las tiendas con precio de Colombia (Steam, PlayStation, Xbox) de las de referencia (precios de EE. UU. convertidos), y la recomendación y las alertas prefieren las primeras (ADR-0024). |
 | CombinedGameRepository | `persistence/combined_game_repository.py` | Lanza cada fuente secundaria en un hilo, aplica el plazo (`DRIFT_SOURCE_TIMEOUT_SECONDS`) y une los precios por identificador de Steam o por nombre normalizado. Se anida tres veces en `main.py` para combinar las cuatro fuentes. |
 | ResilientGameRepository | `persistence/resilient_game_repository.py`, `persistence/in_memory_game_repository.py` | Si Steam falla del todo, responde con el catálogo local curado. |
 | StaleFallbackGameRepository | `persistence/stale_fallback_game_repository.py` | Envuelve cada fuente: copia fresca 15 minutos sin llamar a la fuente; si falla, copia de hasta 72 horas marcada en `cached_sources` (ADR-0015). |
