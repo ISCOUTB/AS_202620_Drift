@@ -35,6 +35,19 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 **ADR-0002** mantiene la misma decisión arquitectónica (Hexagonal) pero cambia la tecnología de implementación a Next.js + FastAPI, con una estructura de carpetas `frontend/` y `backend/` (`domain`, `application`, `infrastructure`) consistente con los bloques de construcción de la Sección 5.
 
 
+### Evolución del semestre: decisiones confirmadas y reemplazadas con evidencia
+
+Recorridos en orden, los ADR explican por qué DRIFT es como es hoy:
+
+1. **Estilo (ADR-0001 → ADR-0002).** Hexagonal elegido por mantenibilidad; se cambió la tecnología (Java → Next.js + FastAPI) sin cambiar el estilo. `backend/tests/test_architecture.py` y `scripts/validar_docs.py` confirman en cada CI que la regla de dependencias se cumple en el backend y en el frontend.
+2. **Datos y ejecución (ADR-0004 → ADR-0008 → ADR-0010 → ADR-0014).** La estrategia con MySQL y actualización asíncrona (ADR-0004) se reemplazó por memoria y ejecución síncrona (ADR-0008) al contrastar la documentación con lo que el backend implementaba de verdad. ADR-0010 dejó escrita la condición que obligaría a revisar la persistencia: guardar datos propios del usuario. Al llegar las cuentas, los dispositivos y los favoritos esa condición se cumplió, y **ADR-0014 reemplazó la persistencia en memoria por PostgreSQL**, citando esa condición. Es la decisión reemplazada con evidencia más clara del proyecto.
+3. **Resiliencia (ADR-0008 → ADR-0009 → ADR-0013 → ADR-0015).** El fallo de una fuente se resolvió con plazo y aviso (ADR-0008) y con reintento y respaldo dentro del adaptador de Steam (ADR-0009). ADR-0009 reconocía que dos intentos podían tardar cerca de 6,25 s; la medición de S12 con Steam sin responder bajó el p95 de 6,24 s a 4,01 s con un plazo total de 4 s, que ADR-0013 registró. ADR-0015 añadió la copia de respaldo por fuente.
+4. **Seguridad (ADR-0011, ADR-0012 → ADR-0017).** Token administrativo y límite de tasa salieron del modelo de amenazas de S13; las cuentas (ADR-0017) obligaron a reabrir el CORS con credenciales.
+5. **Precios (ADR-0016 → ADR-0024).** IsThereAnyDeal entregaba precios de EE. UU. que podían ganar frente a los reales de Colombia; ADR-0024 los separa y modifica ADR-0019 y ADR-0021.
+6. **Despliegue (ADR-0005, ADR-0006 → ADR-0022).** Azure y Vercel se retiraron porque no tenían base de datos y la cookie de sesión no viaja entre sus dominios.
+
+ADR-0013 a ADR-0022 se ratifican en bloque con [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md), sin editar sus archivos.
+
 ## 9.3 Criterio de documentación
 
 No toda decisión de diseño se documenta como ADR en esta sección central. Se registra aquí una decisión cuando cumple al menos uno de estos criterios:

@@ -55,91 +55,54 @@ Decisiones de arquitectura vigentes:
 | [ADR-0010](docs/adr/0010-costo-de-reversion-de-las-decisiones-de-datos.md) | Costo de reversión de las decisiones de datos; mantener el modelo público del juego como decisión de alto costo de cambio |
 | [ADR-0011](docs/adr/0011-autenticacion-operaciones-administrativas.md) | Token de servicio para la sincronización del catálogo y `/metrics`; registro de las operaciones administrativas |
 | [ADR-0012](docs/adr/0012-limitacion-de-tasa-en-la-api.md) | Límite de tasa por cliente en búsqueda y compatibilidad; CORS acotado |
-| [ADR-0013](docs/adr/0013-plazo-total-en-la-busqueda-de-steam.md) | Plazo total por búsqueda en Steam; correcciones a ADR-0009 y ADR-0010 (propuesto) |
-| [ADR-0014](docs/adr/0014-postgresql-como-persistencia.md) | PostgreSQL como persistencia; reemplaza la persistencia en memoria de ADR-0008 (propuesto) |
-| [ADR-0018](docs/adr/0018-puntajes-de-hardware-en-la-base-de-datos.md) | Puntajes de gráficas y procesadores en PostgreSQL, con la copia JSON como respaldo (propuesto) |
-| [ADR-0017](docs/adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) | Inicio de sesión con Google y registro de dispositivos; CORS con credenciales (propuesto) |
-| [ADR-0016](docs/adr/0016-isthereanydeal-e-historial-de-precios.md) | IsThereAnyDeal para las tiendas de PC y el historial de precios, con control de cuota (propuesto) |
-| [ADR-0015](docs/adr/0015-copia-de-respaldo-de-las-fuentes.md) | Copia de respaldo de cada fuente: si una falla, se responde con su último precio guardado y se avisa (propuesto) |
+| [ADR-0013](docs/adr/0013-plazo-total-en-la-busqueda-de-steam.md) | Plazo total por búsqueda en Steam; correcciones a ADR-0009 y ADR-0010 |
+| [ADR-0014](docs/adr/0014-postgresql-como-persistencia.md) | PostgreSQL como persistencia; reemplaza la persistencia en memoria de ADR-0008 |
+| [ADR-0018](docs/adr/0018-puntajes-de-hardware-en-la-base-de-datos.md) | Puntajes de gráficas y procesadores en PostgreSQL, con la copia JSON como respaldo |
+| [ADR-0017](docs/adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) | Inicio de sesión con Google y registro de dispositivos; CORS con credenciales |
+| [ADR-0016](docs/adr/0016-isthereanydeal-e-historial-de-precios.md) | IsThereAnyDeal para las tiendas de PC y el historial de precios, con control de cuota |
+| [ADR-0015](docs/adr/0015-copia-de-respaldo-de-las-fuentes.md) | Copia de respaldo de cada fuente: si una falla, se responde con su último precio guardado y se avisa |
+
+ADR-0013 a ADR-0022 se ratifican con [ADR-0023](docs/adr/0023-ratificar-decisiones-de-noviembre.md); [ADR-0024](docs/adr/0024-precios-de-colombia-y-de-referencia.md) separa los precios de Colombia de los de referencia. Índice completo y evolución en [arc42 §9](docs/arc42/arc42_9_Decisiones_Arquitectonicas.md).
 
 ## Organización del proyecto
 
+Resumen de carpetas (el detalle por componente está en el [C4 nivel 3](docs/c4/componentes.md)):
+
 ```text
-DRIFT/
-├── backend/
+AS_202620_Drift/
+├── backend/                      API FastAPI (Python 3.12)
 │   ├── app/
-│   │   ├── application/
-│   │   │   └── usecases/
-│   │   │       ├── search_games.py
-│   │   │       ├── estimate_compatibility.py
-│   │   │       └── sync_playstation_catalog.py
-│   │   ├── domain/
-│   │   │   ├── model/
-│   │   │   │   ├── game.py
-│   │   │   │   ├── game_requirements.py
-│   │   │   │   └── normalized_game.py
-│   │   │   └── ports/
-│   │   │       ├── game_repository.py
-│   │   │       ├── game_requirements_repository.py
-│   │   │       └── game_catalog_source.py
+│   │   ├── domain/               model/, ports/ (15 puertos), services/
+│   │   ├── application/usecases/ casos de uso: búsqueda, compatibilidad, recomendación,
+│   │   │                         historial, portada y Explorar, cuentas, alertas, sincronizaciones
 │   │   ├── infrastructure/
-│   │   │   ├── external/
-│   │   │   │   ├── steam/
-│   │   │   │   │   └── steam_game_repository.py
-│   │   │   │   └── playstation/
-│   │   │   │       └── playstation_game_catalog_source.py
-│   │   │   └── persistence/
-│   │   │       ├── in_memory_game_repository.py
-│   │   │       ├── in_memory_game_requirements_repository.py
-│   │   │       ├── in_memory_playstation_catalog.py
-│   │   │       ├── combined_game_repository.py
-│   │   │       └── resilient_game_repository.py
-│   │   └── main.py
-│   ├── tests/
-│   │   ├── test_health.py
-│   │   ├── test_search_games.py
-│   │   └── test_compatibility.py
-│   └── requirements.txt
-│
-├── frontend/
-│   ├── application/
-│   ├── domain/
-│   ├── infrastructure/
-│   └── ui/
-│       └── components/
-│           └── DriftHome.js
-│
+│   │   │   ├── api/              rutas de cuentas y seguridad (límite de tasa, token)
+│   │   │   ├── external/         adaptadores: steam/, isthereanydeal/, cheapshark/,
+│   │   │   │                     playstation/, xbox/, google/, exchange/, resilient_http.py
+│   │   │   └── persistence/      composición de fuentes, copia de respaldo, PostgreSQL y memoria
+│   │   └── main.py               rutas de juegos y raíz de composición
+│   ├── tests/                    pytest: unitarias, arquitectura, seguridad, PostgreSQL, contrato
+│   ├── Dockerfile
+│   ├── requirements.txt          versiones fijas (las instala el CI)
+│   └── requirements.lock         mismas versiones con hashes (las instala la imagen)
+├── frontend/                     Next.js 16
+│   ├── app/                      páginas: /, /explorar, /explorar/[genero]
+│   ├── domain/  application/     modelo, casos de uso y puertos
+│   ├── infrastructure/           http/ (adaptadores de la API) y storage/ (localStorage)
+│   └── ui/components/            interfaz y raíz de composición
+├── deploy/
+│   ├── compose.lab.yaml          web, api y postgres en el laboratorio (Dokploy)
+│   └── .env.example
 ├── docs/
-│   ├── adr/
-│   ├── arc42/
-│   ├── c4/
-│   ├── evidencias/
-│   ├── seguridad/
-│   │   ├── modelo-amenazas.md
-│   │   └── privacidad.md
-│   ├── api/
-│   │   ├── drift/
-│   │   │   ├── contrato_api_DRIFT.md
-│   │   │   └── openapi.yaml
-│   │   └── playstation/
-│   │       ├── contrato_api_playstation.md
-│   │       ├── openapi.yaml
-│   │       └── asyncapi.yaml
-│   ├── aspectos.md
-│   ├── escenarios.md
-│   ├── ia.md
-│   └── matriz.md
-│
-├── scripts/
-│   ├── start.py
-│   └── k6_baseline.js
-│
+│   ├── arc42/  c4/  adr/         arquitectura (arc42 1–12, C4 niveles 1–3, ADR 0001–0024)
+│   ├── api/                      contratos OpenAPI y AsyncAPI
+│   ├── seguridad/                modelo de amenazas y privacidad
+│   ├── evidencias/               mediciones, experimentos y validaciones
+│   ├── aspectos.md  escenarios.md  matriz.md  ia.md
+├── scripts/                      arranque local, k6, experimentos, verificar_despliegue.py y validar_docs.py
 ├── .github/
 │   ├── dependabot.yml
-│   └── workflows/
-│       ├── ci.yml
-│       └── master_drift-utb-202620.yml
-│
+│   └── workflows/ci.yml
 ├── sonar-project.properties
 ├── correcciones.md
 └── README.md
@@ -288,31 +251,25 @@ npm run build
 
 Última validación local: compilación de producción aprobada.
 
-### Pruebas de Rendimiento
+### Pruebas de rendimiento
 
-Con k6 se ejecutó una prueba de carga sobre `GET /games/search?q=Minecraft` con 50 usuarios virtuales concurrentes.
+El escenario E1 pide p95 ≤ 3 s con 50 usuarios concurrentes en `GET /games/search`. Resultados vigentes (S14, sin cambiar el umbral):
 
-Resultado posterior a la optimización:
+| Entorno | Búsquedas | p95 (mediana de las corridas) | Estado |
+|---|---|---:|---|
+| Despliegue del laboratorio | distintas | 9,05 s | **No cumple** |
+| Despliegue del laboratorio | la misma | 2,40 s | Cumple en 2 de 3 corridas |
+| Local, fuentes simuladas | distintas | 0,63 s | Cumple; no describe el despliegue |
 
-| Métrica | Resultado |
-|---|---:|
-| Solicitudes exitosas | 50 de 50 |
-| Solicitudes fallidas | 0 % |
-| p95 | 1.24 s |
-| Objetivo E1 | p95 ≤ 3 s |
-| Estado | Cumple |
+Detalle en [medición en el despliegue](docs/evidencias/s14-e1-medicion.md), [medición local](docs/evidencias/s14-medicion-e1.md) y [arc42 §10.3](docs/arc42/arc42_10_Requisitos_Calidad.md). La cifra de 1,24 s de la [línea base de septiembre](docs/evidencias/e1-linea-base.md) es histórica: se midió con otra versión, una sola consulta repetida y en local.
 
-Para ejecutarla, inicia primero el proyecto con `python scripts/start.py`. En otra terminal ejecuta:
+Para repetir la medición en el despliegue (requiere k6; tarda unos 30 minutos por las esperas entre corridas):
 
 ```bash
-k6 run scripts/k6_baseline.js
+python scripts/s14_e1_corridas.py
 ```
 
-En Windows, si k6 no está agregado al PATH:
-
-```powershell
-& "C:\Program Files\k6\k6.exe" run scripts/k6_baseline.js
-```
+El script escribe en `docs/evidencias/s14-resultados/`: copie antes esa carpeta, o cambie `RESULTADOS` en el script, para no sobrescribir la evidencia de S14.
 
 La evidencia completa de este y demás escenarios se encuentra en [docs/evidencias/](docs/evidencias/).
 
@@ -326,6 +283,7 @@ El pipeline ejecuta:
 2. Smoke test entre frontend y API, con la compilación del frontend.
 3. Análisis de SonarQube Cloud con el reporte de cobertura del backend.
 4. Análisis de dependencias: `pip-audit` sobre `backend/requirements.lock` y `npm audit` sobre las dependencias de producción del frontend. Falla ante cualquier vulnerabilidad conocida del backend y ante las altas o críticas del frontend.
+5. Validación de la documentación ([`scripts/validar_docs.py`](scripts/validar_docs.py)): enlaces relativos y anclas de todos los Markdown, convención de nombres y estados de los ADR, regla de dependencias del frontend y render de todos los diagramas Mermaid con `mermaid-cli`.
 
 El pipeline corre en cada push a `master` y en cada pull request hacia `master`. El análisis espera el veredicto del Quality Gate y el job falla si no pasa, así que un cambio con hallazgos no se integra. La configuración está en [`sonar-project.properties`](sonar-project.properties) y usa el secreto de GitHub `SONAR_TOKEN`.
 

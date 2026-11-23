@@ -151,3 +151,91 @@ sequenceDiagram
 ```
 
 La búsqueda es síncrona y no usa cola. El mismo mecanismo se aplica a PlayStation en el combinador externo. El endpoint registra el evento `source_unavailable` y cuenta la búsqueda en `drift_source_unavailable_total`. Medición antes y después en [E6](../evidencias/e6-degradacion-bajo-carga.md); decisión en [ADR-0008](../adr/0008-persistencia-ejecucion-y-degradacion-de-fuentes.md).
+
+## 6.5 Escenario: búsqueda con una fuente caída y copia de respaldo (noviembre de 2026)
+
+Amplía 6.2 con la copia de respaldo de ADR-0015. Ejemplo: la tienda de Xbox no responde dentro de su plazo.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor J as Jugador
+    participant W as Página web
+    participant A as API (SearchGames)
+    participant C as CombinedGameRepository
+    participant S as StaleFallbackGameRepository (Xbox)
+    participant X as Tienda de Xbox
+    participant DB as PostgreSQL (source_snapshot)
+
+    J->>W: Busca «Hades»
+    W->>A: GET /api/games/search?q=Hades
+    A->>C: search("Hades")
+    par Steam, PC, PlayStation y Xbox a la vez
+        C->>S: search("Hades")
+        S->>DB: ¿copia de menos de 15 min?
+        DB-->>S: no
+        S->>X: HTTPS + JSON (plazo 3 s)
+        X--xS: sin respuesta a tiempo
+        S->>DB: última copia (≤ 72 h)
+        DB-->>S: copia de hace 2 h
+        S-->>C: precios de la copia + fecha
+    end
+    C-->>A: juegos unidos, cached_sources = [Xbox]
+    A-->>W: 200 JSON con precios y aviso
+    W-->>J: Resultados con «precio de Xbox de hace 2 h»
+```
+
+Si no hubiera copia, Xbox iría a `unavailable_sources` y la respuesta seguiría con las demás fuentes. Si PostgreSQL no responde, `ResilientSourceSnapshotStore` usa la copia en memoria y deja de llamar a la base durante 30 s. Pruebas: `test_copia_de_respaldo.py`, `test_source_degradation.py`.
+
+## 6.6 Escenario: inicio de sesión con Google (ADR-0017)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor J as Jugador
+    participant W as Página web
+    participant A as API (rutas de cuentas)
+    participant G as Google
+    participant DB as PostgreSQL
+
+    J->>W: «Iniciar sesión con Google»
+    W->>A: GET /api/auth/google/login
+    A-->>J: 302 a Google + cookies drift_login_state y drift_login_nonce (10 min)
+    J->>G: Elige su cuenta y acepta openid, email y profile
+    G-->>J: 302 a /api/auth/google/callback?code=…&state=…
+    J->>A: GET /api/auth/google/callback
+    A->>A: compara state con la cookie
+    A->>G: canjea el código (HTTPS + JSON)
+    G-->>A: id_token
+    A->>A: valida emisor, destinatario, vencimiento, nonce y correo verificado
+    A->>DB: crea o actualiza app_user y guarda la huella SHA-256 de la sesión
+    A-->>J: 302 a la página con ?login=ok + cookie drift_session (HttpOnly, SameSite=Lax, Secure)
+    W->>A: GET /api/auth/me (con la cookie)
+    A-->>W: nombre y correo
+```
+
+Si el `state` no coincide o el código es rechazado, se vuelve con `?login=error` y el log registra `login_rejected` sin el token. Si Google no responde, el inicio de sesión responde «no disponible» y quien ya tiene sesión no se ve afectado. Pruebas: `test_cuentas.py`. **El recorrido con una cuenta real solo se ha probado en `localhost`** ([§11.11](arc42-11-riesgos-y-deuda-tecnica.md)).
+
+## 6.7 Escenario: alertas de los favoritos al entrar (ADR-0021)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant W as Página web
+    participant A as API (CheckFavoriteAlerts)
+    participant DB as PostgreSQL (user_favorite)
+    participant P as StoreCurrentPriceSource
+    participant S as Steam
+    participant I as IsThereAnyDeal
+
+    W->>A: GET /api/favorites/alerts (cookie de sesión)
+    A->>DB: favoritos del usuario con precio guardado y objetivo
+    A->>P: precio de hoy de esos juegos (caché 1 h)
+    P->>S: precio en Colombia
+    P->>I: precios de tiendas de PC (dos llamadas)
+    P-->>A: mejor precio de PC por juego
+    A->>A: price_alerts: ¿llegó al objetivo o bajó 5 % o más?
+    A-->>W: estado por favorito y alertas
+```
+
+No hay procesos en segundo plano ni correos: si la persona no entra, no se revisa. Los juegos que solo están en consola no se revisan. Pruebas: `test_alertas_de_precio.py`, `test_favoritos.py`.

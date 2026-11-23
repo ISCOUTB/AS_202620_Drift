@@ -1118,3 +1118,37 @@ La suite del backend pasa sin base de datos (462 aprobadas, 20 omitidas por requ
 - Se rechazó añadir al contrato un campo con el origen del precio: ADR-0010 trata el modelo público como la decisión más cara de revertir.
 - Se rechazó publicar el commit en `/health` con una variable manual, porque quedaría desactualizada en el siguiente despliegue sin que nadie lo note.
 - No se redactaron señalamientos de la revisión entre pares, no se marcaron las casillas de Google y del laboratorio, y no se escribió el registro de IA del trabajo del 13 al 16 de noviembre: solo quien lo hizo o lo recibió tiene esa información.
+
+### Registro 49 — C4, arc42 y validación automática de la documentación (S16)
+
+**Fecha:** 2026-11-22
+**Herramienta:** Claude (Claude Code), sesión en la nube sobre `master` en `6bbf83e`
+
+**Consulta utilizada:**
+
+> Analizar la actualización actual del repositorio y hacer varios commits para perfeccionar lo que ya se hizo.
+
+**Uso:**
+
+Se utilizó Claude para comparar el PR #66 con un trabajo previo de la misma sesión y trasladar solo lo que el PR no cubría:
+
+- las vistas vigentes del C4 (niveles 1 a 3), reescritas a partir de los `import` reales y de `main.py`, con la huella del código desplegado y ADR-0024;
+- `scripts/validar_docs.py` y el job de CI que comprueba enlaces, ADR, vistas C4, la regla de dependencias del frontend y el render de los diagramas;
+- arc42 §1.4, §3.4, §4.5, §6.5 a §6.7, §9 (evolución) y §10.3;
+- el README;
+- dos enlaces rotos.
+
+**Validación:**
+
+- `validar_docs.py` sin errores sobre la rama. Antes de corregir los enlaces detectó los dos rotos que había en `master`.
+- En una corrida previa, con una importación prohibida en `frontend/domain` y un ADR mal nombrado, el script falló con ambos errores.
+- Los diagramas de `docs/c4/` y de arc42 §6 renderizan con mermaid-cli 11.4.2.
+- Las cifras y pruebas citadas se buscaron en el código antes de escribirlas.
+- El despliegue no se comprobó: la red del entorno de la IA bloquea `drift.iscoutb.dev`.
+
+**Alternativa descartada:**
+
+- Se descartó cambiar el estado de ADR-0013 a ADR-0022 dentro de cada archivo, que era lo que hacía el trabajo previo, porque el equipo eligió ratificarlos con ADR-0023 sin editarlos.
+- Se descartaron los cambios previos de privacidad, amenazas, Next.js y contrato porque el PR #66 ya los cubría; duplicarlos habría producido conflictos.
+- Se descartó activar en el CI el contrato con token y sin límite de tasa: la sincronización llamaría a PlayStation desde el runner y la recarga de puntajes responde 503 sin las direcciones privadas.
+- No se redactaron señalamientos de pares ni el desafío final: no están en el repositorio.
