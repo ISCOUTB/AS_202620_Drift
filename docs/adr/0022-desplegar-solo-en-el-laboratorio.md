@@ -1,6 +1,6 @@
 # ADR-0022: Desplegar DRIFT solo en el servidor del laboratorio
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-13
 - **Decisores:** Equipo DRIFT
 - **Sustituye a:** ADR-0005 (estrategia de despliegue) y ADR-0006 (API de búsqueda sin servidor en Vercel)

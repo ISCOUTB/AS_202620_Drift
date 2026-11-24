@@ -1,6 +1,6 @@
 # ADR-0025: Una página propia para cada juego, con su ficha y tráilers de Steam
 
-- **Estado:** Propuesto (pasa a Aceptado cuando el equipo dé su visto bueno)
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-23
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Complementa a:** [ADR-0019](0019-recomendacion-de-compra.md), [ADR-0016](0016-isthereanydeal-e-historial-de-precios.md) y [ADR-0015](0015-copia-de-respaldo-de-las-fuentes.md): la recomendación, el historial y la copia de respaldo no cambian, solo dónde se muestran.

@@ -1,6 +1,6 @@
 # ADR-0017: Iniciar sesión con Google y registrar los dispositivos del usuario
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-12
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Modifica a:** [ADR-0012](0012-limitacion-de-tasa-en-la-api.md), en la configuración de CORS: los orígenes permitidos ahora pueden enviar credenciales. El límite de tasa no cambia.

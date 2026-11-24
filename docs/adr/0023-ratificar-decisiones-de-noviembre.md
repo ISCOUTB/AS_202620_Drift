@@ -1,6 +1,6 @@
 # ADR-0023: Ratificar las decisiones ADR-0013 a ADR-0022
 
-- **Estado:** Propuesto (pasa a Aceptado cuando el equipo dé su visto bueno)
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-22
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Ratifica a:** [ADR-0013](0013-plazo-total-en-la-busqueda-de-steam.md), [ADR-0014](0014-postgresql-como-persistencia.md), [ADR-0015](0015-copia-de-respaldo-de-las-fuentes.md), [ADR-0016](0016-isthereanydeal-e-historial-de-precios.md), [ADR-0017](0017-inicio-de-sesion-con-google-y-dispositivos.md), [ADR-0018](0018-puntajes-de-hardware-en-la-base-de-datos.md), [ADR-0019](0019-recomendacion-de-compra.md), [ADR-0020](0020-juegos-favoritos.md), [ADR-0021](0021-alertas-de-precio.md) y [ADR-0022](0022-desplegar-solo-en-el-laboratorio.md)
@@ -20,7 +20,7 @@ El equipo sigue la regla de no reescribir los ADR existentes: un cambio se regis
 
 ## Decisión
 
-Se adopta la **alternativa 2**. Cuando este ADR esté aceptado, las decisiones de esta tabla se consideran **aceptadas**, aunque su archivo diga «Propuesto»:
+Se adopta la **alternativa 2**. Las decisiones de esta tabla se consideran **aceptadas**. El 23 de noviembre de 2026 el equipo decidió además cambiar la línea de estado de cada archivo (ADR-0013 a ADR-0025) a «Aceptado», así que ya no hace falta consultar este ADR para saberlo:
 
 | ADR | Decisión ratificada | Efecto sobre decisiones anteriores |
 |---|---|---|
@@ -46,7 +46,7 @@ El índice de [arc42 §9](../arc42/arc42_9_Decisiones_Arquitectonicas.md) remite
 
 **Negativas**
 
-- Quien abra uno de los diez verá «Propuesto» y debe consultar este ADR o el índice de arc42 §9.
+- La única edición a los diez archivos es su línea de estado, hecha el 23 de noviembre de 2026.
 - Ratificar no prueba que las decisiones funcionen en el laboratorio: las verificaciones de Google y PostgreSQL siguen en [su guía](../evidencias/verificaciones-pendientes-google-y-laboratorio.md).
 
 ## Trazabilidad

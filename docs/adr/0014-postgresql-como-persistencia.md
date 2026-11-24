@@ -1,6 +1,6 @@
 # ADR-0014: Adoptar PostgreSQL como persistencia de DRIFT
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-12
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Sustituye a:** [ADR-0008](0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), solo en su decisión de persistencia («todo en memoria»). La ejecución síncrona y la degradación controlada de fuentes siguen vigentes.

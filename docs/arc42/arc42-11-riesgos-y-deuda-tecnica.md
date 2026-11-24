@@ -204,7 +204,7 @@ Revisión de lo que quedó sin verificar al añadir el inicio de sesión, los fa
 | S15-3 | El modelo de amenazas no integraba cuentas, favoritos ni alertas | Resuelto | [Modelo de amenazas](../seguridad/modelo-amenazas.md), sección 6, A12 a A25 |
 | S15-4 | E1 debe repetirse sobre un commit desplegado identificable | **Pendiente de desplegar** | `/health` publica la huella del código y `scripts/verificar_despliegue.py` la traduce a un commit. La medición se repite después de desplegar |
 | S15-5 | Falta evidencia pública del Quality Gate | Resuelto para `a0e18f9` | [Evidencia de SonarCloud](../evidencias/calidad-sonarcloud.md); actualizar con el commit final |
-| S15-6 | ADR-0013 a ADR-0022 seguían como propuestos | **Pendiente del visto bueno** | [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md) los ratifica sin editarlos |
+| S15-6 | ADR-0013 a ADR-0022 seguían como propuestos | **Resuelto** (2026-11-23) | Los ADR-0013 a ADR-0025 pasaron a Aceptado; [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md) deja el registro de la ratificación |
 | S15-7 | Cadena de trazabilidad de las funciones nuevas | Resuelto | Filas F1 a F5 de [aspectos](../aspectos.md) |
 | S15-8 | DRIFT recomendaba tiendas donde el juego no se activa en Colombia | Mitigado | [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md). GOG y Epic siguen como referencia aunque tengan precio para Colombia |
 | S15-9 | Vulnerabilidad moderada en `next` 16.4.3 | Resuelto | `next` 16.4.6; `npm audit` sin hallazgos |

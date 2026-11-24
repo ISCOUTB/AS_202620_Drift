@@ -1,6 +1,6 @@
 # ADR-0020: Juegos favoritos de quien inicia sesión
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-13
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0014](0014-postgresql-como-persistencia.md) (PostgreSQL), [ADR-0017](0017-inicio-de-sesion-con-google-y-dispositivos.md) (cuentas y sesión)
