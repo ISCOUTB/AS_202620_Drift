@@ -1,6 +1,6 @@
 # ADR-0019: Recomendar la opción de compra con una regla explicable
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-13
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0002](0002-adoptar-nextjs-fastapi-arquitectura-hexagonal.md) (la regla vive en el dominio), [ADR-0012](0012-limitacion-de-tasa-en-la-api.md) (límite de tasa), [ADR-0017](0017-inicio-de-sesion-con-google-y-dispositivos.md) (dispositivos del usuario)

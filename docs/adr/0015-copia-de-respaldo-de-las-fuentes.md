@@ -1,6 +1,6 @@
 # ADR-0015: Responder con la última copia cuando una fuente falla
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-12
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Modifica a:** [ADR-0008](0008-persistencia-ejecucion-y-degradacion-de-fuentes.md), en la degradación de fuentes: antes de marcar una fuente como no disponible se intenta responder con su última copia.

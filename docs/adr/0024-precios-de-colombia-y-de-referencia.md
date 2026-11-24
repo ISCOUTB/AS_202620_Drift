@@ -1,6 +1,6 @@
 # ADR-0024: Separar los precios de Colombia de los precios de referencia
 
-- **Estado:** Propuesto (pasa a Aceptado cuando el equipo dé su visto bueno)
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-22
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Modifica a:** [ADR-0019](0019-recomendacion-de-compra.md), en el paso 1 de su regla, y [ADR-0021](0021-alertas-de-precio.md), en el precio que revisa la alerta. No edita esos archivos.

@@ -15,19 +15,19 @@ Cada decisión relevante se documenta como un ADR independiente en `docs/adr/`. 
 | [ADR-0009](../adr/0009-decision-extraccion-integracion-steam.md) | Mantener la integración con Steam dentro del backend; resiliencia del adaptador y circuit breaker diferido | Aceptado | Secciones 5, 7, 8 y 11; evidencia S11 |
 | [ADR-0011](../adr/0011-autenticacion-operaciones-administrativas.md) | Token de servicio para la sincronización del catálogo y `/metrics`; registro de las operaciones administrativas | Aceptado | Secciones 8 y 11; modelo de amenazas A2, A5 y A10 |
 | [ADR-0012](../adr/0012-limitacion-de-tasa-en-la-api.md) | Límite de tasa por cliente en búsqueda y compatibilidad; CORS acotado | Aceptado | Secciones 8 y 11; modelo de amenazas A3 y A9 |
-| [ADR-0013](../adr/0013-plazo-total-en-la-busqueda-de-steam.md) | Plazo total por búsqueda en Steam; registra además las correcciones a ADR-0009 y ADR-0010 | Propuesto | Secciones 8 y 11; escenarios E5 y E6; modifica a ADR-0009 solo en el tiempo de una búsqueda |
-| [ADR-0014](../adr/0014-postgresql-como-persistencia.md) | PostgreSQL como único servicio de datos; la base no puede tumbar la búsqueda | Propuesto | Secciones 5, 7 y 11; sustituye la persistencia en memoria de ADR-0008 |
-| [ADR-0015](../adr/0015-copia-de-respaldo-de-las-fuentes.md) | Responder con la última copia de una fuente cuando falla (15 minutos fresca, 72 horas de respaldo) y avisarlo en `cached_sources` | Propuesto | Secciones 6, 8 y 11; escenarios E5 y E6; tensión disponibilidad contra actualización de precios |
-| [ADR-0016](../adr/0016-isthereanydeal-e-historial-de-precios.md) | IsThereAnyDeal para las tiendas de PC y el historial de precios, con control de cuota; CheapShark queda como respaldo sin llave | Propuesto | Secciones 3, 5, 6 y 11; escenario E1 |
-| [ADR-0017](../adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) | Inicio de sesión con Google, sesión en cookie y registro de dispositivos en PostgreSQL | Propuesto | Secciones 3, 5, 8 y 11; modelo de amenazas A12 a A21; modifica el CORS de ADR-0012 |
-| [ADR-0018](../adr/0018-puntajes-de-hardware-en-la-base-de-datos.md) | Puntajes de gráficas y procesadores en PostgreSQL, cargados desde la copia privada, que queda como respaldo | Propuesto | Secciones 5, 7 y 8; escenario E4 |
-| [ADR-0019](../adr/0019-recomendacion-de-compra.md) | Recomendación de compra con una regla fija en el dominio: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más | Propuesto | Secciones 5 y 6; modelo de amenazas A3 (la ruta entra en el límite de tasa) |
-| [ADR-0020](../adr/0020-juegos-favoritos.md) | Juegos favoritos en PostgreSQL, con el precio al guardarlos como referencia; sin revisión en segundo plano | Propuesto | Secciones 5 y 8; privacidad, sección 8 |
-| [ADR-0021](../adr/0021-alertas-de-precio.md) | Alertas de precio de los favoritos revisadas al entrar, solo tiendas de PC, con caché de una hora; sin correo ni procesos en segundo plano | Propuesto | Secciones 5, 6 y 8; modelo de amenazas A3 (límite de tasa); modifica ADR-0020 |
-| [ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md) | Desplegar solo en el servidor del laboratorio; se retiran Azure App Service y Vercel | Propuesto | Secciones 2, 7, 8 y 11; sustituye a ADR-0005 y ADR-0006; cierra S13-R1 y la amenaza A8 de Azure |
-| [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md) | Ratifica ADR-0013 a ADR-0022 sin editarlos: al aceptarse, esos diez quedan aceptados | Propuesto | Estado de las decisiones de noviembre |
-| [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md) | Los precios de Estados Unidos son referencia y no ganan a un precio de Colombia; modifica a ADR-0019 y ADR-0021 | Propuesto | Secciones 8 y 11; privacidad no afectada; aspecto F5 |
-| [ADR-0025](../adr/0025-pagina-de-cada-juego.md) | Página propia para cada juego con la ficha y los tráilers de Steam; el video va de la CDN de Steam al navegador con `hls.js` | Propuesto | Secciones 5, 6 y 8; C4 nivel 3; contrato `GET /games/{id}/details` |
+| [ADR-0013](../adr/0013-plazo-total-en-la-busqueda-de-steam.md) | Plazo total por búsqueda en Steam; registra además las correcciones a ADR-0009 y ADR-0010 | Aceptado | Secciones 8 y 11; escenarios E5 y E6; modifica a ADR-0009 solo en el tiempo de una búsqueda |
+| [ADR-0014](../adr/0014-postgresql-como-persistencia.md) | PostgreSQL como único servicio de datos; la base no puede tumbar la búsqueda | Aceptado | Secciones 5, 7 y 11; sustituye la persistencia en memoria de ADR-0008 |
+| [ADR-0015](../adr/0015-copia-de-respaldo-de-las-fuentes.md) | Responder con la última copia de una fuente cuando falla (15 minutos fresca, 72 horas de respaldo) y avisarlo en `cached_sources` | Aceptado | Secciones 6, 8 y 11; escenarios E5 y E6; tensión disponibilidad contra actualización de precios |
+| [ADR-0016](../adr/0016-isthereanydeal-e-historial-de-precios.md) | IsThereAnyDeal para las tiendas de PC y el historial de precios, con control de cuota; CheapShark queda como respaldo sin llave | Aceptado | Secciones 3, 5, 6 y 11; escenario E1 |
+| [ADR-0017](../adr/0017-inicio-de-sesion-con-google-y-dispositivos.md) | Inicio de sesión con Google, sesión en cookie y registro de dispositivos en PostgreSQL | Aceptado | Secciones 3, 5, 8 y 11; modelo de amenazas A12 a A21; modifica el CORS de ADR-0012 |
+| [ADR-0018](../adr/0018-puntajes-de-hardware-en-la-base-de-datos.md) | Puntajes de gráficas y procesadores en PostgreSQL, cargados desde la copia privada, que queda como respaldo | Aceptado | Secciones 5, 7 y 8; escenario E4 |
+| [ADR-0019](../adr/0019-recomendacion-de-compra.md) | Recomendación de compra con una regla fija en el dominio: la opción más barata entre los dispositivos del usuario, salvo que otra dé mejor experiencia por hasta 10 % más | Aceptado | Secciones 5 y 6; modelo de amenazas A3 (la ruta entra en el límite de tasa) |
+| [ADR-0020](../adr/0020-juegos-favoritos.md) | Juegos favoritos en PostgreSQL, con el precio al guardarlos como referencia; sin revisión en segundo plano | Aceptado | Secciones 5 y 8; privacidad, sección 8 |
+| [ADR-0021](../adr/0021-alertas-de-precio.md) | Alertas de precio de los favoritos revisadas al entrar, solo tiendas de PC, con caché de una hora; sin correo ni procesos en segundo plano | Aceptado | Secciones 5, 6 y 8; modelo de amenazas A3 (límite de tasa); modifica ADR-0020 |
+| [ADR-0022](../adr/0022-desplegar-solo-en-el-laboratorio.md) | Desplegar solo en el servidor del laboratorio; se retiran Azure App Service y Vercel | Aceptado | Secciones 2, 7, 8 y 11; sustituye a ADR-0005 y ADR-0006; cierra S13-R1 y la amenaza A8 de Azure |
+| [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md) | Ratifica ADR-0013 a ADR-0022 sin editarlos: al aceptarse, esos diez quedan aceptados | Aceptado | Estado de las decisiones de noviembre |
+| [ADR-0024](../adr/0024-precios-de-colombia-y-de-referencia.md) | Los precios de Estados Unidos son referencia y no ganan a un precio de Colombia; modifica a ADR-0019 y ADR-0021 | Aceptado | Secciones 8 y 11; privacidad no afectada; aspecto F5 |
+| [ADR-0025](../adr/0025-pagina-de-cada-juego.md) | Página propia para cada juego con la ficha y los tráilers de Steam; el video va de la CDN de Steam al navegador con `hls.js` | Aceptado | Secciones 5, 6 y 8; C4 nivel 3; contrato `GET /games/{id}/details` |
 
 ## 9.2 Resumen
 
@@ -47,7 +47,7 @@ Recorridos en orden, los ADR explican por qué DRIFT es como es hoy:
 5. **Precios (ADR-0016 → ADR-0024).** IsThereAnyDeal entregaba precios de EE. UU. que podían ganar frente a los reales de Colombia; ADR-0024 los separa y modifica ADR-0019 y ADR-0021.
 6. **Despliegue (ADR-0005, ADR-0006 → ADR-0022).** Azure y Vercel se retiraron porque no tenían base de datos y la cookie de sesión no viaja entre sus dominios.
 
-ADR-0013 a ADR-0022 se ratifican en bloque con [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md), sin editar sus archivos.
+ADR-0013 a ADR-0022 se ratifican en bloque con [ADR-0023](../adr/0023-ratificar-decisiones-de-noviembre.md), y el 23 de noviembre de 2026 el equipo también pasó el estado de cada archivo a Aceptado.
 
 ## 9.3 Criterio de documentación
 

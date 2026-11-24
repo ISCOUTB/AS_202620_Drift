@@ -1,6 +1,6 @@
 # ADR-0021: Alertas de precio de los favoritos, revisadas al entrar
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-13
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0015](0015-copia-de-respaldo-de-las-fuentes.md) (disponibilidad primero), [ADR-0016](0016-isthereanydeal-e-historial-de-precios.md) (cuota de IsThereAnyDeal), [ADR-0020](0020-juegos-favoritos.md) (favoritos; esta decisión la modifica)

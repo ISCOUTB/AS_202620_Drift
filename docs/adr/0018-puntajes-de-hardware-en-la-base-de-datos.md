@@ -1,6 +1,6 @@
 # ADR-0018: Guardar en PostgreSQL los puntajes de gráficas y procesadores
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-12
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0014](0014-postgresql-como-persistencia.md) (PostgreSQL), [ADR-0011](0011-autenticacion-operaciones-administrativas.md) (token administrativo) y [evidencia E4](../evidencias/e4-compatibilidad.md)

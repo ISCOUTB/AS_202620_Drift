@@ -1,6 +1,6 @@
 # ADR-0013: Limitar con un plazo total cada búsqueda en Steam
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-08
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Modifica a:** [ADR-0009](0009-decision-extraccion-integracion-steam.md), solo en lo que dice sobre el tiempo de una búsqueda. Su decisión de no extraer la integración, los 2 intentos y el aplazamiento del circuit breaker siguen vigentes.

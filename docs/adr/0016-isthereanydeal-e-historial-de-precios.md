@@ -1,6 +1,6 @@
 # ADR-0016: Usar IsThereAnyDeal para las tiendas de PC y el historial de precios
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-12
 - **Decisores:** Equipo de desarrollo de DRIFT
 - **Relacionado con:** [ADR-0004](0004-estrategia-de-integracion.md) (cada fuente es un adaptador), [ADR-0014](0014-postgresql-como-persistencia.md) y [ADR-0015](0015-copia-de-respaldo-de-las-fuentes.md) (copia de respaldo y cuota)
